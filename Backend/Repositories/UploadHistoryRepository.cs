@@ -1,5 +1,6 @@
 using Backend.Data;
 using Backend.Models;
+using Microsoft.EntityFrameworkCore;
 using System.Threading.Tasks;
 
 namespace Backend.Repositories
@@ -11,6 +12,13 @@ namespace Backend.Repositories
         public UploadHistoryRepository(AppDbContext dbContext)
         {
             _dbContext = dbContext;
+        }
+
+        public async Task<UploadHistory?> GetByIdAsync(int id)
+        {
+            return await _dbContext.UploadHistories
+                .Include(h => h.Records)
+                .FirstOrDefaultAsync(h => h.Id == id);
         }
 
         public async Task AddAsync(UploadHistory uploadHistory)

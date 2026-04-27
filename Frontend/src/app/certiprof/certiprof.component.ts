@@ -20,6 +20,7 @@ export class CertiprofComponent {
 
   courseCode: string = '';
   certificationName: string = '';
+  uploadId: number | null = null;
 
   // Charts config
   chartData: any[] = [];
@@ -98,6 +99,12 @@ export class CertiprofComponent {
     ];
   }
 
+  parseGrade(rawGrade: any): string {
+    const gradeStr = String(rawGrade || '0').trim();
+    const grade = parseFloat(gradeStr);
+    return isNaN(grade) ? '0' : grade.toString();
+  }
+
   processFile() {
     if (!this.selectedFile || !this.courseCode || !this.certificationName) return;
 
@@ -116,24 +123,50 @@ export class CertiprofComponent {
       'Authorization': `Bearer ${token}`
     });
 
-    this.http.post('http://localhost:5000/api/certiprof/process-report', formData, { headers, responseType: 'blob' })
+    this.http.post<any>('http://localhost:5000/api/certiprof/process-report', formData, { headers })
       .subscribe({
-        next: (response: Blob) => {
+        next: (response) => {
           this.isProcessing = false;
-          // Trigger download
-          const url = window.URL.createObjectURL(response);
-          const a = document.createElement('a');
-          a.href = url;
-          a.download = `Acta_Auxiliar_CE0501.xlsx`;
-          a.click();
-          window.URL.revokeObjectURL(url);
-          this.selectedFile = null;
-          this.previewData = [];
+          this.uploadId = response.uploadId;
+          alert('Archivo procesado con éxito. Ahora puede generar el acta.');
         },
         error: (err) => {
           this.isProcessing = false;
           console.error('Error processing file:', err);
           alert('Error processing file. See console for details.');
+        }
+      });
+  }
+
+  generateAvatarAct() {
+    if (!this.uploadId) return;
+
+    const token = 'placeholder_token_for_demo';
+    const headers = new HttpHeaders({
+      'Authorization': `Bearer ${token}`
+    });
+
+    this.http.get(`http://localhost:5000/api/certiprof/export-avatar/${this.uploadId}`, { headers, responseType: 'blob' })
+      .subscribe({
+        next: (response: Blob) => {
+          // Trigger download
+          const url = window.URL.createObjectURL(response);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = `Acta_Auxiliar_${this.courseCode}.xlsx`;
+          a.click();
+          window.URL.revokeObjectURL(url);
+
+          // Reset state after successful flow
+          this.selectedFile = null;
+          this.previewData = [];
+          this.uploadId = null;
+          this.courseCode = '';
+          this.certificationName = '';
+        },
+        error: (err) => {
+          console.error('Error generating act:', err);
+          alert('Error al generar el acta.');
         }
       });
   }

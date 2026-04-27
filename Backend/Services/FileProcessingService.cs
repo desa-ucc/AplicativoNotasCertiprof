@@ -27,7 +27,7 @@ namespace Backend.Services
             _repository = repository;
         }
 
-        public async Task<ProcessResult> ProcessReportAsync(IFormFile file, string uploadedBy, string courseCode, string certificationName)
+        public async Task<int> ProcessReportAsync(IFormFile file, string uploadedBy, string courseCode, string certificationName)
         {
             if (file == null || file.Length == 0)
                 throw new ArgumentException("File is empty or not provided.");
@@ -66,13 +66,29 @@ namespace Backend.Services
                 var normalizedFirstName = rec.first_name?.Trim() ?? "";
                 var normalizedLastName = rec.last_name?.Trim() ?? "";
 
+                // Parse the grade
+                string rawGrade = rec.notas?.Trim() ?? "";
+                string finalGrade = "";
+
+                // If it parses correctly, store it. Otherwise, default to "0" or leave empty based on logic.
+                // Requirement: "Si el valor es numérico, guárdalo en el campo Grade de la tabla. Asegúrate de manejar posibles errores."
+                if (decimal.TryParse(rawGrade, out decimal parsedGrade))
+                {
+                    finalGrade = parsedGrade.ToString(System.Globalization.CultureInfo.InvariantCulture);
+                }
+                else
+                {
+                    // Fallback for empty or non-numeric
+                    finalGrade = "0";
+                }
+
                 uploadHistory.Records.Add(new CertiprofRecord
                 {
                     Email = normalizedEmail,
                     FirstName = normalizedFirstName,
                     LastName = normalizedLastName,
                     CertificationName = rec.certification_name?.Trim() ?? "",
-                    Grade = rec.notas?.Trim() ?? ""
+                    Grade = finalGrade
                 });
             }
 
@@ -80,21 +96,59 @@ namespace Backend.Services
             await _repository.AddAsync(uploadHistory);
             await _repository.SaveChangesAsync();
 
-            // Generate Excel (Acta Auxiliar)
+            return uploadHistory.Id;
+        }
+
+        public async Task<ProcessResult> GenerateAvatarActAsync(int uploadId)
+        {
+            var uploadHistory = await _repository.GetByIdAsync(uploadId);
+            if (uploadHistory == null)
+            {
+                throw new ArgumentException("Upload history not found.");
+            }
+
             using var workbook = new XLWorkbook();
             var worksheet = workbook.Worksheets.Add("Acta Auxiliar");
 
-            // Add Headers
-            worksheet.Cell(1, 1).Value = "Identificación (Email)";
-            worksheet.Cell(1, 2).Value = "Nombre Completo";
-            worksheet.Cell(1, 3).Value = "Nota Final";
+            // Mapping Dictionary Logic
+            string headerText = "Acta Auxiliar";
+            string courseTitle = uploadHistory.CourseCode;
 
-            var row = 2;
-            foreach (var rec in filteredRecords)
+            // Simplified mapping logic based on prompt instructions
+            if (uploadHistory.Records.Any() && uploadHistory.Records.First().CertificationName.Contains("Generative AI Professional Certification - GAIPC", StringComparison.OrdinalIgnoreCase))
             {
-                worksheet.Cell(row, 1).Value = rec.email;
-                worksheet.Cell(row, 2).Value = $"{rec.first_name} {rec.last_name}";
-                worksheet.Cell(row, 3).Value = rec.notas;
+                courseTitle = "CE0501 – Fundamentos de IA Generativa";
+            }
+
+            worksheet.Cell(1, 1).Value = $"Curso: {courseTitle}";
+            worksheet.Range("A1:C1").Merge();
+            worksheet.Cell(1, 1).Style.Font.Bold = true;
+
+            // Add Headers
+            worksheet.Cell(2, 1).Value = "Identificación";
+            worksheet.Cell(2, 2).Value = "Nombre Completo";
+            worksheet.Cell(2, 3).Value = "Nota Final";
+            worksheet.Range("A2:C2").Style.Font.Bold = true;
+
+            var row = 3;
+            foreach (var rec in uploadHistory.Records)
+            {
+                // Identification: fallback to FirstName if Email is empty
+                string id = !string.IsNullOrWhiteSpace(rec.Email) ? rec.Email : $"{rec.FirstName} {rec.LastName}".Trim();
+
+                worksheet.Cell(row, 1).Value = id;
+                worksheet.Cell(row, 2).Value = $"{rec.FirstName} {rec.LastName}".Trim();
+
+                // Parse grade as number if possible for Excel
+                if (decimal.TryParse(rec.Grade, out decimal numericGrade))
+                {
+                    worksheet.Cell(row, 3).Value = numericGrade;
+                }
+                else
+                {
+                    worksheet.Cell(row, 3).Value = rec.Grade;
+                }
+
                 row++;
             }
 
@@ -107,7 +161,7 @@ namespace Backend.Services
             {
                 FileBytes = memoryStream.ToArray(),
                 ContentType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                FileName = $"Acta_Auxiliar_{courseCode}_{DateTime.Now:yyyyMMddHHmmss}.xlsx",
+                FileName = $"Acta_Auxiliar_{uploadHistory.CourseCode}_{DateTime.Now:yyyyMMddHHmmss}.xlsx",
                 History = uploadHistory
             };
         }

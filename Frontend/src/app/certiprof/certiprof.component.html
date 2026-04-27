@@ -42,14 +42,24 @@
         <p class="text-sm font-medium text-gray-900">Archivo seleccionado:</p>
         <p class="text-sm text-gray-500">{{ selectedFile.name }}</p>
       </div>
-      <button
-        (click)="processFile()"
-        [disabled]="isProcessing || !courseCode || !certificationName"
-        class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:bg-blue-300"
-      >
-        <span *ngIf="isProcessing">Procesando...</span>
-        <span *ngIf="!isProcessing">Generar Acta Auxiliar</span>
-      </button>
+      <div class="flex gap-2">
+        <button
+          *ngIf="!uploadId"
+          (click)="processFile()"
+          [disabled]="isProcessing || !courseCode || !certificationName"
+          class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:bg-blue-300"
+        >
+          <span *ngIf="isProcessing">Procesando...</span>
+          <span *ngIf="!isProcessing">Procesar Archivo</span>
+        </button>
+        <button
+          *ngIf="uploadId"
+          (click)="generateAvatarAct()"
+          class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+        >
+          Generar Acta AVATAR
+        </button>
+      </div>
     </div>
   </div>
 
@@ -88,7 +98,9 @@
             <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{{ row.first_name || row['First Name'] }}</td>
             <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{{ row.last_name || row['Last Name'] }}</td>
             <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500 truncate max-w-xs">{{ row.certification_name || row['Certification Name'] }}</td>
-            <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{{ row.notas || row.Notas || row.Grade }}</td>
+            <td class="whitespace-nowrap px-3 py-4 text-sm font-bold text-gray-900">
+              {{ parseGrade(row.notas || row.Notas || row.Grade) }}
+            </td>
           </tr>
         </tbody>
       </table>
