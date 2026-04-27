@@ -21,14 +21,14 @@ namespace Backend.Controllers
         }
 
         [HttpPost("process-report")]
-        public async Task<IActionResult> ProcessReport(IFormFile file)
+        public async Task<IActionResult> ProcessReport(IFormFile file, [FromForm] string courseCode, [FromForm] string certificationName)
         {
             try
             {
                 // Retrieve user from token
                 var uploadedBy = User.Identity?.Name ?? "Unknown_User";
 
-                var result = await _fileProcessingService.ProcessReportAsync(file, uploadedBy);
+                var result = await _fileProcessingService.ProcessReportAsync(file, uploadedBy, courseCode, certificationName);
 
                 if (result.FileBytes == null)
                     return BadRequest("Error generating report.");

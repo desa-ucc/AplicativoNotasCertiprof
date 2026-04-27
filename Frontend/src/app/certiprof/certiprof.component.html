@@ -24,7 +24,19 @@
     <p class="text-xs text-gray-500 mt-2">CSV o Excel (.csv recomendado)</p>
   </div>
 
-  <div *ngIf="selectedFile" class="mt-8">
+  <div *ngIf="selectedFile" class="mt-8 space-y-4">
+    <div class="bg-gray-50 p-4 rounded-lg border border-gray-200 flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+      <div class="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div>
+          <label for="courseCode" class="block text-sm font-medium text-gray-700">Código del Curso (AVATAR)</label>
+          <input type="text" id="courseCode" [(ngModel)]="courseCode" placeholder="Ej. CE0501" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 border">
+        </div>
+        <div>
+          <label for="certificationName" class="block text-sm font-medium text-gray-700">Nombre de la Certificación (Archivo)</label>
+          <input type="text" id="certificationName" [(ngModel)]="certificationName" placeholder="Ej. Generative AI" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 border">
+        </div>
+      </div>
+    </div>
     <div class="flex items-center justify-between bg-gray-50 p-4 rounded-lg border border-gray-200">
       <div>
         <p class="text-sm font-medium text-gray-900">Archivo seleccionado:</p>
@@ -32,7 +44,7 @@
       </div>
       <button
         (click)="processFile()"
-        [disabled]="isProcessing"
+        [disabled]="isProcessing || !courseCode || !certificationName"
         class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:bg-blue-300"
       >
         <span *ngIf="isProcessing">Procesando...</span>
@@ -42,6 +54,22 @@
   </div>
 
   <div *ngIf="previewData.length > 0" class="mt-8">
+    <div class="mb-10 w-full flex justify-center">
+      <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+        <h2 class="text-lg font-medium text-gray-900 mb-4 text-center">Métricas de Aprobación</h2>
+        <ngx-charts-pie-chart
+          [view]="view"
+          [scheme]="colorScheme"
+          [results]="chartData"
+          [gradient]="gradient"
+          [legend]="showLegend"
+          [legendPosition]="legendPosition"
+          [labels]="showLabels"
+          [doughnut]="isDoughnut">
+        </ngx-charts-pie-chart>
+      </div>
+    </div>
+
     <h2 class="text-lg font-medium text-gray-900 mb-4">Vista Previa de Datos</h2>
     <div class="overflow-x-auto shadow ring-1 ring-black ring-opacity-5 md:rounded-lg">
       <table class="min-w-full divide-y divide-gray-300">

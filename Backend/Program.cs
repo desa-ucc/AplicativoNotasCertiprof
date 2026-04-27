@@ -14,6 +14,7 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
+builder.Services.AddScoped<Backend.Repositories.IUploadHistoryRepository, Backend.Repositories.UploadHistoryRepository>();
 builder.Services.AddScoped<IFileProcessingService, FileProcessingService>();
 
 // Add basic JWT Authentication for RBAC
@@ -27,12 +28,8 @@ builder.Services.AddAuthentication("Bearer")
         {
             ValidateIssuer = false,
             ValidateAudience = false,
-            ValidateIssuerSigningKey = false,
-            SignatureValidator = delegate(string token, Microsoft.IdentityModel.Tokens.TokenValidationParameters parameters)
-            {
-                var jwt = new System.IdentityModel.Tokens.Jwt.JwtSecurityToken(token);
-                return jwt;
-            }
+            ValidateIssuerSigningKey = true,
+            IssuerSigningKey = new Microsoft.IdentityModel.Tokens.SymmetricSecurityKey(System.Text.Encoding.UTF8.GetBytes("ThisIsASecretKeyForJWTValidationWhichNeedsToBeLongEnough256Bits"))
         };
     });
 

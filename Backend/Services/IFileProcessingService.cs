@@ -13,6 +13,6 @@ namespace Backend.Services
 
     public interface IFileProcessingService
     {
-        Task<ProcessResult> ProcessReportAsync(IFormFile file, string uploadedBy);
+        Task<ProcessResult> ProcessReportAsync(IFormFile file, string uploadedBy, string courseCode, string certificationName);
     }
 }

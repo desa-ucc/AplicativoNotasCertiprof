@@ -1,12 +1,14 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { HttpClient } from '@angular/common/http';
-import * as Papa from 'papaparse'; // Let's try to preview the CSV using papaparse, will install it.
+import { HttpClient, HttpHeaders } from '@angular/common/http';
+import * as Papa from 'papaparse';
+import { NgxChartsModule, Color, ScaleType, LegendPosition } from '@swimlane/ngx-charts';
+import { FormsModule } from '@angular/forms';
 
 @Component({
   selector: 'app-certiprof',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, NgxChartsModule, FormsModule],
   templateUrl: './certiprof.component.html',
   styleUrls: ['./certiprof.component.css']
 })
@@ -15,6 +17,24 @@ export class CertiprofComponent {
   previewData: any[] = [];
   isDragging = false;
   isProcessing = false;
+
+  courseCode: string = '';
+  certificationName: string = '';
+
+  // Charts config
+  chartData: any[] = [];
+  view: [number, number] = [700, 400];
+  gradient: boolean = true;
+  showLegend: boolean = true;
+  legendPosition: LegendPosition = LegendPosition.Below;
+  showLabels: boolean = true;
+  isDoughnut: boolean = false;
+  colorScheme: Color = {
+    name: 'custom',
+    selectable: true,
+    group: ScaleType.Ordinal,
+    domain: ['#10B981', '#EF4444'] // Green for pass, Red for fail
+  };
 
   constructor(private http: HttpClient) {}
 
@@ -52,19 +72,51 @@ export class CertiprofComponent {
       skipEmptyLines: true,
       complete: (results) => {
         this.previewData = results.data;
+        this.generateChartData(this.previewData);
       }
     });
   }
 
+  generateChartData(data: any[]) {
+    let passCount = 0;
+    let failCount = 0;
+
+    data.forEach(row => {
+      // Assuming a grade logic, adjust as per real Certiprof data structure
+      const gradeStr = row.notas || row.Notas || row.Grade || '0';
+      const grade = parseFloat(gradeStr);
+      if (!isNaN(grade) && grade >= 60) {
+        passCount++;
+      } else {
+        failCount++;
+      }
+    });
+
+    this.chartData = [
+      { name: 'Aprobados', value: passCount },
+      { name: 'Reprobados', value: failCount }
+    ];
+  }
+
   processFile() {
-    if (!this.selectedFile) return;
+    if (!this.selectedFile || !this.courseCode || !this.certificationName) return;
 
     this.isProcessing = true;
     const formData = new FormData();
     formData.append('file', this.selectedFile);
+    formData.append('courseCode', this.courseCode);
+    formData.append('certificationName', this.certificationName);
 
     // Call backend API
-    this.http.post('http://localhost:5000/api/certiprof/process-report', formData, { responseType: 'blob' })
+    // In a real application, the token should be dynamically acquired
+    // Since this is a demo, we will generate a valid token on the backend to use or rely on interceptors.
+    // For now we will pass a placeholder token to hit the endpoint.
+    const token = 'placeholder_token_for_demo';
+    const headers = new HttpHeaders({
+      'Authorization': `Bearer ${token}`
+    });
+
+    this.http.post('http://localhost:5000/api/certiprof/process-report', formData, { headers, responseType: 'blob' })
       .subscribe({
         next: (response: Blob) => {
           this.isProcessing = false;

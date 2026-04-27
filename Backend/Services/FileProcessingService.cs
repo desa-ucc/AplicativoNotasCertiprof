@@ -5,6 +5,7 @@ using CsvHelper.Configuration;
 using Microsoft.AspNetCore.Http;
 using Backend.Models;
 using Backend.Data;
+using Backend.Repositories;
 
 namespace Backend.Services
 {
@@ -19,17 +20,20 @@ namespace Backend.Services
 
     public class FileProcessingService : IFileProcessingService
     {
-        private readonly AppDbContext _dbContext;
+        private readonly IUploadHistoryRepository _repository;
 
-        public FileProcessingService(AppDbContext dbContext)
+        public FileProcessingService(IUploadHistoryRepository repository)
         {
-            _dbContext = dbContext;
+            _repository = repository;
         }
 
-        public async Task<ProcessResult> ProcessReportAsync(IFormFile file, string uploadedBy)
+        public async Task<ProcessResult> ProcessReportAsync(IFormFile file, string uploadedBy, string courseCode, string certificationName)
         {
             if (file == null || file.Length == 0)
                 throw new ArgumentException("File is empty or not provided.");
+
+            if (string.IsNullOrWhiteSpace(courseCode) || string.IsNullOrWhiteSpace(certificationName))
+                throw new ArgumentException("Course code and Certification name must be provided for intelligent filtering.");
 
             var records = new List<CertiprofCsvRecord>();
 
@@ -41,34 +45,40 @@ namespace Backend.Services
                 records = csv.GetRecords<CertiprofCsvRecord>().ToList();
             }
 
-            // Filter specific course
+            // Intelligent Filtering based on user selection
             var filteredRecords = records
-                .Where(r => r.certification_name.Contains("Generative AI Professional Certification", StringComparison.OrdinalIgnoreCase))
+                .Where(r => !string.IsNullOrEmpty(r.certification_name) &&
+                            r.certification_name.Contains(certificationName, StringComparison.OrdinalIgnoreCase))
                 .ToList();
 
             var uploadHistory = new UploadHistory
             {
                 UploadedBy = uploadedBy,
-                CourseCode = "CE0501", // Mapped course code
+                CourseCode = courseCode,
                 ProcessedRecordsCount = filteredRecords.Count,
                 UploadDate = DateTime.UtcNow
             };
 
             foreach (var rec in filteredRecords)
             {
+                // Normalization: trim spaces and handle casing
+                var normalizedEmail = rec.email?.Trim().ToLowerInvariant() ?? "";
+                var normalizedFirstName = rec.first_name?.Trim() ?? "";
+                var normalizedLastName = rec.last_name?.Trim() ?? "";
+
                 uploadHistory.Records.Add(new CertiprofRecord
                 {
-                    Email = rec.email,
-                    FirstName = rec.first_name,
-                    LastName = rec.last_name,
-                    CertificationName = rec.certification_name,
-                    Grade = rec.notas
+                    Email = normalizedEmail,
+                    FirstName = normalizedFirstName,
+                    LastName = normalizedLastName,
+                    CertificationName = rec.certification_name?.Trim() ?? "",
+                    Grade = rec.notas?.Trim() ?? ""
                 });
             }
 
-            // Save to DB
-            _dbContext.UploadHistories.Add(uploadHistory);
-            await _dbContext.SaveChangesAsync();
+            // Save to DB via Repository
+            await _repository.AddAsync(uploadHistory);
+            await _repository.SaveChangesAsync();
 
             // Generate Excel (Acta Auxiliar)
             using var workbook = new XLWorkbook();
@@ -97,7 +107,7 @@ namespace Backend.Services
             {
                 FileBytes = memoryStream.ToArray(),
                 ContentType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                FileName = $"Acta_Auxiliar_CE0501_{DateTime.Now:yyyyMMddHHmmss}.xlsx",
+                FileName = $"Acta_Auxiliar_{courseCode}_{DateTime.Now:yyyyMMddHHmmss}.xlsx",
                 History = uploadHistory
             };
         }
