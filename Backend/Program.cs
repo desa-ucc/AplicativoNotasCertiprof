@@ -16,6 +16,7 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 
 builder.Services.AddScoped<Backend.Repositories.IUploadHistoryRepository, Backend.Repositories.UploadHistoryRepository>();
 builder.Services.AddScoped<IFileProcessingService, FileProcessingService>();
+builder.Services.AddScoped<IAuthService, AuthService>();
 
 // Add basic JWT Authentication for RBAC
 builder.Services.AddAuthentication("Bearer")
@@ -78,12 +79,32 @@ using (var scope = app.Services.CreateScope())
     {
         var context = services.GetRequiredService<AppDbContext>();
         context.Database.EnsureCreated(); // Use EnsureCreated for simplicity, or Migrate() if using migrations
+
+        // Seed default Admin user
+        if (!context.Users.Any())
+        {
+            var authService = services.GetRequiredService<IAuthService>();
+            context.Users.Add(new Backend.Models.User
+            {
+                Username = "admin",
+                PasswordHash = authService.HashPassword("admin123"),
+                Role = "Admin"
+            });
+            // Seed a default Docente for testing
+            context.Users.Add(new Backend.Models.User
+            {
+                Username = "docente",
+                PasswordHash = authService.HashPassword("docente123"),
+                Role = "Docente"
+            });
+            context.SaveChanges();
+        }
     }
     catch (Exception ex)
     {
         // Log error
         var logger = services.GetRequiredService<ILogger<Program>>();
-        logger.LogError(ex, "An error occurred creating the DB.");
+        logger.LogError(ex, "An error occurred creating the DB and seeding data.");
     }
 }
 

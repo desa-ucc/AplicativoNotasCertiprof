@@ -115,15 +115,7 @@ export class CertiprofComponent {
     formData.append('certificationName', this.certificationName);
 
     // Call backend API
-    // In a real application, the token should be dynamically acquired
-    // Since this is a demo, we will generate a valid token on the backend to use or rely on interceptors.
-    // For now we will pass a placeholder token to hit the endpoint.
-    const token = 'placeholder_token_for_demo';
-    const headers = new HttpHeaders({
-      'Authorization': `Bearer ${token}`
-    });
-
-    this.http.post<any>('http://localhost:5000/api/certiprof/process-report', formData, { headers })
+    this.http.post<any>('http://localhost:5000/api/certiprof/process-report', formData)
       .subscribe({
         next: (response) => {
           this.isProcessing = false;
@@ -141,12 +133,7 @@ export class CertiprofComponent {
   generateAvatarAct() {
     if (!this.uploadId) return;
 
-    const token = 'placeholder_token_for_demo';
-    const headers = new HttpHeaders({
-      'Authorization': `Bearer ${token}`
-    });
-
-    this.http.get(`http://localhost:5000/api/certiprof/export-avatar/${this.uploadId}`, { headers, responseType: 'blob' })
+    this.http.get(`http://localhost:5000/api/certiprof/export-avatar/${this.uploadId}`, { responseType: 'blob' })
       .subscribe({
         next: (response: Blob) => {
           // Trigger download

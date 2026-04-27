@@ -38,6 +38,24 @@ namespace Backend.Controllers
             }
         }
 
+        [HttpGet("history")]
+        public async Task<IActionResult> GetHistory([FromServices] Backend.Repositories.IUploadHistoryRepository repository)
+        {
+            var user = User.Identity?.Name;
+            var role = User.Claims.FirstOrDefault(c => c.Type == System.Security.Claims.ClaimTypes.Role)?.Value;
+
+            if (role == "Admin")
+            {
+                var allHistory = await repository.GetAllAsync();
+                return Ok(allHistory);
+            }
+            else
+            {
+                var userHistory = await repository.GetByUsernameAsync(user ?? "");
+                return Ok(userHistory);
+            }
+        }
+
         [HttpGet("export-avatar/{uploadId}")]
         public async Task<IActionResult> ExportAvatar(int uploadId)
         {

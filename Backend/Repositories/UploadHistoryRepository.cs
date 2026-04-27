@@ -21,6 +21,21 @@ namespace Backend.Repositories
                 .FirstOrDefaultAsync(h => h.Id == id);
         }
 
+        public async Task<System.Collections.Generic.IEnumerable<UploadHistory>> GetAllAsync()
+        {
+            return await _dbContext.UploadHistories
+                .OrderByDescending(h => h.UploadDate)
+                .ToListAsync();
+        }
+
+        public async Task<System.Collections.Generic.IEnumerable<UploadHistory>> GetByUsernameAsync(string username)
+        {
+            return await _dbContext.UploadHistories
+                .Where(h => h.UploadedBy == username)
+                .OrderByDescending(h => h.UploadDate)
+                .ToListAsync();
+        }
+
         public async Task AddAsync(UploadHistory uploadHistory)
         {
             await _dbContext.UploadHistories.AddAsync(uploadHistory);

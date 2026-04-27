@@ -22,6 +22,7 @@ services:
     environment:
       - ConnectionStrings__DefaultConnection=Server=db,1433;Database=AvatarDB;User Id=sa;Password=${DB_PASSWORD:-Your_password123};TrustServerCertificate=True
       - ASPNETCORE_ENVIRONMENT=Development
+      - JWT_SECRET_KEY=${JWT_SECRET_KEY:-ThisIsASecureFallbackKeyForDevelopmentOnly123456789!}
     depends_on:
       - db
 

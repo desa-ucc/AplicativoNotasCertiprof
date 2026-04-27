@@ -55,7 +55,7 @@ namespace Backend.Services
             {
                 UploadedBy = uploadedBy,
                 CourseCode = courseCode,
-                ProcessedRecordsCount = filteredRecords.Count,
+                ProcessedRecordsCount = filteredRecords.Count, // will be updated if upsert drops count, but we are saving to history the parsed items
                 UploadDate = DateTime.UtcNow
             };
 
@@ -65,32 +65,43 @@ namespace Backend.Services
                 var normalizedEmail = rec.email?.Trim().ToLowerInvariant() ?? "";
                 var normalizedFirstName = rec.first_name?.Trim() ?? "";
                 var normalizedLastName = rec.last_name?.Trim() ?? "";
+                var normalizedCertName = rec.certification_name?.Trim() ?? "";
 
                 // Parse the grade
                 string rawGrade = rec.notas?.Trim() ?? "";
-                string finalGrade = "";
+                decimal? finalGrade = null;
 
-                // If it parses correctly, store it. Otherwise, default to "0" or leave empty based on logic.
-                // Requirement: "Si el valor es numérico, guárdalo en el campo Grade de la tabla. Asegúrate de manejar posibles errores."
-                if (decimal.TryParse(rawGrade, out decimal parsedGrade))
+                if (decimal.TryParse(rawGrade, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out decimal parsedGrade))
                 {
-                    finalGrade = parsedGrade.ToString(System.Globalization.CultureInfo.InvariantCulture);
+                    finalGrade = parsedGrade;
+                }
+
+                // Upsert logic inside the current UploadHistory (to avoid duplicates in the same batch)
+                // Real DB upsert against existing records would require querying the DB.
+                // For this demo, we ensure no duplicates within the same UploadHistory.
+                var existingRecord = uploadHistory.Records.FirstOrDefault(r => r.Email == normalizedEmail && r.CertificationName == normalizedCertName);
+
+                if (existingRecord != null)
+                {
+                    // Update existing
+                    existingRecord.Grade = finalGrade;
+                    existingRecord.FirstName = normalizedFirstName;
+                    existingRecord.LastName = normalizedLastName;
                 }
                 else
                 {
-                    // Fallback for empty or non-numeric
-                    finalGrade = "0";
+                    uploadHistory.Records.Add(new CertiprofRecord
+                    {
+                        Email = normalizedEmail,
+                        FirstName = normalizedFirstName,
+                        LastName = normalizedLastName,
+                        CertificationName = normalizedCertName,
+                        Grade = finalGrade
+                    });
                 }
-
-                uploadHistory.Records.Add(new CertiprofRecord
-                {
-                    Email = normalizedEmail,
-                    FirstName = normalizedFirstName,
-                    LastName = normalizedLastName,
-                    CertificationName = rec.certification_name?.Trim() ?? "",
-                    Grade = finalGrade
-                });
             }
+
+            uploadHistory.ProcessedRecordsCount = uploadHistory.Records.Count;
 
             // Save to DB via Repository
             await _repository.AddAsync(uploadHistory);
@@ -139,14 +150,13 @@ namespace Backend.Services
                 worksheet.Cell(row, 1).Value = id;
                 worksheet.Cell(row, 2).Value = $"{rec.FirstName} {rec.LastName}".Trim();
 
-                // Parse grade as number if possible for Excel
-                if (decimal.TryParse(rec.Grade, out decimal numericGrade))
+                if (rec.Grade.HasValue)
                 {
-                    worksheet.Cell(row, 3).Value = numericGrade;
+                    worksheet.Cell(row, 3).Value = rec.Grade.Value;
                 }
                 else
                 {
-                    worksheet.Cell(row, 3).Value = rec.Grade;
+                    worksheet.Cell(row, 3).Value = ""; // Or "N/A"
                 }
 
                 row++;

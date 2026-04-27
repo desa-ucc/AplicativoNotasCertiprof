@@ -11,6 +11,7 @@ namespace Backend.Data
 
         public DbSet<CertiprofRecord> CertiprofRecords { get; set; } = null!;
         public DbSet<UploadHistory> UploadHistories { get; set; } = null!;
+        public DbSet<User> Users { get; set; } = null!;
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

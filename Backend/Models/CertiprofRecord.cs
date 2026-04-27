@@ -16,7 +16,7 @@ namespace Backend.Models
         [Required]
         public string CertificationName { get; set; } = string.Empty;
 
-        public string? Grade { get; set; } // Represented as string in CSV, might be parsed later
+        public decimal? Grade { get; set; } // Represented as string in CSV, parsed to decimal
 
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
