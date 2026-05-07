@@ -79,7 +79,11 @@ export class CertiprofComponent {
         },
         error: (err) => {
           console.error('Error parsing file via backend:', err);
-          alert('Error al leer el archivo. Asegúrese de que el formato sea correcto.');
+          let errorMsg = 'Error al leer el archivo. Asegúrese de que el formato sea correcto.';
+          if (err.error && err.error.message) {
+            errorMsg = `Error: ${err.error.message}`;
+          }
+          alert(errorMsg);
         }
       });
   }

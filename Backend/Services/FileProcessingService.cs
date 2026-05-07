@@ -53,19 +53,24 @@ namespace Backend.Services
 
                 var headerRow = rows.First();
                 var headers = new List<string>();
-                foreach (var cell in headerRow.Cells())
+
+                // ClosedXML rows/cols are 1-indexed. Sometimes RangeUsed can be sparse,
+                // but Cells() provides the actual filled cells.
+                // Best approach for a standard header row is to iterate by column index.
+                int lastCol = headerRow.LastCellUsed()?.Address.ColumnNumber ?? 1;
+
+                for (int i = 1; i <= lastCol; i++)
                 {
-                    headers.Add(cell.Value.ToString().ToLower().Trim());
+                    headers.Add(headerRow.Cell(i).Value.ToString().ToLower().Trim());
                 }
 
                 foreach (var row in rows.Skip(1))
                 {
                     var dict = new Dictionary<string, object>();
-                    int colIdx = 1;
-                    foreach (var header in headers)
+                    for (int i = 1; i <= lastCol; i++)
                     {
-                        dict[header] = row.Cell(colIdx).Value.ToString();
-                        colIdx++;
+                        var header = headers[i - 1];
+                        dict[header] = row.Cell(i).Value.ToString();
                     }
                     records.Add(MapRecord(dict));
                 }
@@ -89,15 +94,25 @@ namespace Backend.Services
                 }
             }
 
-            var emailListStr = string.Join(",", emails.Select(e => $"'{e.Replace("'", "''")}'"));
             var cedulasDict = new Dictionary<string, string>();
 
             if (emails.Any())
             {
-                // Query M12ARC
+                var parameters = new List<string>();
                 using (var command = _dbContext.Database.GetDbConnection().CreateCommand())
                 {
+                    for (int i = 0; i < emails.Count; i++)
+                    {
+                        var p = command.CreateParameter();
+                        p.ParameterName = $"@p{i}";
+                        p.Value = emails[i];
+                        command.Parameters.Add(p);
+                        parameters.Add($"@p{i}");
+                    }
+
+                    var emailListStr = string.Join(",", parameters);
                     command.CommandText = $"SELECT m12emi, M12CAR FROM M12ARC WHERE m12emi IN ({emailListStr})";
+
                     _dbContext.Database.OpenConnection();
                     using (var reader = await command.ExecuteReaderAsync())
                     {
@@ -111,10 +126,21 @@ namespace Backend.Services
                 var missingEmails = emails.Where(e => !cedulasDict.ContainsKey(e)).ToList();
                 if (missingEmails.Any())
                 {
-                    var missingEmailListStr = string.Join(",", missingEmails.Select(e => $"'{e.Replace("'", "''")}'"));
+                    var missingParameters = new List<string>();
                     using (var command = _dbContext.Database.GetDbConnection().CreateCommand())
                     {
+                        for (int i = 0; i < missingEmails.Count; i++)
+                        {
+                            var p = command.CreateParameter();
+                            p.ParameterName = $"@mp{i}";
+                            p.Value = missingEmails[i];
+                            command.Parameters.Add(p);
+                            missingParameters.Add($"@mp{i}");
+                        }
+
+                        var missingEmailListStr = string.Join(",", missingParameters);
                         command.CommandText = $"SELECT pla20emi, pla20ced FROM PLA20ARC WHERE pla20emi IN ({missingEmailListStr})";
+
                         using (var reader = await command.ExecuteReaderAsync())
                         {
                             while (reader.Read())
@@ -207,16 +233,23 @@ namespace Backend.Services
                 using var workbook = new XLWorkbook(stream);
                 var worksheet = workbook.Worksheet(1);
                 var rows = worksheet.RangeUsed().RowsUsed();
+
                 var headerRow = rows.First();
-                var headers = headerRow.Cells().Select(c => c.Value.ToString().ToLower().Trim()).ToList();
+                var headers = new List<string>();
+                int lastCol = headerRow.LastCellUsed()?.Address.ColumnNumber ?? 1;
+
+                for (int i = 1; i <= lastCol; i++)
+                {
+                    headers.Add(headerRow.Cell(i).Value.ToString().ToLower().Trim());
+                }
+
                 foreach (var row in rows.Skip(1))
                 {
                     var dict = new Dictionary<string, object>();
-                    int colIdx = 1;
-                    foreach (var header in headers)
+                    for (int i = 1; i <= lastCol; i++)
                     {
-                        dict[header] = row.Cell(colIdx).Value.ToString();
-                        colIdx++;
+                        var header = headers[i - 1];
+                        dict[header] = row.Cell(i).Value.ToString();
                     }
                     records.Add(MapRecord(dict));
                 }
@@ -229,14 +262,25 @@ namespace Backend.Services
                 if (!string.IsNullOrEmpty(email)) emails.Add(email);
             }
 
-            var emailListStr = string.Join(",", emails.Select(e => $"'{e.Replace("'", "''")}'"));
             var cedulasDict = new Dictionary<string, string>();
 
             if (emails.Any())
             {
+                var parameters = new List<string>();
                 using (var command = _dbContext.Database.GetDbConnection().CreateCommand())
                 {
+                    for (int i = 0; i < emails.Count; i++)
+                    {
+                        var p = command.CreateParameter();
+                        p.ParameterName = $"@p{i}";
+                        p.Value = emails[i];
+                        command.Parameters.Add(p);
+                        parameters.Add($"@p{i}");
+                    }
+
+                    var emailListStr = string.Join(",", parameters);
                     command.CommandText = $"SELECT m12emi, M12CAR FROM M12ARC WHERE m12emi IN ({emailListStr})";
+
                     _dbContext.Database.OpenConnection();
                     using (var reader = await command.ExecuteReaderAsync())
                     {
@@ -247,10 +291,21 @@ namespace Backend.Services
                 var missingEmails = emails.Where(e => !cedulasDict.ContainsKey(e)).ToList();
                 if (missingEmails.Any())
                 {
-                    var missingEmailListStr = string.Join(",", missingEmails.Select(e => $"'{e.Replace("'", "''")}'"));
+                    var missingParameters = new List<string>();
                     using (var command = _dbContext.Database.GetDbConnection().CreateCommand())
                     {
+                        for (int i = 0; i < missingEmails.Count; i++)
+                        {
+                            var p = command.CreateParameter();
+                            p.ParameterName = $"@mp{i}";
+                            p.Value = missingEmails[i];
+                            command.Parameters.Add(p);
+                            missingParameters.Add($"@mp{i}");
+                        }
+
+                        var missingEmailListStr = string.Join(",", missingParameters);
                         command.CommandText = $"SELECT pla20emi, pla20ced FROM PLA20ARC WHERE pla20emi IN ({missingEmailListStr})";
+
                         using (var reader = await command.ExecuteReaderAsync())
                         {
                             while (reader.Read()) cedulasDict[reader.GetString(0)] = reader.GetString(1);

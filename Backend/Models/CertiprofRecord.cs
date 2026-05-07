@@ -7,7 +7,7 @@ namespace Backend.Models
     public class CertiprofRecord
     {
         [Key]
-        [NotMapped]
+        [Column("cert_id")]
         public int Id { get; set; }
 
         [Column("cert_email")]
@@ -39,10 +39,9 @@ namespace Backend.Models
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
         // Foreign key to upload history
-        [NotMapped]
+        [Column("cert_upload_history_id")]
         public int UploadHistoryId { get; set; }
 
-        [NotMapped]
         [ForeignKey(nameof(UploadHistoryId))]
         public UploadHistory? UploadHistory { get; set; }
     }
