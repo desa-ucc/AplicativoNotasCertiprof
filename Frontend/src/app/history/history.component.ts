@@ -19,7 +19,7 @@ export class HistoryComponent implements OnInit {
   }
 
   fetchHistory() {
-    this.http.get<any[]>('http://localhost:5000/api/certiprof/history')
+    this.http.get<any[]>('/api/certiprof/history')
       .subscribe({
         next: (data) => {
           this.histories = data;
@@ -31,7 +31,7 @@ export class HistoryComponent implements OnInit {
   }
 
   downloadActa(uploadId: number, courseCode: string) {
-    this.http.get(`http://localhost:5000/api/certiprof/export-avatar/${uploadId}`, { responseType: 'blob' })
+    this.http.get(`/api/certiprof/export-avatar/${uploadId}`, { responseType: 'blob' })
       .subscribe({
         next: (response: Blob) => {
           const url = window.URL.createObjectURL(response);

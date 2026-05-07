@@ -201,34 +201,38 @@ namespace Backend.Services
                     finalGrade = parsedGrade;
                 }
 
-                // Upsert logic inside the current UploadHistory (to avoid duplicates in the same batch)
-                // Real DB upsert against existing records would require querying the DB.
-                // For this demo, we ensure no duplicates within the same UploadHistory.
-                var existingRecord = uploadHistory.Records.FirstOrDefault(r => r.Email == normalizedEmail && r.CertificationName == normalizedCertName);
+                // Only save the record if the user's Cedula was found
+                if (!string.IsNullOrEmpty(cedula))
+                {
+                    // Upsert logic inside the current UploadHistory (to avoid duplicates in the same batch)
+                    // Real DB upsert against existing records would require querying the DB.
+                    // For this demo, we ensure no duplicates within the same UploadHistory.
+                    var existingRecord = uploadHistory.Records.FirstOrDefault(r => r.Email == normalizedEmail && r.CertificationName == normalizedCertName);
 
-                if (existingRecord != null)
-                {
-                    // Update existing
-                    existingRecord.Grade = finalGrade;
-                    existingRecord.FirstName = normalizedFirstName;
-                    existingRecord.LastName = normalizedLastName;
-                    existingRecord.Percentage = rawGrade;
-                    existingRecord.Status = status;
-                    existingRecord.Cedula = cedula;
-                }
-                else
-                {
-                    uploadHistory.Records.Add(new CertiprofRecord
+                    if (existingRecord != null)
                     {
-                        Email = normalizedEmail,
-                        FirstName = normalizedFirstName,
-                        LastName = normalizedLastName,
-                        CertificationName = normalizedCertName,
-                        Grade = finalGrade,
-                        Percentage = rawGrade,
-                        Status = status,
-                        Cedula = cedula
-                    });
+                        // Update existing
+                        existingRecord.Grade = finalGrade;
+                        existingRecord.FirstName = normalizedFirstName;
+                        existingRecord.LastName = normalizedLastName;
+                        existingRecord.Percentage = rawGrade;
+                        existingRecord.Status = status;
+                        existingRecord.Cedula = cedula;
+                    }
+                    else
+                    {
+                        uploadHistory.Records.Add(new CertiprofRecord
+                        {
+                            Email = normalizedEmail,
+                            FirstName = normalizedFirstName,
+                            LastName = normalizedLastName,
+                            CertificationName = normalizedCertName,
+                            Grade = finalGrade,
+                            Percentage = rawGrade,
+                            Status = status,
+                            Cedula = cedula
+                        });
+                    }
                 }
             }
 

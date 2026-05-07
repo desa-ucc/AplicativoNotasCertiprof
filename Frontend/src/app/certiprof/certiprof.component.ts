@@ -73,7 +73,7 @@ export class CertiprofComponent {
     const formData = new FormData();
     formData.append('file', file);
 
-    this.http.post<any[]>('http://localhost:5000/api/certiprof/parse-excel', formData)
+    this.http.post<any[]>('/api/certiprof/parse-excel', formData)
       .subscribe({
         next: (results) => {
           this.previewData = results;
@@ -113,12 +113,12 @@ export class CertiprofComponent {
     return isNaN(grade) ? '0' : grade.toString();
   }
 
+  hasValidRecords(): boolean {
+    return this.previewData.length > 0 && this.previewData.some(row => !!row.cedula);
+  }
+
   processFile() {
-    // Disabled while previewData has no elements or misses Cedula? Wait, Cedula might be added during processing or parsing.
-    // The instruction says: "El botón de "Guardar" debe permanecer deshabilitado hasta que el flujo de validación obtenga la Cédula desde la base de datos institucional."
-    // So the previewData must have elements, and at least one element should have Cedula if validation was successful. Or just checking if previewData is loaded.
-    const hasCedula = this.previewData.length > 0 && this.previewData.some(row => !!row.cedula);
-    if (!this.selectedFile || !this.courseCode || !this.certificationName || !hasCedula) return;
+    if (!this.selectedFile || !this.courseCode || !this.certificationName || !this.hasValidRecords()) return;
 
     this.isProcessing = true;
     const formData = new FormData();
@@ -127,7 +127,7 @@ export class CertiprofComponent {
     formData.append('certificationName', this.certificationName);
 
     // Call backend API
-    this.http.post<any>('http://localhost:5000/api/certiprof/process-report', formData)
+    this.http.post<any>('/api/certiprof/process-report', formData)
       .subscribe({
         next: (response) => {
           this.isProcessing = false;
@@ -145,7 +145,7 @@ export class CertiprofComponent {
   generateAvatarAct() {
     if (!this.uploadId) return;
 
-    this.http.get(`http://localhost:5000/api/certiprof/export-avatar/${this.uploadId}`, { responseType: 'blob' })
+    this.http.get(`/api/certiprof/export-avatar/${this.uploadId}`, { responseType: 'blob' })
       .subscribe({
         next: (response: Blob) => {
           // Trigger download

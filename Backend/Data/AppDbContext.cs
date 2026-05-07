@@ -20,7 +20,7 @@ namespace Backend.Data
             // Mapping entities to tables with the `cert_` prefix
             modelBuilder.Entity<CertiprofRecord>().ToTable("cert_registros");
             modelBuilder.Entity<UploadHistory>().ToTable("cert_UploadHistories");
-            modelBuilder.Entity<User>().ToTable("cert_usuarios");
+            modelBuilder.Entity<User>().ToTable("cert_users");
         }
     }
 }
