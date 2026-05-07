@@ -77,6 +77,8 @@ namespace Backend.Services
 
             // Database validation for institutional Cedula
             // Collect emails to fetch all related users in a single query to avoid N+1 query problem
+            var result = new List<object>();
+
             var emails = new List<string>();
             foreach (var rec in records)
             {
@@ -87,17 +89,51 @@ namespace Backend.Services
                 }
             }
 
-            var users = await _dbContext.Users.Where(u => u.Email != null && emails.Contains(u.Email)).ToDictionaryAsync(u => u.Email!);
+            var emailListStr = string.Join(",", emails.Select(e => $"'{e.Replace("'", "''")}'"));
+            var cedulasDict = new Dictionary<string, string>();
 
-            var result = new List<object>();
+            if (emails.Any())
+            {
+                // Query M12ARC
+                using (var command = _dbContext.Database.GetDbConnection().CreateCommand())
+                {
+                    command.CommandText = $"SELECT m12emi, M12CAR FROM M12ARC WHERE m12emi IN ({emailListStr})";
+                    _dbContext.Database.OpenConnection();
+                    using (var reader = await command.ExecuteReaderAsync())
+                    {
+                        while (reader.Read())
+                        {
+                            cedulasDict[reader.GetString(0)] = reader.GetString(1);
+                        }
+                    }
+                }
+
+                var missingEmails = emails.Where(e => !cedulasDict.ContainsKey(e)).ToList();
+                if (missingEmails.Any())
+                {
+                    var missingEmailListStr = string.Join(",", missingEmails.Select(e => $"'{e.Replace("'", "''")}'"));
+                    using (var command = _dbContext.Database.GetDbConnection().CreateCommand())
+                    {
+                        command.CommandText = $"SELECT pla20emi, pla20ced FROM PLA20ARC WHERE pla20emi IN ({missingEmailListStr})";
+                        using (var reader = await command.ExecuteReaderAsync())
+                        {
+                            while (reader.Read())
+                            {
+                                cedulasDict[reader.GetString(0)] = reader.GetString(1);
+                            }
+                        }
+                    }
+                }
+            }
+
             foreach (var rec in records)
             {
                 string email = rec.email ?? "";
-                string cedula = "";
+                string cedula = "No está dentro del registro";
 
-                if (!string.IsNullOrEmpty(email) && users.TryGetValue(email, out var user))
+                if (!string.IsNullOrEmpty(email) && cedulasDict.TryGetValue(email, out var foundCedula))
                 {
-                    cedula = user.Cedula ?? "";
+                    cedula = foundCedula;
                 }
 
                 result.Add(new
@@ -152,48 +188,97 @@ namespace Backend.Services
             if (file == null || file.Length == 0)
                 throw new ArgumentException("File is empty or not provided.");
 
-            if (string.IsNullOrWhiteSpace(courseCode) || string.IsNullOrWhiteSpace(certificationName))
-                throw new ArgumentException("Course code and Certification name must be provided for intelligent filtering.");
+            // Directly parsing the file avoiding the N+1 query validation again,
+            // as this is specifically the DB persistence step and we can validate on-the-fly.
+            var records = new List<dynamic>();
+            var extension = Path.GetExtension(file.FileName).ToLower();
 
-            var parsedObjects = await ParseFileForPreviewAsync(file);
-
-            // Cast dynamic objects to a common dictionary shape
-            var parsedDicts = parsedObjects.Select(o => {
-                var props = o.GetType().GetProperties();
-                var dict = new Dictionary<string, string>();
-                foreach (var p in props)
+            if (extension == ".csv")
+            {
+                using var stream = file.OpenReadStream();
+                using var reader = new StreamReader(stream);
+                using var csv = new CsvReader(reader, new CsvConfiguration(CultureInfo.InvariantCulture) { HasHeaderRecord = true, MissingFieldFound = null, HeaderValidated = null });
+                var csvRecords = csv.GetRecords<dynamic>().ToList();
+                foreach (IDictionary<string, object> rec in csvRecords) records.Add(MapRecord(rec));
+            }
+            else if (extension == ".xlsx")
+            {
+                using var stream = file.OpenReadStream();
+                using var workbook = new XLWorkbook(stream);
+                var worksheet = workbook.Worksheet(1);
+                var rows = worksheet.RangeUsed().RowsUsed();
+                var headerRow = rows.First();
+                var headers = headerRow.Cells().Select(c => c.Value.ToString().ToLower().Trim()).ToList();
+                foreach (var row in rows.Skip(1))
                 {
-                    dict[p.Name] = p.GetValue(o)?.ToString() ?? "";
+                    var dict = new Dictionary<string, object>();
+                    int colIdx = 1;
+                    foreach (var header in headers)
+                    {
+                        dict[header] = row.Cell(colIdx).Value.ToString();
+                        colIdx++;
+                    }
+                    records.Add(MapRecord(dict));
                 }
-                return dict;
-            }).ToList();
+            }
 
-            // Intelligent Filtering based on user selection
-            var filteredRecords = parsedDicts
-                .Where(r => r.ContainsKey("certification_name") && !string.IsNullOrEmpty(r["certification_name"]) &&
-                            r["certification_name"].Contains(certificationName, StringComparison.OrdinalIgnoreCase))
-                .ToList();
+            var emails = new List<string>();
+            foreach (var rec in records)
+            {
+                string email = rec.email ?? "";
+                if (!string.IsNullOrEmpty(email)) emails.Add(email);
+            }
+
+            var emailListStr = string.Join(",", emails.Select(e => $"'{e.Replace("'", "''")}'"));
+            var cedulasDict = new Dictionary<string, string>();
+
+            if (emails.Any())
+            {
+                using (var command = _dbContext.Database.GetDbConnection().CreateCommand())
+                {
+                    command.CommandText = $"SELECT m12emi, M12CAR FROM M12ARC WHERE m12emi IN ({emailListStr})";
+                    _dbContext.Database.OpenConnection();
+                    using (var reader = await command.ExecuteReaderAsync())
+                    {
+                        while (reader.Read()) cedulasDict[reader.GetString(0)] = reader.GetString(1);
+                    }
+                }
+
+                var missingEmails = emails.Where(e => !cedulasDict.ContainsKey(e)).ToList();
+                if (missingEmails.Any())
+                {
+                    var missingEmailListStr = string.Join(",", missingEmails.Select(e => $"'{e.Replace("'", "''")}'"));
+                    using (var command = _dbContext.Database.GetDbConnection().CreateCommand())
+                    {
+                        command.CommandText = $"SELECT pla20emi, pla20ced FROM PLA20ARC WHERE pla20emi IN ({missingEmailListStr})";
+                        using (var reader = await command.ExecuteReaderAsync())
+                        {
+                            while (reader.Read()) cedulasDict[reader.GetString(0)] = reader.GetString(1);
+                        }
+                    }
+                }
+            }
 
             var uploadHistory = new UploadHistory
             {
                 UploadedBy = uploadedBy,
                 CourseCode = courseCode,
-                ProcessedRecordsCount = filteredRecords.Count, // will be updated if upsert drops count, but we are saving to history the parsed items
+                ProcessedRecordsCount = records.Count, // will be updated if upsert drops count
                 UploadDate = DateTime.UtcNow
             };
 
-            foreach (var rec in filteredRecords)
+            foreach (var rec in records)
             {
                 // Normalization: trim spaces and handle casing
-                var normalizedEmail = rec.ContainsKey("email") ? rec["email"].Trim().ToLowerInvariant() : "";
-                var normalizedFirstName = rec.ContainsKey("first_name") ? rec["first_name"].Trim() : "";
-                var normalizedLastName = rec.ContainsKey("last_name") ? rec["last_name"].Trim() : "";
-                var normalizedCertName = rec.ContainsKey("certification_name") ? rec["certification_name"].Trim() : "";
-                var status = rec.ContainsKey("status") ? rec["status"].Trim() : "";
-                var cedula = rec.ContainsKey("cedula") ? rec["cedula"].Trim() : "";
+                var normalizedEmail = (rec.email ?? "").Trim().ToLowerInvariant();
+                var normalizedFirstName = (rec.first_name ?? "").Trim();
+                var normalizedLastName = (rec.last_name ?? "").Trim();
+                var normalizedCertName = (rec.certification_name ?? "").Trim();
+                var status = (rec.status ?? "").Trim();
+                var cedula = cedulasDict.ContainsKey(rec.email ?? "") ? cedulasDict[rec.email ?? ""] : "";
 
                 // Parse the grade
-                string rawGrade = rec.ContainsKey("percentage") ? rec["percentage"].Trim() : "";
+                string rawGrade = (rec.percentage ?? "").Trim();
                 decimal? finalGrade = null;
 
                 if (decimal.TryParse(rawGrade, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out decimal parsedGrade))
@@ -204,14 +289,10 @@ namespace Backend.Services
                 // Only save the record if the user's Cedula was found
                 if (!string.IsNullOrEmpty(cedula))
                 {
-                    // Upsert logic inside the current UploadHistory (to avoid duplicates in the same batch)
-                    // Real DB upsert against existing records would require querying the DB.
-                    // For this demo, we ensure no duplicates within the same UploadHistory.
                     var existingRecord = uploadHistory.Records.FirstOrDefault(r => r.Email == normalizedEmail && r.CertificationName == normalizedCertName);
 
                     if (existingRecord != null)
                     {
-                        // Update existing
                         existingRecord.Grade = finalGrade;
                         existingRecord.FirstName = normalizedFirstName;
                         existingRecord.LastName = normalizedLastName;

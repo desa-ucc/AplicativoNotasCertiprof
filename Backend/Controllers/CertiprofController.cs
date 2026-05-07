@@ -35,14 +35,14 @@ namespace Backend.Controllers
         }
 
         [HttpPost("process-report")]
-        public async Task<IActionResult> ProcessReport(IFormFile file, [FromForm] string courseCode, [FromForm] string certificationName)
+        public async Task<IActionResult> ProcessReport(IFormFile file)
         {
             try
             {
                 // Retrieve user from token
                 var uploadedBy = User.Identity?.Name ?? "Unknown_User";
 
-                var uploadId = await _fileProcessingService.ProcessReportAsync(file, uploadedBy, courseCode, certificationName);
+                var uploadId = await _fileProcessingService.ProcessReportAsync(file, uploadedBy, string.Empty, string.Empty);
 
                 return Ok(new { UploadId = uploadId });
             }

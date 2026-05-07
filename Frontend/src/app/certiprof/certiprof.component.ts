@@ -18,8 +18,6 @@ export class CertiprofComponent {
   isDragging = false;
   isProcessing = false;
 
-  courseCode: string = '';
-  certificationName: string = '';
   uploadId: number | null = null;
 
   // Charts config
@@ -114,17 +112,15 @@ export class CertiprofComponent {
   }
 
   hasValidRecords(): boolean {
-    return this.previewData.length > 0 && this.previewData.some(row => !!row.cedula);
+    return this.previewData.length > 0 && this.previewData.some(row => !!row.cedula && row.cedula !== 'No está dentro del registro');
   }
 
   processFile() {
-    if (!this.selectedFile || !this.courseCode || !this.certificationName || !this.hasValidRecords()) return;
+    if (!this.selectedFile || !this.hasValidRecords()) return;
 
     this.isProcessing = true;
     const formData = new FormData();
     formData.append('file', this.selectedFile);
-    formData.append('courseCode', this.courseCode);
-    formData.append('certificationName', this.certificationName);
 
     // Call backend API
     this.http.post<any>('/api/certiprof/process-report', formData)
@@ -152,7 +148,7 @@ export class CertiprofComponent {
           const url = window.URL.createObjectURL(response);
           const a = document.createElement('a');
           a.href = url;
-          a.download = `Acta_Auxiliar_${this.courseCode}.xlsx`;
+          a.download = `Acta_Auxiliar.xlsx`;
           a.click();
           window.URL.revokeObjectURL(url);
 
@@ -160,8 +156,6 @@ export class CertiprofComponent {
           this.selectedFile = null;
           this.previewData = [];
           this.uploadId = null;
-          this.courseCode = '';
-          this.certificationName = '';
         },
         error: (err) => {
           console.error('Error generating act:', err);

@@ -25,18 +25,6 @@
   </div>
 
   <div *ngIf="selectedFile" class="mt-8 space-y-4">
-    <div class="bg-gray-50 p-4 rounded-lg border border-gray-200 flex flex-col sm:flex-row sm:items-end justify-between gap-4">
-      <div class="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <div>
-          <label for="courseCode" class="block text-sm font-medium text-gray-700">Código del Curso (AVATAR)</label>
-          <input type="text" id="courseCode" [(ngModel)]="courseCode" placeholder="Ej. CE0501" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 border">
-        </div>
-        <div>
-          <label for="certificationName" class="block text-sm font-medium text-gray-700">Nombre de la Certificación (Archivo)</label>
-          <input type="text" id="certificationName" [(ngModel)]="certificationName" placeholder="Ej. Generative AI" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 border">
-        </div>
-      </div>
-    </div>
     <div class="flex items-center justify-between bg-gray-50 p-4 rounded-lg border border-gray-200">
       <div>
         <p class="text-sm font-medium text-gray-900">Archivo seleccionado:</p>
@@ -46,11 +34,11 @@
         <button
           *ngIf="!uploadId"
           (click)="processFile()"
-          [disabled]="isProcessing || !courseCode || !certificationName || !hasValidRecords()"
+          [disabled]="isProcessing || !hasValidRecords()"
           class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:bg-blue-300"
         >
           <span *ngIf="isProcessing">Procesando...</span>
-          <span *ngIf="!isProcessing">Procesar Archivo</span>
+          <span *ngIf="!isProcessing">Carga de Datos</span>
         </button>
         <button
           *ngIf="uploadId"
@@ -92,13 +80,14 @@
             <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Certificación</th>
             <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Porcentaje</th>
             <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Estado</th>
+            <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Fecha Creado</th>
           </tr>
         </thead>
         <tbody class="divide-y divide-gray-200 bg-white">
           <tr *ngFor="let row of previewData | slice:0:10">
             <td class="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6">
-              <span *ngIf="row.cedula">{{ row.cedula }}</span>
-              <span *ngIf="!row.cedula" class="text-red-500">No encontrada</span>
+              <span *ngIf="row.cedula && row.cedula !== 'No está dentro del registro'">{{ row.cedula }}</span>
+              <span *ngIf="!row.cedula || row.cedula === 'No está dentro del registro'" class="text-red-500">No está dentro del registro</span>
             </td>
             <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{{ row.email }}</td>
             <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{{ row.first_name }}</td>
@@ -108,6 +97,7 @@
               {{ parseGrade(row.percentage) }}
             </td>
             <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{{ row.status }}</td>
+            <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{{ row.created_at }}</td>
           </tr>
         </tbody>
       </table>

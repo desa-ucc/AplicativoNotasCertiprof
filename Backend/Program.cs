@@ -71,42 +71,4 @@ app.UseAuthorization();
 
 app.MapControllers();
 
-// Apply migrations automatically on startup for development purposes
-using (var scope = app.Services.CreateScope())
-{
-    var services = scope.ServiceProvider;
-    try
-    {
-        var context = services.GetRequiredService<AppDbContext>();
-        context.Database.EnsureCreated(); // Use EnsureCreated for simplicity, or Migrate() if using migrations
-
-        // Seed default Admin user
-        if (!context.Users.Any())
-        {
-            var authService = services.GetRequiredService<IAuthService>();
-            context.Users.Add(new Backend.Models.User
-            {
-                Username = "admin",
-                PasswordHash = authService.HashPassword("admin123"),
-                Role = "Admin"
-            });
-            // Seed a default Docente for testing
-            context.Users.Add(new Backend.Models.User
-            {
-                Username = "docente",
-                PasswordHash = authService.HashPassword("docente123"),
-                Role = "Docente"
-            });
-            context.SaveChanges();
-        }
-    }
-    catch (Exception ex)
-    {
-        // Log error
-        var logger = services.GetRequiredService<ILogger<Program>>();
-        logger.LogError(ex, "An error occurred creating the DB and seeding data.");
-    }
-}
-
-
 app.Run();
