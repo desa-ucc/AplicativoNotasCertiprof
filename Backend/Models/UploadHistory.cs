@@ -2,8 +2,11 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 
+using System.ComponentModel.DataAnnotations.Schema;
+
 namespace Backend.Models
 {
+    [Table("cert_historial_cargas")]
     public class UploadHistory
     {
         [Key]

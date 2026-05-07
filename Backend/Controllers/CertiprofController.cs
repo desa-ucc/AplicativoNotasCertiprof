@@ -20,15 +20,36 @@ namespace Backend.Controllers
             _fileProcessingService = fileProcessingService;
         }
 
+        [HttpPost("validate-emails")]
+        public async Task<IActionResult> ValidateEmails([FromBody] List<string> emails)
+        {
+            try
+            {
+                var result = await _fileProcessingService.ValidateEmailsAsync(emails);
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { Message = ex.Message });
+            }
+        }
+
         [HttpPost("process-report")]
-        public async Task<IActionResult> ProcessReport(IFormFile file, [FromForm] string courseCode, [FromForm] string certificationName)
+        public async Task<IActionResult> ProcessReport(IFormFile file, [FromForm] string courseCode, [FromForm] string certificationName, [FromForm] string emailMapJson)
         {
             try
             {
                 // Retrieve user from token
                 var uploadedBy = User.Identity?.Name ?? "Unknown_User";
 
-                var uploadId = await _fileProcessingService.ProcessReportAsync(file, uploadedBy, courseCode, certificationName);
+                var emailToCedulaMap = new System.Collections.Generic.Dictionary<string, string>();
+                if (!string.IsNullOrWhiteSpace(emailMapJson))
+                {
+                    emailToCedulaMap = System.Text.Json.JsonSerializer.Deserialize<System.Collections.Generic.Dictionary<string, string>>(emailMapJson)
+                        ?? new System.Collections.Generic.Dictionary<string, string>();
+                }
+
+                var uploadId = await _fileProcessingService.ProcessReportAsync(file, uploadedBy, courseCode, certificationName, emailToCedulaMap);
 
                 return Ok(new { UploadId = uploadId });
             }

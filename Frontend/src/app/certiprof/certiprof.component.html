@@ -46,11 +46,12 @@
         <button
           *ngIf="!uploadId"
           (click)="processFile()"
-          [disabled]="isProcessing || !courseCode || !certificationName"
+          [disabled]="isProcessing || isValidating || !isValidated || !courseCode || !certificationName"
           class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:bg-blue-300"
         >
-          <span *ngIf="isProcessing">Procesando...</span>
-          <span *ngIf="!isProcessing">Procesar Archivo</span>
+          <span *ngIf="isValidating">Validando Correos...</span>
+          <span *ngIf="isProcessing && !isValidating">Procesando...</span>
+          <span *ngIf="!isProcessing && !isValidating">Procesar Archivo</span>
         </button>
         <button
           *ngIf="uploadId"
@@ -86,20 +87,27 @@
         <thead class="bg-gray-50">
           <tr>
             <th scope="col" class="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-6">Email</th>
+            <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Cédula</th>
             <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Nombres</th>
             <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Apellidos</th>
             <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Certificación</th>
-            <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Notas</th>
+            <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Porcentaje</th>
           </tr>
         </thead>
         <tbody class="divide-y divide-gray-200 bg-white">
           <tr *ngFor="let row of previewData | slice:0:10">
-            <td class="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6">{{ row.email || row.Email }}</td>
+            <td class="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6">
+              {{ row.email || row.Email }}
+              <span *ngIf="!emailToCedulaMap[row.email || row.Email] && isValidated !== undefined" class="text-xs text-red-500 ml-2">(No Encontrado)</span>
+            </td>
+            <td class="whitespace-nowrap px-3 py-4 text-sm font-medium text-blue-600">
+              {{ emailToCedulaMap[row.email || row.Email] || 'Buscando...' }}
+            </td>
             <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{{ row.first_name || row['First Name'] }}</td>
             <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{{ row.last_name || row['Last Name'] }}</td>
             <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500 truncate max-w-xs">{{ row.certification_name || row['Certification Name'] }}</td>
             <td class="whitespace-nowrap px-3 py-4 text-sm font-bold text-gray-900">
-              {{ parseGrade(row.notas || row.Notas || row.Grade) }}
+              {{ parseGrade(row.percentage || row.Percentage || row.notas || row.Notas || row.Grade) }}
             </td>
           </tr>
         </tbody>

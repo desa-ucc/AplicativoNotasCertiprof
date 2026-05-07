@@ -22,6 +22,10 @@ export class CertiprofComponent {
   certificationName: string = '';
   uploadId: number | null = null;
 
+  isValidated = false;
+  isValidating = false;
+  emailToCedulaMap: { [key: string]: string } = {};
+
   // Charts config
   chartData: any[] = [];
   view: [number, number] = [700, 400];
@@ -66,6 +70,8 @@ export class CertiprofComponent {
 
   handleFile(file: File) {
     this.selectedFile = file;
+    this.isValidated = false;
+    this.emailToCedulaMap = {};
 
     // Parse for preview
     Papa.parse(file, {
@@ -74,8 +80,42 @@ export class CertiprofComponent {
       complete: (results) => {
         this.previewData = results.data;
         this.generateChartData(this.previewData);
+        this.validateEmails(this.previewData);
       }
     });
+  }
+
+  validateEmails(data: any[]) {
+    const emails = data.map(row => row.email || row.Email).filter(e => !!e);
+    if (emails.length === 0) {
+      alert('No se encontraron correos en el archivo.');
+      return;
+    }
+
+    this.isValidating = true;
+    this.http.post<{ [key: string]: string }>('http://localhost:5000/api/certiprof/validate-emails', emails)
+      .subscribe({
+        next: (res) => {
+          this.isValidating = false;
+          this.emailToCedulaMap = res;
+
+          // Check if all extracted emails have a matched cedula
+          const allFound = emails.every(email => !!this.emailToCedulaMap[email]);
+
+          if (allFound) {
+            this.isValidated = true;
+          } else {
+            this.isValidated = false;
+            alert('Algunos correos no se encontraron en la base de datos institucional. Por favor, verifique.');
+          }
+        },
+        error: (err) => {
+          this.isValidating = false;
+          this.isValidated = false;
+          console.error('Error validating emails:', err);
+          alert('Error al validar los correos con la base de datos.');
+        }
+      });
   }
 
   generateChartData(data: any[]) {
@@ -84,7 +124,7 @@ export class CertiprofComponent {
 
     data.forEach(row => {
       // Assuming a grade logic, adjust as per real Certiprof data structure
-      const gradeStr = row.notas || row.Notas || row.Grade || '0';
+      const gradeStr = row.percentage || row.Percentage || row.notas || row.Notas || row.Grade || '0';
       const grade = parseFloat(gradeStr);
       if (!isNaN(grade) && grade >= 60) {
         passCount++;
@@ -113,6 +153,8 @@ export class CertiprofComponent {
     formData.append('file', this.selectedFile);
     formData.append('courseCode', this.courseCode);
     formData.append('certificationName', this.certificationName);
+
+    formData.append('emailMapJson', JSON.stringify(this.emailToCedulaMap));
 
     // Call backend API
     this.http.post<any>('http://localhost:5000/api/certiprof/process-report', formData)
