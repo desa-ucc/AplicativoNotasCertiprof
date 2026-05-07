@@ -20,7 +20,7 @@ services:
     ports:
       - "5000:8080"
     environment:
-      - ConnectionStrings__DefaultConnection=Server=db,1433;Database=AvatarDB;User Id=sa;Password=${DB_PASSWORD:-Your_password123};TrustServerCertificate=True
+      - ConnectionStrings__DefaultConnection=Server=172.29.99.8;Database=CERTIFICACIONES_BD;User Id=fsalazarmo;Password=3i5q32sNpf8B;TrustServerCertificate=True;MultipleActiveResultSets=true
       - ASPNETCORE_ENVIRONMENT=Development
       - JWT_SECRET_KEY=${JWT_SECRET_KEY:-ThisIsASecureFallbackKeyForDevelopmentOnly123456789!}
     depends_on:
