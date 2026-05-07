@@ -17,11 +17,11 @@
     <div class="flex text-sm text-gray-600 justify-center">
       <label for="file-upload" class="relative cursor-pointer bg-white rounded-md font-medium text-blue-600 hover:text-blue-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-blue-500">
         <span>Sube un archivo</span>
-        <input id="file-upload" name="file-upload" type="file" class="sr-only" accept=".csv" (change)="onFileSelected($event)">
+        <input id="file-upload" name="file-upload" type="file" class="sr-only" accept=".xlsx" (change)="onFileSelected($event)">
       </label>
       <p class="pl-1">o arrastra y suelta aquí</p>
     </div>
-    <p class="text-xs text-gray-500 mt-2">CSV o Excel (.csv recomendado)</p>
+    <p class="text-xs text-gray-500 mt-2">Excel (.xlsx recomendado)</p>
   </div>
 
   <div *ngIf="selectedFile" class="mt-8 space-y-4">

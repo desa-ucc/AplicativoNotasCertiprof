@@ -72,17 +72,23 @@ export class CertiprofComponent {
     this.selectedFile = file;
     this.isValidated = false;
     this.emailToCedulaMap = {};
+    this.previewData = [];
 
-    // Parse for preview
-    Papa.parse(file, {
-      header: true,
-      skipEmptyLines: true,
-      complete: (results) => {
-        this.previewData = results.data;
-        this.generateChartData(this.previewData);
-        this.validateEmails(this.previewData);
-      }
-    });
+    const formData = new FormData();
+    formData.append('file', file);
+
+    this.http.post<any[]>('http://localhost:5000/api/certiprof/parse-excel', formData)
+      .subscribe({
+        next: (data) => {
+          this.previewData = data;
+          this.generateChartData(this.previewData);
+          this.validateEmails(this.previewData);
+        },
+        error: (err) => {
+          console.error('Error parsing excel:', err);
+          alert('Error al leer el archivo Excel.');
+        }
+      });
   }
 
   validateEmails(data: any[]) {

@@ -20,6 +20,21 @@ namespace Backend.Controllers
             _fileProcessingService = fileProcessingService;
         }
 
+        [HttpPost("parse-excel")]
+        [AllowAnonymous] // Assuming parsing is allowed before saving
+        public async Task<IActionResult> ParseExcel(IFormFile file)
+        {
+            try
+            {
+                var result = await _fileProcessingService.ParseExcelAsync(file);
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { Message = ex.Message });
+            }
+        }
+
         [HttpPost("validate-emails")]
         public async Task<IActionResult> ValidateEmails([FromBody] List<string> emails)
         {

@@ -81,6 +81,42 @@ namespace Backend.Services
             return result;
         }
 
+        public Task<List<CertiprofCsvRecord>> ParseExcelAsync(IFormFile file)
+        {
+            if (file == null || file.Length == 0)
+                throw new ArgumentException("File is empty or not provided.");
+
+            var records = new List<CertiprofCsvRecord>();
+
+            using (var stream = file.OpenReadStream())
+            using (var workbook = new XLWorkbook(stream))
+            {
+                var worksheet = workbook.Worksheet(1);
+                var rows = worksheet.RangeUsed().RowsUsed().Skip(1); // Skip header
+
+                // Find column indices by header name
+                var headerRow = worksheet.FirstRowUsed();
+                var headers = headerRow.Cells().ToDictionary(c => c.Value.ToString().Trim().ToLowerInvariant(), c => c.Address.ColumnNumber);
+
+                foreach (var row in rows)
+                {
+                    var record = new CertiprofCsvRecord();
+
+                    if (headers.TryGetValue("status", out int statusCol)) record.status = row.Cell(statusCol).Value.ToString();
+                    if (headers.TryGetValue("percentage", out int percentageCol)) record.percentage = row.Cell(percentageCol).Value.ToString();
+                    if (headers.TryGetValue("first_name", out int fNameCol)) record.first_name = row.Cell(fNameCol).Value.ToString();
+                    if (headers.TryGetValue("last_name", out int lNameCol)) record.last_name = row.Cell(lNameCol).Value.ToString();
+                    if (headers.TryGetValue("email", out int emailCol)) record.email = row.Cell(emailCol).Value.ToString();
+                    if (headers.TryGetValue("certification_name", out int certCol)) record.certification_name = row.Cell(certCol).Value.ToString();
+                    if (headers.TryGetValue("created_at", out int createdCol)) record.created_at = row.Cell(createdCol).Value.ToString();
+
+                    records.Add(record);
+                }
+            }
+
+            return Task.FromResult(records);
+        }
+
         public async Task<int> ProcessReportAsync(IFormFile file, string uploadedBy, string courseCode, string certificationName, Dictionary<string, string> emailToCedulaMap)
         {
             if (file == null || file.Length == 0)
@@ -89,15 +125,9 @@ namespace Backend.Services
             if (string.IsNullOrWhiteSpace(courseCode) || string.IsNullOrWhiteSpace(certificationName))
                 throw new ArgumentException("Course code and Certification name must be provided for intelligent filtering.");
 
-            var records = new List<CertiprofCsvRecord>();
+            var caseInsensitiveEmailMap = new Dictionary<string, string>(emailToCedulaMap ?? new Dictionary<string, string>(), StringComparer.OrdinalIgnoreCase);
 
-            // Parse CSV
-            using (var stream = file.OpenReadStream())
-            using (var reader = new StreamReader(stream))
-            using (var csv = new CsvReader(reader, new CsvConfiguration(CultureInfo.InvariantCulture) { HasHeaderRecord = true, MissingFieldFound = null, HeaderValidated = null }))
-            {
-                records = csv.GetRecords<CertiprofCsvRecord>().ToList();
-            }
+            var records = await ParseExcelAsync(file);
 
             // Intelligent Filtering based on user selection
             var filteredRecords = records
@@ -139,7 +169,7 @@ namespace Backend.Services
                     createdAt = parsedDate;
                 }
 
-                emailToCedulaMap.TryGetValue(normalizedEmail, out var cedula);
+                caseInsensitiveEmailMap.TryGetValue(normalizedEmail, out var cedula);
 
                 // Upsert logic inside the current UploadHistory (to avoid duplicates in the same batch)
                 // Real DB upsert against existing records would require querying the DB.
