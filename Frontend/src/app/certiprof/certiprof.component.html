@@ -17,11 +17,11 @@
     <div class="flex text-sm text-gray-600 justify-center">
       <label for="file-upload" class="relative cursor-pointer bg-white rounded-md font-medium text-blue-600 hover:text-blue-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-blue-500">
         <span>Sube un archivo</span>
-        <input id="file-upload" name="file-upload" type="file" class="sr-only" accept=".csv" (change)="onFileSelected($event)">
+        <input id="file-upload" name="file-upload" type="file" class="sr-only" accept=".csv,.xlsx" (change)="onFileSelected($event)">
       </label>
       <p class="pl-1">o arrastra y suelta aquí</p>
     </div>
-    <p class="text-xs text-gray-500 mt-2">CSV o Excel (.csv recomendado)</p>
+    <p class="text-xs text-gray-500 mt-2">CSV o Excel (.csv o .xlsx)</p>
   </div>
 
   <div *ngIf="selectedFile" class="mt-8 space-y-4">
@@ -46,7 +46,7 @@
         <button
           *ngIf="!uploadId"
           (click)="processFile()"
-          [disabled]="isProcessing || !courseCode || !certificationName"
+          [disabled]="isProcessing || !courseCode || !certificationName || previewData.length === 0 || !previewData[0].cedula"
           class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:bg-blue-300"
         >
           <span *ngIf="isProcessing">Procesando...</span>
@@ -85,22 +85,29 @@
       <table class="min-w-full divide-y divide-gray-300">
         <thead class="bg-gray-50">
           <tr>
-            <th scope="col" class="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-6">Email</th>
+            <th scope="col" class="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-6">Cédula</th>
+            <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Email</th>
             <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Nombres</th>
             <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Apellidos</th>
             <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Certificación</th>
-            <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Notas</th>
+            <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Porcentaje</th>
+            <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Estado</th>
           </tr>
         </thead>
         <tbody class="divide-y divide-gray-200 bg-white">
           <tr *ngFor="let row of previewData | slice:0:10">
-            <td class="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6">{{ row.email || row.Email }}</td>
-            <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{{ row.first_name || row['First Name'] }}</td>
-            <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{{ row.last_name || row['Last Name'] }}</td>
-            <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500 truncate max-w-xs">{{ row.certification_name || row['Certification Name'] }}</td>
-            <td class="whitespace-nowrap px-3 py-4 text-sm font-bold text-gray-900">
-              {{ parseGrade(row.notas || row.Notas || row.Grade) }}
+            <td class="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6">
+              <span *ngIf="row.cedula">{{ row.cedula }}</span>
+              <span *ngIf="!row.cedula" class="text-red-500">No encontrada</span>
             </td>
+            <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{{ row.email }}</td>
+            <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{{ row.first_name }}</td>
+            <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{{ row.last_name }}</td>
+            <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500 truncate max-w-xs">{{ row.certification_name }}</td>
+            <td class="whitespace-nowrap px-3 py-4 text-sm font-bold text-gray-900">
+              {{ parseGrade(row.percentage) }}
+            </td>
+            <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{{ row.status }}</td>
           </tr>
         </tbody>
       </table>

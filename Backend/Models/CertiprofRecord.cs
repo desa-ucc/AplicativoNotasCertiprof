@@ -18,6 +18,10 @@ namespace Backend.Models
 
         public decimal? Grade { get; set; } // Represented as string in CSV, parsed to decimal
 
+        public string? Percentage { get; set; }
+        public string? Status { get; set; }
+        public string? Cedula { get; set; }
+
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
         // Foreign key to upload history

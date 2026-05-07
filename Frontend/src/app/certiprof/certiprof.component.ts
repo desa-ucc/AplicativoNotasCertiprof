@@ -66,16 +66,24 @@ export class CertiprofComponent {
 
   handleFile(file: File) {
     this.selectedFile = file;
+    this.previewData = [];
+    this.chartData = [];
 
-    // Parse for preview
-    Papa.parse(file, {
-      header: true,
-      skipEmptyLines: true,
-      complete: (results) => {
-        this.previewData = results.data;
-        this.generateChartData(this.previewData);
-      }
-    });
+    // Parse for preview via backend
+    const formData = new FormData();
+    formData.append('file', file);
+
+    this.http.post<any[]>('http://localhost:5000/api/certiprof/parse-excel', formData)
+      .subscribe({
+        next: (results) => {
+          this.previewData = results;
+          this.generateChartData(this.previewData);
+        },
+        error: (err) => {
+          console.error('Error parsing file via backend:', err);
+          alert('Error al leer el archivo. Asegúrese de que el formato sea correcto.');
+        }
+      });
   }
 
   generateChartData(data: any[]) {
@@ -83,8 +91,8 @@ export class CertiprofComponent {
     let failCount = 0;
 
     data.forEach(row => {
-      // Assuming a grade logic, adjust as per real Certiprof data structure
-      const gradeStr = row.notas || row.Notas || row.Grade || '0';
+      // Adjusted based on actual return from parse-excel
+      const gradeStr = row.percentage || '0';
       const grade = parseFloat(gradeStr);
       if (!isNaN(grade) && grade >= 60) {
         passCount++;
@@ -106,7 +114,11 @@ export class CertiprofComponent {
   }
 
   processFile() {
-    if (!this.selectedFile || !this.courseCode || !this.certificationName) return;
+    // Disabled while previewData has no elements or misses Cedula? Wait, Cedula might be added during processing or parsing.
+    // The instruction says: "El botón de "Guardar" debe permanecer deshabilitado hasta que el flujo de validación obtenga la Cédula desde la base de datos institucional."
+    // So the previewData must have elements, and at least one element should have Cedula if validation was successful. Or just checking if previewData is loaded.
+    const hasCedula = this.previewData.length > 0 && this.previewData.some(row => !!row.cedula);
+    if (!this.selectedFile || !this.courseCode || !this.certificationName || !hasCedula) return;
 
     this.isProcessing = true;
     const formData = new FormData();
