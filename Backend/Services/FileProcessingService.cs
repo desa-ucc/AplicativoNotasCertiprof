@@ -94,7 +94,7 @@ namespace Backend.Services
                 }
             }
 
-            var cedulasDict = new Dictionary<string, string>();
+            var cedulasDict = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
 
             if (emails.Any())
             {
@@ -268,7 +268,7 @@ namespace Backend.Services
                 if (!string.IsNullOrEmpty(email)) emails.Add(email);
             }
 
-            var cedulasDict = new Dictionary<string, string>();
+            var cedulasDict = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
 
             if (emails.Any())
             {
@@ -372,6 +372,16 @@ namespace Backend.Services
                 }
                 else
                 {
+                    // Parse the created_at directly from the record map instead of defaulting to UtcNow
+                    DateTime? parsedCreatedAt = null;
+                    if (rec.created_at != null)
+                    {
+                        if (DateTime.TryParse(rec.created_at.ToString(), out DateTime ca))
+                        {
+                            parsedCreatedAt = ca;
+                        }
+                    }
+
                     uploadHistory.Records.Add(new CertiprofRecord
                     {
                         Email = normalizedEmail,
@@ -381,7 +391,8 @@ namespace Backend.Services
                         Grade = finalGrade,
                         Percentage = rawGrade,
                         Status = status,
-                        Cedula = cedula
+                        Cedula = cedula,
+                        CreatedAt = parsedCreatedAt ?? DateTime.UtcNow
                     });
                 }
             }
