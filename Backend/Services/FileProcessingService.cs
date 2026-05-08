@@ -98,12 +98,62 @@ namespace Backend.Services
 
             if (emails.Any())
             {
-                var users = await _dbContext.Users.Where(u => u.Email != null && emails.Contains(u.Email)).ToListAsync();
-                foreach (var u in users)
+                var parameters = new List<string>();
+                using (var command = _dbContext.Database.GetDbConnection().CreateCommand())
                 {
-                    if (!string.IsNullOrEmpty(u.Email) && !string.IsNullOrEmpty(u.Cedula))
+                    for (int i = 0; i < emails.Count; i++)
                     {
-                        cedulasDict[u.Email] = u.Cedula;
+                        var p = command.CreateParameter();
+                        p.ParameterName = $"@p{i}";
+                        p.Value = emails[i];
+                        command.Parameters.Add(p);
+                        parameters.Add($"@p{i}");
+                    }
+
+                    var emailListStr = string.Join(",", parameters);
+                    command.CommandText = $"SELECT m12emi, M12CAR FROM M12ARC WHERE m12emi IN ({emailListStr})";
+
+                    _dbContext.Database.OpenConnection();
+                    using (var reader = await command.ExecuteReaderAsync())
+                    {
+                        while (reader.Read())
+                        {
+                            if (!reader.IsDBNull(0) && !reader.IsDBNull(1))
+                            {
+                                cedulasDict[reader.GetString(0)] = reader.GetString(1);
+                            }
+                        }
+                    }
+                }
+
+                var missingEmails = emails.Where(e => !cedulasDict.ContainsKey(e)).ToList();
+                if (missingEmails.Any())
+                {
+                    var missingParameters = new List<string>();
+                    using (var command = _dbContext.Database.GetDbConnection().CreateCommand())
+                    {
+                        for (int i = 0; i < missingEmails.Count; i++)
+                        {
+                            var p = command.CreateParameter();
+                            p.ParameterName = $"@mp{i}";
+                            p.Value = missingEmails[i];
+                            command.Parameters.Add(p);
+                            missingParameters.Add($"@mp{i}");
+                        }
+
+                        var missingEmailListStr = string.Join(",", missingParameters);
+                        command.CommandText = $"SELECT pla20emi, pla20ced FROM PLA20ARC WHERE pla20emi IN ({missingEmailListStr})";
+
+                        using (var reader = await command.ExecuteReaderAsync())
+                        {
+                            while (reader.Read())
+                            {
+                                if (!reader.IsDBNull(0) && !reader.IsDBNull(1))
+                                {
+                                    cedulasDict[reader.GetString(0)] = reader.GetString(1);
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -222,12 +272,66 @@ namespace Backend.Services
 
             if (emails.Any())
             {
-                var users = await _dbContext.Users.Where(u => u.Email != null && emails.Contains(u.Email)).ToListAsync();
-                foreach (var u in users)
+                var parameters = new List<string>();
+                using (var command = _dbContext.Database.GetDbConnection().CreateCommand())
                 {
-                    if (!string.IsNullOrEmpty(u.Email) && !string.IsNullOrEmpty(u.Cedula))
+                    for (int i = 0; i < emails.Count; i++)
                     {
-                        cedulasDict[u.Email] = u.Cedula;
+                        var p = command.CreateParameter();
+                        p.ParameterName = $"@p{i}";
+                        p.Value = emails[i];
+                        command.Parameters.Add(p);
+                        parameters.Add($"@p{i}");
+                    }
+
+                    var emailListStr = string.Join(",", parameters);
+                    command.CommandText = $"SELECT m12emi, M12CAR FROM M12ARC WHERE m12emi IN ({emailListStr})";
+
+                    if (_dbContext.Database.GetDbConnection().State != System.Data.ConnectionState.Open)
+                    {
+                        _dbContext.Database.OpenConnection();
+                    }
+
+                    using (var reader = await command.ExecuteReaderAsync())
+                    {
+                        while (reader.Read())
+                        {
+                            if (!reader.IsDBNull(0) && !reader.IsDBNull(1))
+                            {
+                                cedulasDict[reader.GetString(0)] = reader.GetString(1);
+                            }
+                        }
+                    }
+                }
+
+                var missingEmails = emails.Where(e => !cedulasDict.ContainsKey(e)).ToList();
+                if (missingEmails.Any())
+                {
+                    var missingParameters = new List<string>();
+                    using (var command = _dbContext.Database.GetDbConnection().CreateCommand())
+                    {
+                        for (int i = 0; i < missingEmails.Count; i++)
+                        {
+                            var p = command.CreateParameter();
+                            p.ParameterName = $"@mp{i}";
+                            p.Value = missingEmails[i];
+                            command.Parameters.Add(p);
+                            missingParameters.Add($"@mp{i}");
+                        }
+
+                        var missingEmailListStr = string.Join(",", missingParameters);
+                        command.CommandText = $"SELECT pla20emi, pla20ced FROM PLA20ARC WHERE pla20emi IN ({missingEmailListStr})";
+
+                        using (var reader = await command.ExecuteReaderAsync())
+                        {
+                            while (reader.Read())
+                            {
+                                if (!reader.IsDBNull(0) && !reader.IsDBNull(1))
+                                {
+                                    cedulasDict[reader.GetString(0)] = reader.GetString(1);
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -301,6 +405,7 @@ namespace Backend.Services
             // The table cert_registros has explicitly the columns: cert_status, cert_percentage, cert_first_name, cert_last_name, cert_email, cert_certification_name, cert_created_at y cert_cedula
             foreach (var record in uploadHistory.Records)
             {
+                // Validate that we only do individual lookups without EF navigation mappings
                 using (var command = _dbContext.Database.GetDbConnection().CreateCommand())
                 {
                     command.CommandText = @"
