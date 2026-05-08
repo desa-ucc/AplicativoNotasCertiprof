@@ -111,7 +111,7 @@ namespace Backend.Services
                     }
 
                     var emailListStr = string.Join(",", parameters);
-                    command.CommandText = $"SELECT m12emi, M12CAR FROM M12ARC WHERE m12emi IN ({emailListStr})";
+                    command.CommandText = $"SELECT m12emi, M12CAR FROM [AVATAR_TEST_03].[dbo].[M12ARC] WHERE m12emi IN ({emailListStr})";
 
                     _dbContext.Database.OpenConnection();
                     using (var reader = await command.ExecuteReaderAsync())
@@ -142,7 +142,7 @@ namespace Backend.Services
                         }
 
                         var missingEmailListStr = string.Join(",", missingParameters);
-                        command.CommandText = $"SELECT pla20emi, pla20ced FROM PLA20ARC WHERE pla20emi IN ({missingEmailListStr})";
+                        command.CommandText = $"SELECT pla20emi, pla20ced FROM [AVATAR_TEST_03].[dbo].[PLA20ARC] WHERE pla20emi IN ({missingEmailListStr})";
 
                         using (var reader = await command.ExecuteReaderAsync())
                         {
@@ -285,7 +285,7 @@ namespace Backend.Services
                     }
 
                     var emailListStr = string.Join(",", parameters);
-                    command.CommandText = $"SELECT m12emi, M12CAR FROM M12ARC WHERE m12emi IN ({emailListStr})";
+                    command.CommandText = $"SELECT m12emi, M12CAR FROM [AVATAR_TEST_03].[dbo].[M12ARC] WHERE m12emi IN ({emailListStr})";
 
                     if (_dbContext.Database.GetDbConnection().State != System.Data.ConnectionState.Open)
                     {

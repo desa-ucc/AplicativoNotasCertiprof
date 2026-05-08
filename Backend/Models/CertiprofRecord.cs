@@ -10,32 +10,32 @@ namespace Backend.Models
         [Column("id")]
         public int Id { get; set; }
 
-        [Column("cert_email")]
+        [Column("email")]
         public string? Email { get; set; }
 
-        [Column("cert_first_name")]
+        [Column("first_name")]
         public string? FirstName { get; set; }
 
-        [Column("cert_last_name")]
+        [Column("last_name")]
         public string? LastName { get; set; }
 
         [Required]
-        [Column("cert_certification_name")]
+        [Column("certification_name")]
         public string CertificationName { get; set; } = string.Empty;
 
         [NotMapped]
         public decimal? Grade { get; set; } // Represented as string in CSV, parsed to decimal
 
-        [Column("cert_percentage")]
+        [Column("percentage")]
         public string? Percentage { get; set; }
 
-        [Column("cert_status")]
+        [Column("status")]
         public string? Status { get; set; }
 
-        [Column("cert_cedula")]
+        [Column("cedula")]
         public string? Cedula { get; set; }
 
-        [Column("cert_created_at")]
+        [Column("created_at")]
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
         // Foreign key to upload history
