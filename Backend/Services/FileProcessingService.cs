@@ -181,10 +181,10 @@ namespace Backend.Services
             command.CommandText = storedProcedureName;
             command.CommandType = CommandType.StoredProcedure;
 
-            var emailListParam = command.CreateParameter();
-            emailListParam.ParameterName = "@EmailList";
-            emailListParam.Value = string.Join(",", emails.Select(e => e.Trim()));
-            command.Parameters.Add(emailListParam);
+            var correoParam = command.CreateParameter();
+            correoParam.ParameterName = "@Correo";
+            correoParam.Value = string.Join(",", emails.Select(e => e.Trim()));
+            command.Parameters.Add(correoParam);
 
             if (_dbContext.Database.GetDbConnection().State != ConnectionState.Open)
             {
