@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Http;
 using Backend.Models;
 using Backend.Data;
 using Backend.Repositories;
+using System.Data;
 
 namespace Backend.Services
 {
@@ -98,62 +99,15 @@ namespace Backend.Services
 
             if (emails.Any())
             {
-                var parameters = new List<string>();
-                using (var command = _dbContext.Database.GetDbConnection().CreateCommand())
-                {
-                    for (int i = 0; i < emails.Count; i++)
-                    {
-                        var p = command.CreateParameter();
-                        p.ParameterName = $"@p{i}";
-                        p.Value = emails[i];
-                        command.Parameters.Add(p);
-                        parameters.Add($"@p{i}");
-                    }
-
-                    var emailListStr = string.Join(",", parameters);
-                    command.CommandText = $"SELECT m12emi, M12CAR FROM [AVATAR_TEST_03].[dbo].[M12ARC] WHERE m12emi IN ({emailListStr})";
-
-                    _dbContext.Database.OpenConnection();
-                    using (var reader = await command.ExecuteReaderAsync())
-                    {
-                        while (reader.Read())
-                        {
-                            if (!reader.IsDBNull(0) && !reader.IsDBNull(1))
-                            {
-                                cedulasDict[reader.GetString(0)] = reader.GetString(1);
-                            }
-                        }
-                    }
-                }
+                cedulasDict = await GetCedulasByEmailsAsync("sp_ObtenerCedulaPorCorreo", emails);
 
                 var missingEmails = emails.Where(e => !cedulasDict.ContainsKey(e)).ToList();
                 if (missingEmails.Any())
                 {
-                    var missingParameters = new List<string>();
-                    using (var command = _dbContext.Database.GetDbConnection().CreateCommand())
+                    var fallbackCedulas = await GetCedulasByEmailsAsync("sp_ObtenerCedulaPorCorreo", missingEmails);
+                    foreach (var kvp in fallbackCedulas)
                     {
-                        for (int i = 0; i < missingEmails.Count; i++)
-                        {
-                            var p = command.CreateParameter();
-                            p.ParameterName = $"@mp{i}";
-                            p.Value = missingEmails[i];
-                            command.Parameters.Add(p);
-                            missingParameters.Add($"@mp{i}");
-                        }
-
-                        var missingEmailListStr = string.Join(",", missingParameters);
-                        command.CommandText = $"SELECT pla20emi, pla20ced FROM [AVATAR_TEST_03].[dbo].[PLA20ARC] WHERE pla20emi IN ({missingEmailListStr})";
-
-                        using (var reader = await command.ExecuteReaderAsync())
-                        {
-                            while (reader.Read())
-                            {
-                                if (!reader.IsDBNull(0) && !reader.IsDBNull(1))
-                                {
-                                    cedulasDict[reader.GetString(0)] = reader.GetString(1);
-                                }
-                            }
-                        }
+                        cedulasDict[kvp.Key] = kvp.Value;
                     }
                 }
             }
@@ -215,6 +169,40 @@ namespace Backend.Services
             return string.Empty;
         }
 
+        private async Task<Dictionary<string, string>> GetCedulasByEmailsAsync(string storedProcedureName, IEnumerable<string> emails)
+        {
+            var cedulasDict = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+            if (!emails.Any())
+            {
+                return cedulasDict;
+            }
+
+            using var command = _dbContext.Database.GetDbConnection().CreateCommand();
+            command.CommandText = storedProcedureName;
+            command.CommandType = CommandType.StoredProcedure;
+
+            var emailListParam = command.CreateParameter();
+            emailListParam.ParameterName = "@EmailList";
+            emailListParam.Value = string.Join(",", emails.Select(e => e.Trim()));
+            command.Parameters.Add(emailListParam);
+
+            if (_dbContext.Database.GetDbConnection().State != ConnectionState.Open)
+            {
+                _dbContext.Database.OpenConnection();
+            }
+
+            using var reader = await command.ExecuteReaderAsync();
+            while (await reader.ReadAsync())
+            {
+                if (!reader.IsDBNull(0) && !reader.IsDBNull(1))
+                {
+                    cedulasDict[reader.GetString(0)] = reader.GetString(1);
+                }
+            }
+
+            return cedulasDict;
+        }
+
         public async Task<int> ProcessReportAsync(IFormFile file, string uploadedBy, string courseCode, string certificationName)
         {
             if (file == null || file.Length == 0)
@@ -272,66 +260,15 @@ namespace Backend.Services
 
             if (emails.Any())
             {
-                var parameters = new List<string>();
-                using (var command = _dbContext.Database.GetDbConnection().CreateCommand())
-                {
-                    for (int i = 0; i < emails.Count; i++)
-                    {
-                        var p = command.CreateParameter();
-                        p.ParameterName = $"@p{i}";
-                        p.Value = emails[i];
-                        command.Parameters.Add(p);
-                        parameters.Add($"@p{i}");
-                    }
-
-                    var emailListStr = string.Join(",", parameters);
-                    command.CommandText = $"SELECT m12emi, M12CAR FROM [AVATAR_TEST_03].[dbo].[M12ARC] WHERE m12emi IN ({emailListStr})";
-
-                    if (_dbContext.Database.GetDbConnection().State != System.Data.ConnectionState.Open)
-                    {
-                        _dbContext.Database.OpenConnection();
-                    }
-
-                    using (var reader = await command.ExecuteReaderAsync())
-                    {
-                        while (reader.Read())
-                        {
-                            if (!reader.IsDBNull(0) && !reader.IsDBNull(1))
-                            {
-                                cedulasDict[reader.GetString(0)] = reader.GetString(1);
-                            }
-                        }
-                    }
-                }
+                cedulasDict = await GetCedulasByEmailsAsync("sp_ObtenerCedulaPorCorreo", emails);
 
                 var missingEmails = emails.Where(e => !cedulasDict.ContainsKey(e)).ToList();
                 if (missingEmails.Any())
                 {
-                    var missingParameters = new List<string>();
-                    using (var command = _dbContext.Database.GetDbConnection().CreateCommand())
+                    var fallbackCedulas = await GetCedulasByEmailsAsync("sp_ObtenerCedulaPorCorreo", missingEmails);
+                    foreach (var kvp in fallbackCedulas)
                     {
-                        for (int i = 0; i < missingEmails.Count; i++)
-                        {
-                            var p = command.CreateParameter();
-                            p.ParameterName = $"@mp{i}";
-                            p.Value = missingEmails[i];
-                            command.Parameters.Add(p);
-                            missingParameters.Add($"@mp{i}");
-                        }
-
-                        var missingEmailListStr = string.Join(",", missingParameters);
-                        command.CommandText = $"SELECT pla20emi, pla20ced FROM PLA20ARC WHERE pla20emi IN ({missingEmailListStr})";
-
-                        using (var reader = await command.ExecuteReaderAsync())
-                        {
-                            while (reader.Read())
-                            {
-                                if (!reader.IsDBNull(0) && !reader.IsDBNull(1))
-                                {
-                                    cedulasDict[reader.GetString(0)] = reader.GetString(1);
-                                }
-                            }
-                        }
+                        cedulasDict[kvp.Key] = kvp.Value;
                     }
                 }
             }
@@ -401,25 +338,22 @@ namespace Backend.Services
                 }
             }
 
-            // We use direct SQL insert for cert_registros as HasNoKey makes it hard for EF Core Tracking to insert it as a child collection
-            // The table cert_registros has explicitly the columns: cert_status, cert_percentage, cert_first_name, cert_last_name, cert_email, cert_certification_name, cert_created_at y cert_cedula
+            // We use a stored procedure for cert_registros because HasNoKey makes it hard for EF Core Tracking to insert it as a child collection.
             foreach (var record in uploadHistory.Records)
             {
-                // Validate that we only do individual lookups without EF navigation mappings
                 using (var command = _dbContext.Database.GetDbConnection().CreateCommand())
                 {
-                    command.CommandText = @"
-                        INSERT INTO cert_registros (cert_status, cert_percentage, cert_first_name, cert_last_name, cert_email, cert_certification_name, cert_created_at, cert_cedula)
-                        VALUES (@status, @percentage, @first_name, @last_name, @email, @certification_name, @created_at, @cedula)";
+                    command.CommandText = "dbo.sp_MantRegistroNotas";
+                    command.CommandType = CommandType.StoredProcedure;
 
-                    var p1 = command.CreateParameter(); p1.ParameterName = "@status"; p1.Value = (object)record.Status ?? DBNull.Value; command.Parameters.Add(p1);
-                    var p2 = command.CreateParameter(); p2.ParameterName = "@percentage"; p2.Value = (object)record.Percentage ?? DBNull.Value; command.Parameters.Add(p2);
-                    var p3 = command.CreateParameter(); p3.ParameterName = "@first_name"; p3.Value = (object)record.FirstName ?? DBNull.Value; command.Parameters.Add(p3);
-                    var p4 = command.CreateParameter(); p4.ParameterName = "@last_name"; p4.Value = (object)record.LastName ?? DBNull.Value; command.Parameters.Add(p4);
-                    var p5 = command.CreateParameter(); p5.ParameterName = "@email"; p5.Value = (object)record.Email ?? DBNull.Value; command.Parameters.Add(p5);
-                    var p6 = command.CreateParameter(); p6.ParameterName = "@certification_name"; p6.Value = (object)record.CertificationName ?? DBNull.Value; command.Parameters.Add(p6);
-                    var p7 = command.CreateParameter(); p7.ParameterName = "@created_at"; p7.Value = record.CreatedAt; command.Parameters.Add(p7);
-                    var p8 = command.CreateParameter(); p8.ParameterName = "@cedula"; p8.Value = (object)record.Cedula ?? DBNull.Value; command.Parameters.Add(p8);
+                    var p1 = command.CreateParameter(); p1.ParameterName = "@Status"; p1.Value = (object)record.Status ?? DBNull.Value; command.Parameters.Add(p1);
+                    var p2 = command.CreateParameter(); p2.ParameterName = "@Percentage"; p2.Value = (object)record.Percentage ?? DBNull.Value; command.Parameters.Add(p2);
+                    var p3 = command.CreateParameter(); p3.ParameterName = "@FirstName"; p3.Value = (object)record.FirstName ?? DBNull.Value; command.Parameters.Add(p3);
+                    var p4 = command.CreateParameter(); p4.ParameterName = "@LastName"; p4.Value = (object)record.LastName ?? DBNull.Value; command.Parameters.Add(p4);
+                    var p5 = command.CreateParameter(); p5.ParameterName = "@Email"; p5.Value = (object)record.Email ?? DBNull.Value; command.Parameters.Add(p5);
+                    var p6 = command.CreateParameter(); p6.ParameterName = "@CertificationName"; p6.Value = (object)record.CertificationName ?? DBNull.Value; command.Parameters.Add(p6);
+                    var p7 = command.CreateParameter(); p7.ParameterName = "@CreatedAt"; p7.Value = record.CreatedAt; command.Parameters.Add(p7);
+                    var p8 = command.CreateParameter(); p8.ParameterName = "@Cedula"; p8.Value = (object)record.Cedula ?? DBNull.Value; command.Parameters.Add(p8);
 
                     if (_dbContext.Database.GetDbConnection().State != System.Data.ConnectionState.Open)
                     {
