@@ -8,6 +8,8 @@ namespace Backend.Controllers
 {
     using Microsoft.AspNetCore.Authorization;
 
+    using Microsoft.EntityFrameworkCore;
+
     [ApiController]
     [Route("api/[controller]")]
     [Authorize(Policy = "DocentePolicy")]
@@ -53,21 +55,43 @@ namespace Backend.Controllers
         }
 
         [HttpGet("history")]
-        public async Task<IActionResult> GetHistory([FromServices] Backend.Repositories.IUploadHistoryRepository repository)
+        public async Task<IActionResult> GetHistory([FromServices] Backend.Data.AppDbContext dbContext)
         {
-            var user = User.Identity?.Name;
-            var role = User.Claims.FirstOrDefault(c => c.Type == System.Security.Claims.ClaimTypes.Role)?.Value;
+            // Simple SELECT * FROM cert_registros mapping as requested
+            // Because we don't have PKs and map it via HasNoKey, we can execute raw sql to fetch them simply,
+            // or just use FromSqlRaw.
 
-            if (role == "Admin")
+            var records = new System.Collections.Generic.List<object>();
+
+            using (var command = dbContext.Database.GetDbConnection().CreateCommand())
             {
-                var allHistory = await repository.GetAllAsync();
-                return Ok(allHistory);
+                command.CommandText = "SELECT status, percentage, first_name, last_name, email, certification_name, created_at, cedula FROM cert_registros";
+
+                if (dbContext.Database.GetDbConnection().State != System.Data.ConnectionState.Open)
+                {
+                    dbContext.Database.OpenConnection();
+                }
+
+                using (var reader = await command.ExecuteReaderAsync())
+                {
+                    while (reader.Read())
+                    {
+                        records.Add(new
+                        {
+                            status = reader.IsDBNull(0) ? null : reader.GetString(0),
+                            percentage = reader.IsDBNull(1) ? null : reader.GetString(1),
+                            first_name = reader.IsDBNull(2) ? null : reader.GetString(2),
+                            last_name = reader.IsDBNull(3) ? null : reader.GetString(3),
+                            email = reader.IsDBNull(4) ? null : reader.GetString(4),
+                            certification_name = reader.IsDBNull(5) ? null : reader.GetString(5),
+                            created_at = reader.IsDBNull(6) ? (System.DateTime?)null : reader.GetDateTime(6),
+                            cedula = reader.IsDBNull(7) ? null : reader.GetString(7)
+                        });
+                    }
+                }
             }
-            else
-            {
-                var userHistory = await repository.GetByUsernameAsync(user ?? "");
-                return Ok(userHistory);
-            }
+
+            return Ok(records);
         }
 
         [HttpGet("export-avatar/{uploadId}")]

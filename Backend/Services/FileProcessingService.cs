@@ -118,7 +118,10 @@ namespace Backend.Services
                     {
                         while (reader.Read())
                         {
-                            cedulasDict[reader.GetString(0)] = reader.GetString(1);
+                            if (!reader.IsDBNull(0) && !reader.IsDBNull(1))
+                            {
+                                cedulasDict[reader.GetString(0)] = reader.GetString(1);
+                            }
                         }
                     }
                 }
@@ -145,7 +148,10 @@ namespace Backend.Services
                         {
                             while (reader.Read())
                             {
-                                cedulasDict[reader.GetString(0)] = reader.GetString(1);
+                                if (!reader.IsDBNull(0) && !reader.IsDBNull(1))
+                                {
+                                    cedulasDict[reader.GetString(0)] = reader.GetString(1);
+                                }
                             }
                         }
                     }
@@ -157,7 +163,7 @@ namespace Backend.Services
                 string email = rec.email ?? "";
                 string cedula = "No está dentro del registro";
 
-                if (!string.IsNullOrEmpty(email) && cedulasDict.TryGetValue(email, out var foundCedula))
+                if (!string.IsNullOrEmpty(email) && cedulasDict.TryGetValue(email, out var foundCedula) && !string.IsNullOrWhiteSpace(foundCedula))
                 {
                     cedula = foundCedula;
                 }
@@ -284,7 +290,13 @@ namespace Backend.Services
                     _dbContext.Database.OpenConnection();
                     using (var reader = await command.ExecuteReaderAsync())
                     {
-                        while (reader.Read()) cedulasDict[reader.GetString(0)] = reader.GetString(1);
+                while (reader.Read())
+                {
+                    if (!reader.IsDBNull(0) && !reader.IsDBNull(1))
+                    {
+                        cedulasDict[reader.GetString(0)] = reader.GetString(1);
+                    }
+                }
                     }
                 }
 
@@ -308,7 +320,13 @@ namespace Backend.Services
 
                         using (var reader = await command.ExecuteReaderAsync())
                         {
-                            while (reader.Read()) cedulasDict[reader.GetString(0)] = reader.GetString(1);
+                            while (reader.Read())
+                            {
+                                if (!reader.IsDBNull(0) && !reader.IsDBNull(1))
+                                {
+                                    cedulasDict[reader.GetString(0)] = reader.GetString(1);
+                                }
+                            }
                         }
                     }
                 }
@@ -330,7 +348,7 @@ namespace Backend.Services
                 var normalizedLastName = (rec.last_name ?? "").Trim();
                 var normalizedCertName = (rec.certification_name ?? "").Trim();
                 var status = (rec.status ?? "").Trim();
-                var cedula = cedulasDict.ContainsKey(rec.email ?? "") ? cedulasDict[rec.email ?? ""] : "";
+                var cedula = cedulasDict.ContainsKey(rec.email ?? "") && !string.IsNullOrWhiteSpace(cedulasDict[rec.email ?? ""]) ? cedulasDict[rec.email ?? ""] : "No está dentro del registro";
 
                 // Parse the grade
                 string rawGrade = (rec.percentage ?? "").Trim();
@@ -341,52 +359,42 @@ namespace Backend.Services
                     finalGrade = parsedGrade;
                 }
 
-                // Only save the record if the user's Cedula was found
-                if (!string.IsNullOrEmpty(cedula))
-                {
-                    var existingRecord = uploadHistory.Records.FirstOrDefault(r => r.Email == normalizedEmail && r.CertificationName == normalizedCertName);
+                var existingRecord = uploadHistory.Records.FirstOrDefault(r => r.Email == normalizedEmail && r.CertificationName == normalizedCertName);
 
-                    if (existingRecord != null)
+                if (existingRecord != null)
+                {
+                    existingRecord.Grade = finalGrade;
+                    existingRecord.FirstName = normalizedFirstName;
+                    existingRecord.LastName = normalizedLastName;
+                    existingRecord.Percentage = rawGrade;
+                    existingRecord.Status = status;
+                    existingRecord.Cedula = cedula;
+                }
+                else
+                {
+                    uploadHistory.Records.Add(new CertiprofRecord
                     {
-                        existingRecord.Grade = finalGrade;
-                        existingRecord.FirstName = normalizedFirstName;
-                        existingRecord.LastName = normalizedLastName;
-                        existingRecord.Percentage = rawGrade;
-                        existingRecord.Status = status;
-                        existingRecord.Cedula = cedula;
-                    }
-                    else
-                    {
-                        uploadHistory.Records.Add(new CertiprofRecord
-                        {
-                            Email = normalizedEmail,
-                            FirstName = normalizedFirstName,
-                            LastName = normalizedLastName,
-                            CertificationName = normalizedCertName,
-                            Grade = finalGrade,
-                            Percentage = rawGrade,
-                            Status = status,
-                            Cedula = cedula
-                        });
-                    }
+                        Email = normalizedEmail,
+                        FirstName = normalizedFirstName,
+                        LastName = normalizedLastName,
+                        CertificationName = normalizedCertName,
+                        Grade = finalGrade,
+                        Percentage = rawGrade,
+                        Status = status,
+                        Cedula = cedula
+                    });
                 }
             }
 
-            uploadHistory.ProcessedRecordsCount = uploadHistory.Records.Count;
-
-            // Save to DB via Repository
-            // Save history record first
-            await _repository.AddAsync(uploadHistory);
-            await _repository.SaveChangesAsync();
-
             // We use direct SQL insert for cert_registros as HasNoKey makes it hard for EF Core Tracking to insert it as a child collection
+            // The table cert_registros has explicitly the columns: status, percentage, first_name, last_name, email, certification_name, created_at y cedula
             foreach (var record in uploadHistory.Records)
             {
                 using (var command = _dbContext.Database.GetDbConnection().CreateCommand())
                 {
                     command.CommandText = @"
-                        INSERT INTO cert_registros (cert_status, cert_percentage, cert_first_name, cert_last_name, cert_email, cert_certification_name, cert_created_at, cert_cedula, cert_upload_history_id)
-                        VALUES (@status, @percentage, @first_name, @last_name, @email, @certification_name, @created_at, @cedula, @upload_id)";
+                        INSERT INTO cert_registros (status, percentage, first_name, last_name, email, certification_name, created_at, cedula)
+                        VALUES (@status, @percentage, @first_name, @last_name, @email, @certification_name, @created_at, @cedula)";
 
                     var p1 = command.CreateParameter(); p1.ParameterName = "@status"; p1.Value = (object)record.Status ?? DBNull.Value; command.Parameters.Add(p1);
                     var p2 = command.CreateParameter(); p2.ParameterName = "@percentage"; p2.Value = (object)record.Percentage ?? DBNull.Value; command.Parameters.Add(p2);
@@ -396,7 +404,6 @@ namespace Backend.Services
                     var p6 = command.CreateParameter(); p6.ParameterName = "@certification_name"; p6.Value = (object)record.CertificationName ?? DBNull.Value; command.Parameters.Add(p6);
                     var p7 = command.CreateParameter(); p7.ParameterName = "@created_at"; p7.Value = record.CreatedAt; command.Parameters.Add(p7);
                     var p8 = command.CreateParameter(); p8.ParameterName = "@cedula"; p8.Value = (object)record.Cedula ?? DBNull.Value; command.Parameters.Add(p8);
-                    var p9 = command.CreateParameter(); p9.ParameterName = "@upload_id"; p9.Value = uploadHistory.Id; command.Parameters.Add(p9);
 
                     if (_dbContext.Database.GetDbConnection().State != System.Data.ConnectionState.Open)
                     {
@@ -406,7 +413,7 @@ namespace Backend.Services
                 }
             }
 
-            return uploadHistory.Id;
+            return 0; // We bypass UploadHistory save entirely as cert_UploadHistories table was never created
         }
 
         public async Task<ProcessResult> GenerateAvatarActAsync(int uploadId)
