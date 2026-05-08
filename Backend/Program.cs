@@ -71,36 +71,4 @@ app.UseAuthorization();
 
 app.MapControllers();
 
-// Ensure cert_registros exists via raw SQL script
-using (var scope = app.Services.CreateScope())
-{
-    try
-    {
-        var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-
-        string createTableSql = @"
-            IF NOT EXISTS (SELECT * FROM sysobjects WHERE name='cert_registros' AND xtype='U')
-            BEGIN
-                CREATE TABLE cert_registros (
-                    id INT IDENTITY(1,1) PRIMARY KEY,
-                    status NVARCHAR(255),
-                    percentage NVARCHAR(255),
-                    first_name NVARCHAR(255),
-                    last_name NVARCHAR(255),
-                    email NVARCHAR(255),
-                    certification_name NVARCHAR(255),
-                    created_at DATETIME,
-                    cedula NVARCHAR(255)
-                )
-            END
-        ";
-        context.Database.ExecuteSqlRaw(createTableSql);
-    }
-    catch (Exception ex)
-    {
-        var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
-        logger.LogError(ex, "An error occurred creating the cert_registros table.");
-    }
-}
-
 app.Run();
