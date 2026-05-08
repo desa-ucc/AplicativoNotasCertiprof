@@ -22,6 +22,7 @@ namespace Backend.Controllers
             _fileProcessingService = fileProcessingService;
         }
 
+        [AllowAnonymous]
         [HttpPost("parse-excel")]
         public async Task<IActionResult> ParseExcel(IFormFile file)
         {
