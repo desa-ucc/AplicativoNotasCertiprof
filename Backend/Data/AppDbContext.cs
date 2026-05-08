@@ -11,6 +11,7 @@ namespace Backend.Data
 
         public DbSet<CertiprofRecord> CertiprofRecords { get; set; } = null!;
         public DbSet<UploadHistory> UploadHistories { get; set; } = null!;
+        public DbSet<User> Users { get; set; } = null!;
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -18,8 +19,8 @@ namespace Backend.Data
 
             // Mapping entities to tables with the `cert_` prefix
             modelBuilder.Entity<CertiprofRecord>().ToTable("cert_registros");
-            modelBuilder.Entity<CertiprofRecord>().HasNoKey(); // Since we use [NotMapped] on Id and don't have a specific primary key for this tracking table as per prompt instructions, we use HasNoKey to avoid EF Core errors
             modelBuilder.Entity<UploadHistory>().ToTable("cert_UploadHistories");
+            modelBuilder.Entity<User>().ToTable("cert_users");
         }
     }
 }

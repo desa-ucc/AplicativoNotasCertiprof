@@ -66,7 +66,7 @@ namespace Backend.Controllers
 
             using (var command = dbContext.Database.GetDbConnection().CreateCommand())
             {
-                command.CommandText = "SELECT status, percentage, first_name, last_name, email, certification_name, created_at, cedula FROM cert_registros";
+                command.CommandText = "SELECT cert_status, cert_percentage, cert_first_name, cert_last_name, cert_email, cert_certification_name, cert_created_at, cert_cedula FROM cert_registros";
 
                 if (dbContext.Database.GetDbConnection().State != System.Data.ConnectionState.Open)
                 {
