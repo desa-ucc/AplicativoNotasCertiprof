@@ -29,16 +29,19 @@ namespace Backend.Controllers
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginRequest request)
         {
-            var user = await _dbContext.Users.FirstOrDefaultAsync(u => u.Username == request.Username);
-
-            if (user == null || !_authService.VerifyPassword(request.Password, user.PasswordHash))
+            // Bypass DB authentication and use a hardcoded admin user
+            if (request.Username == "admin" && request.Password == "admin123")
             {
-                return Unauthorized(new { Message = "Credenciales inválidas" });
+                var token = _authService.GenerateJwtToken("admin", "Admin");
+                return Ok(new { Token = token, Role = "Admin" });
+            }
+            else if (request.Username == "docente" && request.Password == "docente123")
+            {
+                var token = _authService.GenerateJwtToken("docente", "Docente");
+                return Ok(new { Token = token, Role = "Docente" });
             }
 
-            var token = _authService.GenerateJwtToken(user.Username, user.Role);
-
-            return Ok(new { Token = token, Role = user.Role });
+            return Unauthorized(new { Message = "Credenciales inválidas" });
         }
     }
 }

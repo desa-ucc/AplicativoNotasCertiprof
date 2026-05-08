@@ -375,8 +375,36 @@ namespace Backend.Services
             uploadHistory.ProcessedRecordsCount = uploadHistory.Records.Count;
 
             // Save to DB via Repository
+            // Save history record first
             await _repository.AddAsync(uploadHistory);
             await _repository.SaveChangesAsync();
+
+            // We use direct SQL insert for cert_registros as HasNoKey makes it hard for EF Core Tracking to insert it as a child collection
+            foreach (var record in uploadHistory.Records)
+            {
+                using (var command = _dbContext.Database.GetDbConnection().CreateCommand())
+                {
+                    command.CommandText = @"
+                        INSERT INTO cert_registros (cert_status, cert_percentage, cert_first_name, cert_last_name, cert_email, cert_certification_name, cert_created_at, cert_cedula, cert_upload_history_id)
+                        VALUES (@status, @percentage, @first_name, @last_name, @email, @certification_name, @created_at, @cedula, @upload_id)";
+
+                    var p1 = command.CreateParameter(); p1.ParameterName = "@status"; p1.Value = (object)record.Status ?? DBNull.Value; command.Parameters.Add(p1);
+                    var p2 = command.CreateParameter(); p2.ParameterName = "@percentage"; p2.Value = (object)record.Percentage ?? DBNull.Value; command.Parameters.Add(p2);
+                    var p3 = command.CreateParameter(); p3.ParameterName = "@first_name"; p3.Value = (object)record.FirstName ?? DBNull.Value; command.Parameters.Add(p3);
+                    var p4 = command.CreateParameter(); p4.ParameterName = "@last_name"; p4.Value = (object)record.LastName ?? DBNull.Value; command.Parameters.Add(p4);
+                    var p5 = command.CreateParameter(); p5.ParameterName = "@email"; p5.Value = (object)record.Email ?? DBNull.Value; command.Parameters.Add(p5);
+                    var p6 = command.CreateParameter(); p6.ParameterName = "@certification_name"; p6.Value = (object)record.CertificationName ?? DBNull.Value; command.Parameters.Add(p6);
+                    var p7 = command.CreateParameter(); p7.ParameterName = "@created_at"; p7.Value = record.CreatedAt; command.Parameters.Add(p7);
+                    var p8 = command.CreateParameter(); p8.ParameterName = "@cedula"; p8.Value = (object)record.Cedula ?? DBNull.Value; command.Parameters.Add(p8);
+                    var p9 = command.CreateParameter(); p9.ParameterName = "@upload_id"; p9.Value = uploadHistory.Id; command.Parameters.Add(p9);
+
+                    if (_dbContext.Database.GetDbConnection().State != System.Data.ConnectionState.Open)
+                    {
+                        _dbContext.Database.OpenConnection();
+                    }
+                    await command.ExecuteNonQueryAsync();
+                }
+            }
 
             return uploadHistory.Id;
         }
