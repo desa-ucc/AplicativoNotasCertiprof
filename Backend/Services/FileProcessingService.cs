@@ -169,52 +169,70 @@ namespace Backend.Services
                 }
             }
 
-            var emails = new List<string>();
-            foreach (var rec in records)
-            {
-                string email = rec.email ?? "";
-                if (!string.IsNullOrEmpty(email)) emails.Add(email);
-            }
-
             if (_dbContext.Database.GetDbConnection().State != System.Data.ConnectionState.Open)
             {
                 _dbContext.Database.OpenConnection();
             }
 
-            var uploadHistory = new UploadHistory
+            foreach (var rec in records)
             {
-                UploadedBy = uploadedBy,
-                CourseCode = courseCode,
-                ProcessedRecordsCount = records.Count, // will be updated if upsert drops count
-                UploadDate = DateTime.UtcNow
-            };
-
-            var emailListStr = string.Join(",", emails.Distinct());
-            if (string.IsNullOrEmpty(emailListStr))
-            {
-                throw new ArgumentException("No valid emails found in the uploaded file.");
-            }
-
-            // Using the SP to do the validation and insertion directly per instructions.
-            using (var command = _dbContext.Database.GetDbConnection().CreateCommand())
-            {
-                command.CommandText = "sp_ObtenerCedulaPorCorreo";
-                command.CommandType = System.Data.CommandType.StoredProcedure;
-
-                var paramCorreo = command.CreateParameter();
-                paramCorreo.ParameterName = "@Correos";
-                paramCorreo.Value = emailListStr;
-                command.Parameters.Add(paramCorreo);
-
-                if (_dbContext.Database.GetDbConnection().State != System.Data.ConnectionState.Open)
+                string email = rec.email ?? "";
+                if (string.IsNullOrWhiteSpace(email))
                 {
-                    _dbContext.Database.OpenConnection();
+                    continue; // Skip empty emails
                 }
 
-                await command.ExecuteNonQueryAsync();
+                using (var command = _dbContext.Database.GetDbConnection().CreateCommand())
+                {
+                    command.CommandText = "sp_ObtenerCedulaPorCorreo";
+                    command.CommandType = System.Data.CommandType.StoredProcedure;
+
+                    var paramCorreo = command.CreateParameter();
+                    paramCorreo.ParameterName = "@Correo";
+                    paramCorreo.Value = email.Trim();
+                    command.Parameters.Add(paramCorreo);
+
+                    var paramCert = command.CreateParameter();
+                    paramCert.ParameterName = "@CertificacionNombre";
+                    paramCert.Value = rec.certification_name ?? string.Empty;
+                    command.Parameters.Add(paramCert);
+
+                    var paramFirst = command.CreateParameter();
+                    paramFirst.ParameterName = "@FirstName";
+                    paramFirst.Value = (object)rec.first_name ?? DBNull.Value;
+                    command.Parameters.Add(paramFirst);
+
+                    var paramLast = command.CreateParameter();
+                    paramLast.ParameterName = "@LastName";
+                    paramLast.Value = (object)rec.last_name ?? DBNull.Value;
+                    command.Parameters.Add(paramLast);
+
+                    // Parse percentage to INT
+                    int? percentageInt = null;
+                    if (int.TryParse((rec.percentage ?? "").ToString(), out int p))
+                    {
+                        percentageInt = p;
+                    }
+                    else if (decimal.TryParse((rec.percentage ?? "").ToString(), System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out decimal pd))
+                    {
+                        percentageInt = (int)pd;
+                    }
+
+                    var paramPercentage = command.CreateParameter();
+                    paramPercentage.ParameterName = "@Percentage";
+                    paramPercentage.Value = (object)percentageInt ?? DBNull.Value;
+                    command.Parameters.Add(paramPercentage);
+
+                    if (_dbContext.Database.GetDbConnection().State != System.Data.ConnectionState.Open)
+                    {
+                        _dbContext.Database.OpenConnection();
+                    }
+
+                    await command.ExecuteNonQueryAsync();
+                }
             }
 
-            return 0;
+            return 0; // Upload history bypass
         }
 
         public async Task<ProcessResult> GenerateAvatarActAsync(int uploadId)

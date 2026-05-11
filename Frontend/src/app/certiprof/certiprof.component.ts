@@ -18,23 +18,6 @@ export class CertiprofComponent {
   isDragging = false;
   isProcessing = false;
 
-  uploadId: number | null = null;
-
-  // Charts config
-  chartData: any[] = [];
-  view: [number, number] = [700, 400];
-  gradient: boolean = true;
-  showLegend: boolean = true;
-  legendPosition: LegendPosition = LegendPosition.Below;
-  showLabels: boolean = true;
-  isDoughnut: boolean = false;
-  colorScheme: Color = {
-    name: 'custom',
-    selectable: true,
-    group: ScaleType.Ordinal,
-    domain: ['#10B981', '#EF4444'] // Green for pass, Red for fail
-  };
-
   constructor(private http: HttpClient) {}
 
   onDragOver(event: DragEvent) {
@@ -83,7 +66,7 @@ export class CertiprofComponent {
         next: (response) => {
           this.isProcessing = false;
           this.selectedFile = null;
-          this.successMessage = 'Datos procesados correctamente.';
+          this.successMessage = 'Proceso finalizado';
         },
         error: (err) => {
           this.isProcessing = false;
@@ -94,32 +77,6 @@ export class CertiprofComponent {
             errorMsg = `Error: ${err.error.message}`;
           }
           alert(errorMsg);
-        }
-      });
-  }
-
-  generateAvatarAct() {
-    if (!this.uploadId) return;
-
-    this.http.get(`/api/certiprof/export-avatar/${this.uploadId}`, { responseType: 'blob' })
-      .subscribe({
-        next: (response: Blob) => {
-          // Trigger download
-          const url = window.URL.createObjectURL(response);
-          const a = document.createElement('a');
-          a.href = url;
-          a.download = `Acta_Auxiliar.xlsx`;
-          a.click();
-          window.URL.revokeObjectURL(url);
-
-          // Reset state after successful flow
-          this.selectedFile = null;
-          this.previewData = [];
-          this.uploadId = null;
-        },
-        error: (err) => {
-          console.error('Error generating act:', err);
-          alert('Error al generar el acta.');
         }
       });
   }

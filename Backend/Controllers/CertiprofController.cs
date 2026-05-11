@@ -65,14 +65,14 @@ namespace Backend.Controllers
                     {
                         records.Add(new
                         {
-                            status = reader.IsDBNull(0) ? null : reader.GetString(0),
-                            percentage = reader.IsDBNull(1) ? null : reader.GetString(1),
-                            first_name = reader.IsDBNull(2) ? null : reader.GetString(2),
-                            last_name = reader.IsDBNull(3) ? null : reader.GetString(3),
-                            email = reader.IsDBNull(4) ? null : reader.GetString(4),
-                            certification_name = reader.IsDBNull(5) ? null : reader.GetString(5),
+                            status = reader.IsDBNull(0) ? null : reader.GetValue(0).ToString(),
+                            percentage = reader.IsDBNull(1) ? null : reader.GetValue(1).ToString(),
+                            first_name = reader.IsDBNull(2) ? null : reader.GetValue(2).ToString(),
+                            last_name = reader.IsDBNull(3) ? null : reader.GetValue(3).ToString(),
+                            email = reader.IsDBNull(4) ? null : reader.GetValue(4).ToString(),
+                            certification_name = reader.IsDBNull(5) ? null : reader.GetValue(5).ToString(),
                             created_at = reader.IsDBNull(6) ? (System.DateTime?)null : reader.GetDateTime(6),
-                            cedula = reader.IsDBNull(7) ? null : reader.GetString(7)
+                            cedula = reader.IsDBNull(7) ? null : reader.GetValue(7).ToString()
                         });
                     }
                 }
