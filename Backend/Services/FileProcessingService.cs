@@ -6,7 +6,6 @@ using Microsoft.AspNetCore.Http;
 using Backend.Models;
 using Backend.Data;
 using Backend.Repositories;
-using System.Data;
 
 namespace Backend.Services
 {
@@ -97,20 +96,6 @@ namespace Backend.Services
 
             var cedulasDict = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
 
-            if (emails.Any())
-            {
-                cedulasDict = await GetCedulasByEmailsAsync("sp_ObtenerCedulaPorCorreo", emails);
-
-                var missingEmails = emails.Where(e => !cedulasDict.ContainsKey(e)).ToList();
-                if (missingEmails.Any())
-                {
-                    var fallbackCedulas = await GetCedulasByEmailsAsync("sp_ObtenerCedulaPorCorreo", missingEmails);
-                    foreach (var kvp in fallbackCedulas)
-                    {
-                        cedulasDict[kvp.Key] = kvp.Value;
-                    }
-                }
-            }
 
             foreach (var rec in records)
             {
@@ -169,40 +154,6 @@ namespace Backend.Services
             return string.Empty;
         }
 
-        private async Task<Dictionary<string, string>> GetCedulasByEmailsAsync(string storedProcedureName, IEnumerable<string> emails)
-        {
-            var cedulasDict = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
-            if (!emails.Any())
-            {
-                return cedulasDict;
-            }
-
-            using var command = _dbContext.Database.GetDbConnection().CreateCommand();
-            command.CommandText = storedProcedureName;
-            command.CommandType = CommandType.StoredProcedure;
-
-            var correoParam = command.CreateParameter();
-            correoParam.ParameterName = "@Correo";
-            correoParam.Value = string.Join(",", emails.Select(e => e.Trim()));
-            command.Parameters.Add(correoParam);
-
-            if (_dbContext.Database.GetDbConnection().State != ConnectionState.Open)
-            {
-                _dbContext.Database.OpenConnection();
-            }
-
-            using var reader = await command.ExecuteReaderAsync();
-            while (await reader.ReadAsync())
-            {
-                if (!reader.IsDBNull(0) && !reader.IsDBNull(1))
-                {
-                    cedulasDict[reader.GetString(0)] = reader.GetString(1);
-                }
-            }
-
-            return cedulasDict;
-        }
-
         public async Task<int> ProcessReportAsync(IFormFile file, string uploadedBy, string courseCode, string certificationName)
         {
             if (file == null || file.Length == 0)
@@ -256,21 +207,9 @@ namespace Backend.Services
                 if (!string.IsNullOrEmpty(email)) emails.Add(email);
             }
 
-            var cedulasDict = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
-
-            if (emails.Any())
+            if (_dbContext.Database.GetDbConnection().State != System.Data.ConnectionState.Open)
             {
-                cedulasDict = await GetCedulasByEmailsAsync("sp_ObtenerCedulaPorCorreo", emails);
-
-                var missingEmails = emails.Where(e => !cedulasDict.ContainsKey(e)).ToList();
-                if (missingEmails.Any())
-                {
-                    var fallbackCedulas = await GetCedulasByEmailsAsync("sp_ObtenerCedulaPorCorreo", missingEmails);
-                    foreach (var kvp in fallbackCedulas)
-                    {
-                        cedulasDict[kvp.Key] = kvp.Value;
-                    }
-                }
+                _dbContext.Database.OpenConnection();
             }
 
             var uploadHistory = new UploadHistory
@@ -284,12 +223,43 @@ namespace Backend.Services
             foreach (var rec in records)
             {
                 // Normalization: trim spaces and handle casing
-                var normalizedEmail = (rec.email ?? "").Trim().ToLowerInvariant();
+                var emailFromExcel = (rec.email ?? "").Trim().ToLowerInvariant();
                 var normalizedFirstName = (rec.first_name ?? "").Trim();
                 var normalizedLastName = (rec.last_name ?? "").Trim();
                 var normalizedCertName = (rec.certification_name ?? "").Trim();
                 var status = (rec.status ?? "").Trim();
-                var cedula = cedulasDict.ContainsKey(rec.email ?? "") && !string.IsNullOrWhiteSpace(cedulasDict[rec.email ?? ""]) ? cedulasDict[rec.email ?? ""] : "No está dentro del registro";
+
+                string cedula = "No está dentro del registro";
+                string finalEmail = emailFromExcel;
+
+                if (!string.IsNullOrEmpty(emailFromExcel))
+                {
+                    using (var command = _dbContext.Database.GetDbConnection().CreateCommand())
+                    {
+                        command.CommandText = "sp_ObtenerCedulaPorCorreo";
+                        command.CommandType = System.Data.CommandType.StoredProcedure;
+
+                        var param = command.CreateParameter();
+                        param.ParameterName = "@Email";
+                        param.Value = emailFromExcel;
+                        command.Parameters.Add(param);
+
+                        using (var reader = await command.ExecuteReaderAsync())
+                        {
+                            if (reader.Read())
+                            {
+                                if (!reader.IsDBNull(reader.GetOrdinal("Cedula")))
+                                {
+                                    cedula = reader.GetString(reader.GetOrdinal("Cedula"));
+                                }
+                                if (!reader.IsDBNull(reader.GetOrdinal("Email")))
+                                {
+                                    finalEmail = reader.GetString(reader.GetOrdinal("Email"));
+                                }
+                            }
+                        }
+                    }
+                }
 
                 // Parse the grade
                 string rawGrade = (rec.percentage ?? "").Trim();
@@ -300,7 +270,7 @@ namespace Backend.Services
                     finalGrade = parsedGrade;
                 }
 
-                var existingRecord = uploadHistory.Records.FirstOrDefault(r => r.Email == normalizedEmail && r.CertificationName == normalizedCertName);
+                var existingRecord = uploadHistory.Records.FirstOrDefault(r => r.Email == finalEmail && r.CertificationName == normalizedCertName);
 
                 if (existingRecord != null)
                 {
@@ -325,7 +295,7 @@ namespace Backend.Services
 
                     uploadHistory.Records.Add(new CertiprofRecord
                     {
-                        Email = normalizedEmail,
+                        Email = finalEmail, // Use the SP validated email
                         FirstName = normalizedFirstName,
                         LastName = normalizedLastName,
                         CertificationName = normalizedCertName,
@@ -338,22 +308,25 @@ namespace Backend.Services
                 }
             }
 
-            // We use a stored procedure for cert_registros because HasNoKey makes it hard for EF Core Tracking to insert it as a child collection.
+            // We use direct SQL insert for cert_registros as HasNoKey makes it hard for EF Core Tracking to insert it as a child collection
+            // The table cert_registros has explicitly the columns: cert_status, cert_percentage, cert_first_name, cert_last_name, cert_email, cert_certification_name, cert_created_at y cert_cedula
             foreach (var record in uploadHistory.Records)
             {
+                // Validate that we only do individual lookups without EF navigation mappings
                 using (var command = _dbContext.Database.GetDbConnection().CreateCommand())
                 {
-                    command.CommandText = "dbo.sp_MantRegistroNotas";
-                    command.CommandType = CommandType.StoredProcedure;
+                    command.CommandText = @"
+                        INSERT INTO cert_registros (cert_status, cert_percentage, cert_first_name, cert_last_name, cert_email, cert_certification_name, cert_created_at, cert_cedula)
+                        VALUES (@status, @percentage, @first_name, @last_name, @email, @certification_name, @created_at, @cedula)";
 
-                    var p1 = command.CreateParameter(); p1.ParameterName = "@Status"; p1.Value = (object)record.Status ?? DBNull.Value; command.Parameters.Add(p1);
-                    var p2 = command.CreateParameter(); p2.ParameterName = "@Percentage"; p2.Value = (object)record.Percentage ?? DBNull.Value; command.Parameters.Add(p2);
-                    var p3 = command.CreateParameter(); p3.ParameterName = "@FirstName"; p3.Value = (object)record.FirstName ?? DBNull.Value; command.Parameters.Add(p3);
-                    var p4 = command.CreateParameter(); p4.ParameterName = "@LastName"; p4.Value = (object)record.LastName ?? DBNull.Value; command.Parameters.Add(p4);
-                    var p5 = command.CreateParameter(); p5.ParameterName = "@Email"; p5.Value = (object)record.Email ?? DBNull.Value; command.Parameters.Add(p5);
-                    var p6 = command.CreateParameter(); p6.ParameterName = "@CertificationName"; p6.Value = (object)record.CertificationName ?? DBNull.Value; command.Parameters.Add(p6);
-                    var p7 = command.CreateParameter(); p7.ParameterName = "@CreatedAt"; p7.Value = record.CreatedAt; command.Parameters.Add(p7);
-                    var p8 = command.CreateParameter(); p8.ParameterName = "@Cedula"; p8.Value = (object)record.Cedula ?? DBNull.Value; command.Parameters.Add(p8);
+                    var p1 = command.CreateParameter(); p1.ParameterName = "@status"; p1.Value = (object)record.Status ?? DBNull.Value; command.Parameters.Add(p1);
+                    var p2 = command.CreateParameter(); p2.ParameterName = "@percentage"; p2.Value = (object)record.Percentage ?? DBNull.Value; command.Parameters.Add(p2);
+                    var p3 = command.CreateParameter(); p3.ParameterName = "@first_name"; p3.Value = (object)record.FirstName ?? DBNull.Value; command.Parameters.Add(p3);
+                    var p4 = command.CreateParameter(); p4.ParameterName = "@last_name"; p4.Value = (object)record.LastName ?? DBNull.Value; command.Parameters.Add(p4);
+                    var p5 = command.CreateParameter(); p5.ParameterName = "@email"; p5.Value = (object)record.Email ?? DBNull.Value; command.Parameters.Add(p5);
+                    var p6 = command.CreateParameter(); p6.ParameterName = "@certification_name"; p6.Value = (object)record.CertificationName ?? DBNull.Value; command.Parameters.Add(p6);
+                    var p7 = command.CreateParameter(); p7.ParameterName = "@created_at"; p7.Value = record.CreatedAt; command.Parameters.Add(p7);
+                    var p8 = command.CreateParameter(); p8.ParameterName = "@cedula"; p8.Value = (object)record.Cedula ?? DBNull.Value; command.Parameters.Add(p8);
 
                     if (_dbContext.Database.GetDbConnection().State != System.Data.ConnectionState.Open)
                     {
