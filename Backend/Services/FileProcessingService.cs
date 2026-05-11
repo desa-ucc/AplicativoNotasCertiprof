@@ -80,31 +80,48 @@ namespace Backend.Services
                 throw new ArgumentException("Unsupported file type.");
             }
 
-            // Database validation for institutional Cedula
-            // Collect emails to fetch all related users in a single query to avoid N+1 query problem
             var result = new List<object>();
 
-            var emails = new List<string>();
-            foreach (var rec in records)
+            if (_dbContext.Database.GetDbConnection().State != System.Data.ConnectionState.Open)
             {
-                string email = rec.email ?? "";
-                if (!string.IsNullOrEmpty(email))
-                {
-                    emails.Add(email);
-                }
+                _dbContext.Database.OpenConnection();
             }
 
-            var cedulasDict = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
-
-
+            // Database validation for institutional Cedula via SP
             foreach (var rec in records)
             {
                 string email = rec.email ?? "";
                 string cedula = "No está dentro del registro";
+                string validatedEmail = email;
 
-                if (!string.IsNullOrEmpty(email) && cedulasDict.TryGetValue(email, out var foundCedula) && !string.IsNullOrWhiteSpace(foundCedula))
+                if (!string.IsNullOrEmpty(email))
                 {
-                    cedula = foundCedula;
+                    using (var command = _dbContext.Database.GetDbConnection().CreateCommand())
+                    {
+                        command.CommandText = "sp_ObtenerCedulaPorCorreo";
+                        command.CommandType = System.Data.CommandType.StoredProcedure;
+
+                        var param = command.CreateParameter();
+                        param.ParameterName = "@Correos";
+                        param.Value = email;
+                        command.Parameters.Add(param);
+
+                        using (var reader = await command.ExecuteReaderAsync())
+                        {
+                            if (reader.Read())
+                            {
+                                if (!reader.IsDBNull(reader.GetOrdinal("Cedula")))
+                                {
+                                    cedula = reader.GetString(reader.GetOrdinal("Cedula"));
+                                }
+                                if (!reader.IsDBNull(reader.GetOrdinal("EmailEncontrado")))
+                                {
+                                    validatedEmail = reader.GetString(reader.GetOrdinal("EmailEncontrado"));
+                                    rec.email = validatedEmail; // Sync object state
+                                }
+                            }
+                        }
+                    }
                 }
 
                 result.Add(new
@@ -113,7 +130,7 @@ namespace Backend.Services
                     percentage = rec.percentage,
                     first_name = rec.first_name,
                     last_name = rec.last_name,
-                    email = rec.email,
+                    email = validatedEmail,
                     certification_name = rec.certification_name,
                     created_at = rec.created_at,
                     cedula = cedula
@@ -240,7 +257,7 @@ namespace Backend.Services
                         command.CommandType = System.Data.CommandType.StoredProcedure;
 
                         var param = command.CreateParameter();
-                        param.ParameterName = "@Email";
+                        param.ParameterName = "@Correos"; // Using @Correos as per the updated SP
                         param.Value = emailFromExcel;
                         command.Parameters.Add(param);
 
@@ -252,10 +269,13 @@ namespace Backend.Services
                                 {
                                     cedula = reader.GetString(reader.GetOrdinal("Cedula"));
                                 }
-                                if (!reader.IsDBNull(reader.GetOrdinal("Email")))
+                                if (!reader.IsDBNull(reader.GetOrdinal("EmailEncontrado")))
                                 {
-                                    finalEmail = reader.GetString(reader.GetOrdinal("Email"));
+                                    finalEmail = reader.GetString(reader.GetOrdinal("EmailEncontrado"));
                                 }
+                                // We also receive NombreCompleto, Estado, FechaIngreso, etc from the new SP.
+                                // If needed for `cert_registros`, we would map them here.
+                                // For now, we respect the explicitly requested columns from earlier instructions.
                             }
                         }
                     }
