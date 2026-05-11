@@ -257,7 +257,7 @@ namespace Backend.Services
                         command.CommandType = System.Data.CommandType.StoredProcedure;
 
                         var param = command.CreateParameter();
-                        param.ParameterName = "@Correos"; // Using @Correos as per the updated SP
+                        param.ParameterName = "@Correos";
                         param.Value = emailFromExcel;
                         command.Parameters.Add(param);
 
@@ -273,9 +273,6 @@ namespace Backend.Services
                                 {
                                     finalEmail = reader.GetString(reader.GetOrdinal("EmailEncontrado"));
                                 }
-                                // We also receive NombreCompleto, Estado, FechaIngreso, etc from the new SP.
-                                // If needed for `cert_registros`, we would map them here.
-                                // For now, we respect the explicitly requested columns from earlier instructions.
                             }
                         }
                     }
