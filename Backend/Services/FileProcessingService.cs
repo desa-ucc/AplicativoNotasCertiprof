@@ -87,56 +87,8 @@ namespace Backend.Services
                 _dbContext.Database.OpenConnection();
             }
 
-            // Database validation for institutional Cedula via SP
-            foreach (var rec in records)
-            {
-                string email = rec.email ?? "";
-                string cedula = "No está dentro del registro";
-                string validatedEmail = email;
-
-                if (!string.IsNullOrEmpty(email))
-                {
-                    using (var command = _dbContext.Database.GetDbConnection().CreateCommand())
-                    {
-                        command.CommandText = "sp_ObtenerCedulaPorCorreo";
-                        command.CommandType = System.Data.CommandType.StoredProcedure;
-
-                        var param = command.CreateParameter();
-                        param.ParameterName = "@Correos";
-                        param.Value = email;
-                        command.Parameters.Add(param);
-
-                        using (var reader = await command.ExecuteReaderAsync())
-                        {
-                            if (reader.Read())
-                            {
-                                if (!reader.IsDBNull(reader.GetOrdinal("Cedula")))
-                                {
-                                    cedula = reader.GetString(reader.GetOrdinal("Cedula"));
-                                }
-                                if (!reader.IsDBNull(reader.GetOrdinal("EmailEncontrado")))
-                                {
-                                    validatedEmail = reader.GetString(reader.GetOrdinal("EmailEncontrado"));
-                                    rec.email = validatedEmail; // Sync object state
-                                }
-                            }
-                        }
-                    }
-                }
-
-                result.Add(new
-                {
-                    status = rec.status,
-                    percentage = rec.percentage,
-                    first_name = rec.first_name,
-                    last_name = rec.last_name,
-                    email = validatedEmail,
-                    certification_name = rec.certification_name,
-                    created_at = rec.created_at,
-                    cedula = cedula
-                });
-            }
-
+            // The preview logic is disabled as the frontend no longer uses it.
+            // Returning an empty array.
             return result;
         }
 
@@ -237,123 +189,32 @@ namespace Backend.Services
                 UploadDate = DateTime.UtcNow
             };
 
-            foreach (var rec in records)
+            var emailListStr = string.Join(",", emails.Distinct());
+            if (string.IsNullOrEmpty(emailListStr))
             {
-                // Normalization: trim spaces and handle casing
-                var emailFromExcel = (rec.email ?? "").Trim().ToLowerInvariant();
-                var normalizedFirstName = (rec.first_name ?? "").Trim();
-                var normalizedLastName = (rec.last_name ?? "").Trim();
-                var normalizedCertName = (rec.certification_name ?? "").Trim();
-                var status = (rec.status ?? "").Trim();
-
-                string cedula = "No está dentro del registro";
-                string finalEmail = emailFromExcel;
-
-                if (!string.IsNullOrEmpty(emailFromExcel))
-                {
-                    using (var command = _dbContext.Database.GetDbConnection().CreateCommand())
-                    {
-                        command.CommandText = "sp_ObtenerCedulaPorCorreo";
-                        command.CommandType = System.Data.CommandType.StoredProcedure;
-
-                        var param = command.CreateParameter();
-                        param.ParameterName = "@Correos";
-                        param.Value = emailFromExcel;
-                        command.Parameters.Add(param);
-
-                        using (var reader = await command.ExecuteReaderAsync())
-                        {
-                            if (reader.Read())
-                            {
-                                if (!reader.IsDBNull(reader.GetOrdinal("Cedula")))
-                                {
-                                    cedula = reader.GetString(reader.GetOrdinal("Cedula"));
-                                }
-                                if (!reader.IsDBNull(reader.GetOrdinal("EmailEncontrado")))
-                                {
-                                    finalEmail = reader.GetString(reader.GetOrdinal("EmailEncontrado"));
-                                }
-                            }
-                        }
-                    }
-                }
-
-                // Parse the grade
-                string rawGrade = (rec.percentage ?? "").Trim();
-                decimal? finalGrade = null;
-
-                if (decimal.TryParse(rawGrade, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out decimal parsedGrade))
-                {
-                    finalGrade = parsedGrade;
-                }
-
-                var existingRecord = uploadHistory.Records.FirstOrDefault(r => r.Email == finalEmail && r.CertificationName == normalizedCertName);
-
-                if (existingRecord != null)
-                {
-                    existingRecord.Grade = finalGrade;
-                    existingRecord.FirstName = normalizedFirstName;
-                    existingRecord.LastName = normalizedLastName;
-                    existingRecord.Percentage = rawGrade;
-                    existingRecord.Status = status;
-                    existingRecord.Cedula = cedula;
-                }
-                else
-                {
-                    // Parse the created_at directly from the record map instead of defaulting to UtcNow
-                    DateTime? parsedCreatedAt = null;
-                    if (rec.created_at != null)
-                    {
-                        if (DateTime.TryParse(rec.created_at.ToString(), out DateTime ca))
-                        {
-                            parsedCreatedAt = ca;
-                        }
-                    }
-
-                    uploadHistory.Records.Add(new CertiprofRecord
-                    {
-                        Email = finalEmail, // Use the SP validated email
-                        FirstName = normalizedFirstName,
-                        LastName = normalizedLastName,
-                        CertificationName = normalizedCertName,
-                        Grade = finalGrade,
-                        Percentage = rawGrade,
-                        Status = status,
-                        Cedula = cedula,
-                        CreatedAt = parsedCreatedAt ?? DateTime.UtcNow
-                    });
-                }
+                throw new ArgumentException("No valid emails found in the uploaded file.");
             }
 
-            // We use direct SQL insert for cert_registros as HasNoKey makes it hard for EF Core Tracking to insert it as a child collection
-            // The table cert_registros has explicitly the columns: cert_status, cert_percentage, cert_first_name, cert_last_name, cert_email, cert_certification_name, cert_created_at y cert_cedula
-            foreach (var record in uploadHistory.Records)
+            // Using the SP to do the validation and insertion directly per instructions.
+            using (var command = _dbContext.Database.GetDbConnection().CreateCommand())
             {
-                // Validate that we only do individual lookups without EF navigation mappings
-                using (var command = _dbContext.Database.GetDbConnection().CreateCommand())
+                command.CommandText = "sp_ObtenerCedulaPorCorreo";
+                command.CommandType = System.Data.CommandType.StoredProcedure;
+
+                var paramCorreo = command.CreateParameter();
+                paramCorreo.ParameterName = "@Correos";
+                paramCorreo.Value = emailListStr;
+                command.Parameters.Add(paramCorreo);
+
+                if (_dbContext.Database.GetDbConnection().State != System.Data.ConnectionState.Open)
                 {
-                    command.CommandText = @"
-                        INSERT INTO cert_registros (cert_status, cert_percentage, cert_first_name, cert_last_name, cert_email, cert_certification_name, cert_created_at, cert_cedula)
-                        VALUES (@status, @percentage, @first_name, @last_name, @email, @certification_name, @created_at, @cedula)";
-
-                    var p1 = command.CreateParameter(); p1.ParameterName = "@status"; p1.Value = (object)record.Status ?? DBNull.Value; command.Parameters.Add(p1);
-                    var p2 = command.CreateParameter(); p2.ParameterName = "@percentage"; p2.Value = (object)record.Percentage ?? DBNull.Value; command.Parameters.Add(p2);
-                    var p3 = command.CreateParameter(); p3.ParameterName = "@first_name"; p3.Value = (object)record.FirstName ?? DBNull.Value; command.Parameters.Add(p3);
-                    var p4 = command.CreateParameter(); p4.ParameterName = "@last_name"; p4.Value = (object)record.LastName ?? DBNull.Value; command.Parameters.Add(p4);
-                    var p5 = command.CreateParameter(); p5.ParameterName = "@email"; p5.Value = (object)record.Email ?? DBNull.Value; command.Parameters.Add(p5);
-                    var p6 = command.CreateParameter(); p6.ParameterName = "@certification_name"; p6.Value = (object)record.CertificationName ?? DBNull.Value; command.Parameters.Add(p6);
-                    var p7 = command.CreateParameter(); p7.ParameterName = "@created_at"; p7.Value = record.CreatedAt; command.Parameters.Add(p7);
-                    var p8 = command.CreateParameter(); p8.ParameterName = "@cedula"; p8.Value = (object)record.Cedula ?? DBNull.Value; command.Parameters.Add(p8);
-
-                    if (_dbContext.Database.GetDbConnection().State != System.Data.ConnectionState.Open)
-                    {
-                        _dbContext.Database.OpenConnection();
-                    }
-                    await command.ExecuteNonQueryAsync();
+                    _dbContext.Database.OpenConnection();
                 }
+
+                await command.ExecuteNonQueryAsync();
             }
 
-            return 0; // We bypass UploadHistory save entirely as cert_UploadHistories table was never created
+            return 0;
         }
 
         public async Task<ProcessResult> GenerateAvatarActAsync(int uploadId)

@@ -62,82 +62,38 @@ export class CertiprofComponent {
     }
   }
 
+  successMessage: string = '';
+
   handleFile(file: File) {
     this.selectedFile = file;
-    this.previewData = [];
-    this.chartData = [];
-
-    // Parse for preview via backend
-    const formData = new FormData();
-    formData.append('file', file);
-
-    this.http.post<any[]>('/api/certiprof/parse-excel', formData)
-      .subscribe({
-        next: (results) => {
-          this.previewData = results;
-          this.generateChartData(this.previewData);
-        },
-        error: (err) => {
-          console.error('Error parsing file via backend:', err);
-          let errorMsg = 'Error al leer el archivo. Asegúrese de que el formato sea correcto.';
-          if (err.error && err.error.message) {
-            errorMsg = `Error: ${err.error.message}`;
-          }
-          alert(errorMsg);
-        }
-      });
-  }
-
-  generateChartData(data: any[]) {
-    let passCount = 0;
-    let failCount = 0;
-
-    data.forEach(row => {
-      // Adjusted based on actual return from parse-excel
-      const gradeStr = row.percentage || '0';
-      const grade = parseFloat(gradeStr);
-      if (!isNaN(grade) && grade >= 60) {
-        passCount++;
-      } else {
-        failCount++;
-      }
-    });
-
-    this.chartData = [
-      { name: 'Aprobados', value: passCount },
-      { name: 'Reprobados', value: failCount }
-    ];
-  }
-
-  parseGrade(rawGrade: any): string {
-    const gradeStr = String(rawGrade || '0').trim();
-    const grade = parseFloat(gradeStr);
-    return isNaN(grade) ? '0' : grade.toString();
-  }
-
-  hasValidRecords(): boolean {
-    return this.previewData.length > 0 && this.previewData.some(row => !!row.cedula && row.cedula !== 'No está dentro del registro');
+    this.successMessage = '';
   }
 
   processFile() {
-    if (!this.selectedFile || !this.hasValidRecords()) return;
+    if (!this.selectedFile) return;
 
     this.isProcessing = true;
+    this.successMessage = '';
     const formData = new FormData();
     formData.append('file', this.selectedFile);
 
-    // Call backend API
+    // Call backend API directly to process and save
     this.http.post<any>('/api/certiprof/process-report', formData)
       .subscribe({
         next: (response) => {
           this.isProcessing = false;
-          this.uploadId = response.uploadId;
-          alert('Archivo procesado con éxito. Ahora puede generar el acta.');
+          this.selectedFile = null;
+          this.successMessage = 'Datos procesados correctamente.';
         },
         error: (err) => {
           this.isProcessing = false;
           console.error('Error processing file:', err);
-          alert('Error processing file. See console for details.');
+
+          let errorMsg = 'Error al procesar el archivo.';
+          if (err.error && err.error.message) {
+            errorMsg = `Error: ${err.error.message}`;
+          }
+          alert(errorMsg);
         }
       });
   }

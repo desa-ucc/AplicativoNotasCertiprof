@@ -23,20 +23,6 @@ namespace Backend.Controllers
         }
 
         [AllowAnonymous]
-        [HttpPost("parse-excel")]
-        public async Task<IActionResult> ParseExcel(IFormFile file)
-        {
-            try
-            {
-                var records = await _fileProcessingService.ParseFileForPreviewAsync(file);
-                return Ok(records);
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(new { Message = ex.Message });
-            }
-        }
-
         [HttpPost("process-report")]
         public async Task<IActionResult> ProcessReport(IFormFile file)
         {

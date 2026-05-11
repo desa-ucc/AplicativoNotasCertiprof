@@ -34,74 +34,26 @@
         <button
           *ngIf="!uploadId"
           (click)="processFile()"
-          [disabled]="isProcessing || !hasValidRecords()"
+          [disabled]="isProcessing"
           class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:bg-blue-300"
         >
           <span *ngIf="isProcessing">Procesando...</span>
           <span *ngIf="!isProcessing">Carga de Datos</span>
         </button>
-        <button
-          *ngIf="uploadId"
-          (click)="generateAvatarAct()"
-          class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
-        >
-          Generar Acta AVATAR
-        </button>
-      </div>
-    </div>
-  </div>
-
-  <div *ngIf="previewData.length > 0" class="mt-8">
-    <div class="mb-10 w-full flex justify-center">
-      <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-        <h2 class="text-lg font-medium text-gray-900 mb-4 text-center">Métricas de Aprobación</h2>
-        <ngx-charts-pie-chart
-          [view]="view"
-          [scheme]="colorScheme"
-          [results]="chartData"
-          [gradient]="gradient"
-          [legend]="showLegend"
-          [legendPosition]="legendPosition"
-          [labels]="showLabels"
-          [doughnut]="isDoughnut">
-        </ngx-charts-pie-chart>
       </div>
     </div>
 
-    <h2 class="text-lg font-medium text-gray-900 mb-4">Vista Previa de Datos</h2>
-    <div class="overflow-x-auto shadow ring-1 ring-black ring-opacity-5 md:rounded-lg">
-      <table class="min-w-full divide-y divide-gray-300">
-        <thead class="bg-gray-50">
-          <tr>
-            <th scope="col" class="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-6">Cédula</th>
-            <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Email</th>
-            <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Nombres</th>
-            <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Apellidos</th>
-            <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Certificación</th>
-            <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Porcentaje</th>
-            <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Estado</th>
-            <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Fecha Creado</th>
-          </tr>
-        </thead>
-        <tbody class="divide-y divide-gray-200 bg-white">
-          <tr *ngFor="let row of previewData | slice:0:10">
-            <td class="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6">
-              <span *ngIf="row.cedula && row.cedula !== 'No está dentro del registro'">{{ row.cedula }}</span>
-              <span *ngIf="!row.cedula || row.cedula === 'No está dentro del registro'" class="text-red-500">No está dentro del registro</span>
-            </td>
-            <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{{ row.email }}</td>
-            <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{{ row.first_name }}</td>
-            <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{{ row.last_name }}</td>
-            <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500 truncate max-w-xs">{{ row.certification_name }}</td>
-            <td class="whitespace-nowrap px-3 py-4 text-sm font-bold text-gray-900">
-              {{ parseGrade(row.percentage) }}
-            </td>
-            <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{{ row.status }}</td>
-            <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{{ row.created_at }}</td>
-          </tr>
-        </tbody>
-      </table>
+    <div *ngIf="successMessage" class="rounded-md bg-green-50 p-4 mt-4">
+      <div class="flex">
+        <div class="flex-shrink-0">
+          <svg class="h-5 w-5 text-green-400" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z" clip-rule="evenodd" />
+          </svg>
+        </div>
+        <div class="ml-3">
+          <h3 class="text-sm font-medium text-green-800">{{ successMessage }}</h3>
+        </div>
+      </div>
     </div>
-    <p class="text-xs text-gray-500 mt-2">* Mostrando los primeros 10 registros para vista previa.</p>
   </div>
 </div>
