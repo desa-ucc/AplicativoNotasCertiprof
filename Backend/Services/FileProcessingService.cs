@@ -207,21 +207,22 @@ namespace Backend.Services
                     paramLast.Value = (object)rec.last_name ?? DBNull.Value;
                     command.Parameters.Add(paramLast);
 
-                    // Parse percentage to INT
-                    int? percentageInt = null;
-                    if (int.TryParse((rec.percentage ?? "").ToString(), out int p))
+                    // Parse percentage to DECIMAL
+                    decimal? percentageDecimal = null;
+                    if (decimal.TryParse((rec.percentage ?? "").ToString(), System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out decimal pd))
                     {
-                        percentageInt = p;
-                    }
-                    else if (decimal.TryParse((rec.percentage ?? "").ToString(), System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out decimal pd))
-                    {
-                        percentageInt = (int)pd;
+                        percentageDecimal = pd;
                     }
 
                     var paramPercentage = command.CreateParameter();
                     paramPercentage.ParameterName = "@Percentage";
-                    paramPercentage.Value = (object)percentageInt ?? DBNull.Value;
+                    paramPercentage.Value = (object)percentageDecimal ?? DBNull.Value;
                     command.Parameters.Add(paramPercentage);
+
+                    var paramStatus = command.CreateParameter();
+                    paramStatus.ParameterName = "@Status";
+                    paramStatus.Value = (object)rec.status ?? DBNull.Value;
+                    command.Parameters.Add(paramStatus);
 
                     if (_dbContext.Database.GetDbConnection().State != System.Data.ConnectionState.Open)
                     {
@@ -232,6 +233,9 @@ namespace Backend.Services
                 }
             }
 
+            // By returning 0 here as requested, the process-report HTTP endpoint
+            // finishes parsing the entire loop completely before returning the 200 OK
+            // which guarantees that the cache is 'refreshed' on completion.
             return 0; // Upload history bypass
         }
 

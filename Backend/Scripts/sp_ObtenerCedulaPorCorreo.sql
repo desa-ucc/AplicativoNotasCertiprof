@@ -11,7 +11,8 @@ ALTER PROCEDURE [dbo].[sp_ObtenerCedulaPorCorreo]
     @CertificacionNombre VARCHAR(255),
     @FirstName VARCHAR(150) = NULL,
     @LastName VARCHAR(150) = NULL,
-    @Percentage INT = NULL
+    @Percentage DECIMAL(18,2) = NULL,
+    @Status VARCHAR(255) = NULL
 AS
 BEGIN
     SET NOCOUNT ON;
@@ -60,7 +61,7 @@ BEGIN
                 @FirstName,
                 @LastName,
                 @Percentage,
-                'Procesado',
+                ISNULL(@Status, 'Procesado'),
                 GETDATE()
             );
         END

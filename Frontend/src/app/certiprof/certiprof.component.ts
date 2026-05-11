@@ -4,6 +4,7 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
 import * as Papa from 'papaparse';
 import { NgxChartsModule, Color, ScaleType, LegendPosition } from '@swimlane/ngx-charts';
 import { FormsModule } from '@angular/forms';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-certiprof',
@@ -18,7 +19,7 @@ export class CertiprofComponent {
   isDragging = false;
   isProcessing = false;
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient, private router: Router) {}
 
   onDragOver(event: DragEvent) {
     event.preventDefault();
@@ -66,7 +67,12 @@ export class CertiprofComponent {
         next: (response) => {
           this.isProcessing = false;
           this.selectedFile = null;
-          this.successMessage = 'Proceso finalizado';
+          this.successMessage = 'Carga exitosa';
+
+          // Wait briefly to show the success message, then navigate to history
+          setTimeout(() => {
+            this.router.navigate(['/history']);
+          }, 1500);
         },
         error: (err) => {
           this.isProcessing = false;
