@@ -44,15 +44,13 @@ namespace Backend.Controllers
         [HttpGet("history")]
         public async Task<IActionResult> GetHistory([FromServices] Backend.Data.AppDbContext dbContext)
         {
-            // Simple SELECT * FROM cert_registros mapping as requested
-            // Because we don't have PKs and map it via HasNoKey, we can execute raw sql to fetch them simply,
-            // or just use FromSqlRaw.
-
             var records = new System.Collections.Generic.List<object>();
 
             using (var command = dbContext.Database.GetDbConnection().CreateCommand())
             {
-                command.CommandText = "SELECT cert_status, cert_percentage, cert_first_name, cert_last_name, cert_email, cert_certification_name, cert_created_at, cert_cedula FROM cert_registros";
+                // The House Way: Execute the requested SP instead of a direct SELECT
+                command.CommandText = "sp_ConsultarHistorialCertificaciones";
+                command.CommandType = System.Data.CommandType.StoredProcedure;
 
                 if (dbContext.Database.GetDbConnection().State != System.Data.ConnectionState.Open)
                 {
@@ -63,16 +61,29 @@ namespace Backend.Controllers
                 {
                     while (reader.Read())
                     {
+                        // Map directly according to the strict instruction:
+                        // "cedula, email, certification_name, first_name, last_name, percentage, status"
+                        decimal? percentageVal = null;
+                        if (!reader.IsDBNull(reader.GetOrdinal("percentage")))
+                        {
+                            var rawPct = reader.GetValue(reader.GetOrdinal("percentage"));
+                            if (decimal.TryParse(rawPct.ToString(), out decimal parsedPct))
+                            {
+                                percentageVal = parsedPct;
+                            }
+                        }
+
                         records.Add(new
                         {
-                            status = reader.IsDBNull(0) ? null : reader.GetValue(0).ToString(),
-                            percentage = reader.IsDBNull(1) ? null : reader.GetValue(1).ToString(),
-                            first_name = reader.IsDBNull(2) ? null : reader.GetValue(2).ToString(),
-                            last_name = reader.IsDBNull(3) ? null : reader.GetValue(3).ToString(),
-                            email = reader.IsDBNull(4) ? null : reader.GetValue(4).ToString(),
-                            certification_name = reader.IsDBNull(5) ? null : reader.GetValue(5).ToString(),
-                            created_at = reader.IsDBNull(6) ? (System.DateTime?)null : reader.GetDateTime(6),
-                            cedula = reader.IsDBNull(7) ? null : reader.GetValue(7).ToString()
+                            cedula = reader.IsDBNull(reader.GetOrdinal("cedula")) ? null : reader.GetValue(reader.GetOrdinal("cedula")).ToString(),
+                            email = reader.IsDBNull(reader.GetOrdinal("email")) ? null : reader.GetValue(reader.GetOrdinal("email")).ToString(),
+                            certification_name = reader.IsDBNull(reader.GetOrdinal("certification_name")) ? null : reader.GetValue(reader.GetOrdinal("certification_name")).ToString(),
+                            first_name = reader.IsDBNull(reader.GetOrdinal("first_name")) ? null : reader.GetValue(reader.GetOrdinal("first_name")).ToString(),
+                            last_name = reader.IsDBNull(reader.GetOrdinal("last_name")) ? null : reader.GetValue(reader.GetOrdinal("last_name")).ToString(),
+                            percentage = percentageVal,
+                            status = reader.IsDBNull(reader.GetOrdinal("status")) ? null : reader.GetValue(reader.GetOrdinal("status")).ToString(),
+                            // Including created_at for frontend as requested
+                            created_at = reader.IsDBNull(reader.GetOrdinal("created_at")) ? (System.DateTime?)null : reader.GetDateTime(reader.GetOrdinal("created_at"))
                         });
                     }
                 }
