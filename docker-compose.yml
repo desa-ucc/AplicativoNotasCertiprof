@@ -9,7 +9,7 @@ services:
     ports:
       - "5000:8080"
     environment:
-      - ConnectionStrings__DefaultConnection=${DB_CONNECTION_STRING:-Server=172.29.99.8;Database=CERTIFICACIONES_BD;User Id=sa;Password=Your_password123;TrustServerCertificate=True;MultipleActiveResultSets=true}
+      - ConnectionStrings__DefaultConnection=Server=172.29.99.8;Database=CERTIFICACIONES_BD;User Id=fsalazarmo;Password=3i5q32sNpf8B;TrustServerCertificate=True;MultipleActiveResultSets=true;
       - ASPNETCORE_ENVIRONMENT=Development
       - JWT_SECRET_KEY=${JWT_SECRET_KEY:-ThisIsASecureFallbackKeyForDevelopmentOnly123456789!}
 
