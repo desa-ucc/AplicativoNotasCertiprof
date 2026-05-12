@@ -75,6 +75,7 @@ namespace Backend.Controllers
 
                         records.Add(new
                         {
+                            id = reader.IsDBNull(reader.GetOrdinal("id")) ? 0 : reader.GetInt32(reader.GetOrdinal("id")),
                             cedula = reader.IsDBNull(reader.GetOrdinal("cedula")) ? null : reader.GetValue(reader.GetOrdinal("cedula")).ToString(),
                             email = reader.IsDBNull(reader.GetOrdinal("email")) ? null : reader.GetValue(reader.GetOrdinal("email")).ToString(),
                             certification_name = reader.IsDBNull(reader.GetOrdinal("certification_name")) ? null : reader.GetValue(reader.GetOrdinal("certification_name")).ToString(),
@@ -90,6 +91,49 @@ namespace Backend.Controllers
             }
 
             return Ok(records);
+        }
+
+        public class EditRecordRequest
+        {
+            public int Id { get; set; }
+            public string? FirstName { get; set; }
+            public string? LastName { get; set; }
+            public decimal? Percentage { get; set; }
+            public string? Status { get; set; }
+            public string? CertificationName { get; set; }
+        }
+
+        [HttpPost("edit")]
+        public async Task<IActionResult> EditRecord([FromBody] EditRecordRequest request, [FromServices] Backend.Data.AppDbContext dbContext)
+        {
+            try
+            {
+                using (var command = dbContext.Database.GetDbConnection().CreateCommand())
+                {
+                    command.CommandText = "sp_EditarRegistroCertificacion";
+                    command.CommandType = System.Data.CommandType.StoredProcedure;
+
+                    var pId = command.CreateParameter(); pId.ParameterName = "@Id"; pId.Value = request.Id; command.Parameters.Add(pId);
+                    var pFirst = command.CreateParameter(); pFirst.ParameterName = "@FirstName"; pFirst.Value = (object)request.FirstName ?? DBNull.Value; command.Parameters.Add(pFirst);
+                    var pLast = command.CreateParameter(); pLast.ParameterName = "@LastName"; pLast.Value = (object)request.LastName ?? DBNull.Value; command.Parameters.Add(pLast);
+                    var pPct = command.CreateParameter(); pPct.ParameterName = "@Percentage"; pPct.Value = (object)request.Percentage ?? DBNull.Value; command.Parameters.Add(pPct);
+                    var pStatus = command.CreateParameter(); pStatus.ParameterName = "@Status"; pStatus.Value = (object)request.Status ?? DBNull.Value; command.Parameters.Add(pStatus);
+                    var pCert = command.CreateParameter(); pCert.ParameterName = "@CertificationName"; pCert.Value = (object)request.CertificationName ?? DBNull.Value; command.Parameters.Add(pCert);
+
+                    if (dbContext.Database.GetDbConnection().State != System.Data.ConnectionState.Open)
+                    {
+                        dbContext.Database.OpenConnection();
+                    }
+
+                    await command.ExecuteNonQueryAsync();
+                }
+
+                return Ok(new { Message = "Registro actualizado exitosamente." });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { Message = ex.Message });
+            }
         }
 
         [HttpGet("export-avatar/{uploadId}")]

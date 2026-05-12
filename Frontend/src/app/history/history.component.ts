@@ -1,16 +1,20 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
+import { FormsModule } from '@angular/forms';
 
 @Component({
   selector: 'app-history',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, FormsModule],
   templateUrl: './history.component.html',
   styleUrls: ['./history.component.css']
 })
 export class HistoryComponent implements OnInit {
   histories: any[] = [];
+
+  isEditing = false;
+  editRecord: any = null;
 
   constructor(private http: HttpClient) {}
 
@@ -26,6 +30,33 @@ export class HistoryComponent implements OnInit {
         },
         error: (err) => {
           console.error('Error fetching history:', err);
+        }
+      });
+  }
+
+  openEditModal(record: any) {
+    // Clone the record so we don't modify the table row until save
+    this.editRecord = { ...record };
+    this.isEditing = true;
+  }
+
+  closeEditModal() {
+    this.isEditing = false;
+    this.editRecord = null;
+  }
+
+  saveRecord() {
+    if (!this.editRecord || !this.editRecord.id) return;
+
+    this.http.post('/api/certiprof/edit', this.editRecord)
+      .subscribe({
+        next: () => {
+          this.closeEditModal();
+          this.fetchHistory(); // Refresh the table automatically
+        },
+        error: (err) => {
+          console.error('Error al editar:', err);
+          alert('Hubo un error al actualizar el registro.');
         }
       });
   }
