@@ -95,11 +95,17 @@ namespace Backend.Controllers
 
         public class EditRecordRequest
         {
+            [System.Text.Json.Serialization.JsonPropertyName("id")]
             public int Id { get; set; }
+            [System.Text.Json.Serialization.JsonPropertyName("first_name")]
             public string? FirstName { get; set; }
+            [System.Text.Json.Serialization.JsonPropertyName("last_name")]
             public string? LastName { get; set; }
+            [System.Text.Json.Serialization.JsonPropertyName("percentage")]
             public decimal? Percentage { get; set; }
+            [System.Text.Json.Serialization.JsonPropertyName("status")]
             public string? Status { get; set; }
+            [System.Text.Json.Serialization.JsonPropertyName("certification_name")]
             public string? CertificationName { get; set; }
         }
 

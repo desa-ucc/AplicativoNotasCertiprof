@@ -46,7 +46,16 @@ export class HistoryComponent implements OnInit {
   }
 
   saveRecord() {
-    if (!this.editRecord || !this.editRecord.id) return;
+    if (!this.editRecord || !this.editRecord.id) {
+      alert('Error: ID de registro no válido.');
+      return;
+    }
+
+    // Validate no critical fields are fully null or completely empty (though COALESCE handles nulls on backend, we want to prevent sending explicitly blank strings if they were filled before, but we send what's in the form).
+    if (this.editRecord.first_name === '' || this.editRecord.last_name === '' || this.editRecord.certification_name === '') {
+       alert('Por favor complete todos los campos de texto requeridos.');
+       return;
+    }
 
     this.http.post('/api/certiprof/edit', this.editRecord)
       .subscribe({
