@@ -68,10 +68,11 @@ namespace Backend.Controllers
         {
             try
             {
-                byte[] hashBytes;
+                string hashString;
                 using (var sha256 = System.Security.Cryptography.SHA256.Create())
                 {
-                    hashBytes = sha256.ComputeHash(System.Text.Encoding.UTF8.GetBytes(request.Password));
+                    var hashedBytes = sha256.ComputeHash(System.Text.Encoding.UTF8.GetBytes(request.Password));
+                    hashString = BitConverter.ToString(hashedBytes).Replace("-", "").ToLower();
                 }
 
                 using (var command = _dbContext.Database.GetDbConnection().CreateCommand())
@@ -79,7 +80,7 @@ namespace Backend.Controllers
                     command.CommandText = "INSERT INTO cert_usuarios (username, password_hash, rol_id) VALUES (@Username, @Hash, @RolId)";
 
                     var pUser = command.CreateParameter(); pUser.ParameterName = "@Username"; pUser.Value = request.Username; command.Parameters.Add(pUser);
-                    var pHash = command.CreateParameter(); pHash.ParameterName = "@Hash"; pHash.Value = hashBytes; command.Parameters.Add(pHash);
+                    var pHash = command.CreateParameter(); pHash.ParameterName = "@Hash"; pHash.Value = hashString; command.Parameters.Add(pHash);
                     var pRol = command.CreateParameter(); pRol.ParameterName = "@RolId"; pRol.Value = request.RolId; command.Parameters.Add(pRol);
 
                     if (_dbContext.Database.GetDbConnection().State != System.Data.ConnectionState.Open)
