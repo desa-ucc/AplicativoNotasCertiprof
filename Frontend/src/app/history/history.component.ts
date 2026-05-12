@@ -15,10 +15,12 @@ export class HistoryComponent implements OnInit {
 
   isEditing = false;
   editRecord: any = null;
+  userRole: string | null = null;
 
   constructor(private http: HttpClient) {}
 
   ngOnInit(): void {
+    this.userRole = localStorage.getItem('role');
     this.fetchHistory();
   }
 
@@ -68,6 +70,22 @@ export class HistoryComponent implements OnInit {
           alert('Hubo un error al actualizar el registro.');
         }
       });
+  }
+
+
+  deleteRecord(id: number) {
+    if (confirm('¿Está seguro de que desea eliminar este registro?')) {
+      this.http.delete(`/api/certiprof/${id}`)
+        .subscribe({
+          next: () => {
+            this.fetchHistory();
+          },
+          error: (err) => {
+            console.error('Error al eliminar:', err);
+            alert('Hubo un error al eliminar el registro.');
+          }
+        });
+    }
   }
 
   downloadActa(uploadId: number, courseCode: string) {

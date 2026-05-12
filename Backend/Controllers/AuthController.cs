@@ -1,3 +1,4 @@
+using System;
 using System.Linq;
 using System.Threading.Tasks;
 using Backend.Data;
@@ -29,23 +30,69 @@ namespace Backend.Controllers
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginRequest request)
         {
-            // Note: DB authentication has been bypassed as 'cert_users' is not available.
-            // Using a simple fallback for testing, but in production this should be
-            // verified against an Identity Provider, LDAP, or an environment-configured secret.
-            var adminUser = Environment.GetEnvironmentVariable("ADMIN_USERNAME") ?? "admin";
-            var adminPass = Environment.GetEnvironmentVariable("ADMIN_PASSWORD") ?? "admin123";
-            var docenteUser = Environment.GetEnvironmentVariable("DOCENTE_USERNAME") ?? "docente";
-            var docentePass = Environment.GetEnvironmentVariable("DOCENTE_PASSWORD") ?? "docente123";
+            try
+            {
+                using (var command = _dbContext.Database.GetDbConnection().CreateCommand())
+                {
+                    // Query directly the cert_usuarios table. Using ADO.NET the House Way.
+                    command.CommandText = "SELECT u.id, u.username, u.password_hash, r.name as role_name FROM cert_usuarios u JOIN cert_roles r ON u.rol_id = r.id WHERE u.username = @Username";
 
-            if (request.Username == adminUser && request.Password == adminPass)
-            {
-                var token = _authService.GenerateJwtToken("admin", "Admin");
-                return Ok(new { Token = token, Role = "Admin" });
+                    var pUser = command.CreateParameter();
+                    pUser.ParameterName = "@Username";
+                    pUser.Value = request.Username;
+                    command.Parameters.Add(pUser);
+
+                    if (_dbContext.Database.GetDbConnection().State != System.Data.ConnectionState.Open)
+                    {
+                        await _dbContext.Database.OpenConnectionAsync();
+                    }
+
+                    using (var reader = await command.ExecuteReaderAsync())
+                    {
+                        if (await reader.ReadAsync())
+                        {
+                            var storedHash = reader.GetString(reader.GetOrdinal("password_hash"));
+                            var roleName = reader.GetString(reader.GetOrdinal("role_name"));
+
+                            // Simple SHA256 hash comparison
+                            using (var sha256 = System.Security.Cryptography.SHA256.Create())
+                            {
+                                var hashedBytes = sha256.ComputeHash(System.Text.Encoding.UTF8.GetBytes(request.Password));
+                                var hashString = BitConverter.ToString(hashedBytes).Replace("-", "").ToLower();
+
+                                if (hashString == storedHash.ToLower())
+                                {
+                                    var token = _authService.GenerateJwtToken(request.Username, roleName);
+                                    return Ok(new { Token = token, Role = roleName });
+                                }
+                            }
+                        }
+                    }
+                }
             }
-            else if (request.Username == docenteUser && request.Password == docentePass)
+            catch (Exception ex)
             {
-                var token = _authService.GenerateJwtToken("docente", "Docente");
-                return Ok(new { Token = token, Role = "Docente" });
+                // Fallback for testing if cert_usuarios/cert_roles don't exist yet in local testing
+                if (ex.Message.Contains("Invalid object name 'cert_usuarios'") || ex.Message.Contains("Invalid object name 'cert_roles'"))
+                {
+                    var adminUser = Environment.GetEnvironmentVariable("ADMIN_USERNAME") ?? "admin";
+                    var adminPass = Environment.GetEnvironmentVariable("ADMIN_PASSWORD") ?? "admin123";
+                    var docenteUser = Environment.GetEnvironmentVariable("DOCENTE_USERNAME") ?? "docente";
+                    var docentePass = Environment.GetEnvironmentVariable("DOCENTE_PASSWORD") ?? "docente123";
+
+                    if (request.Username == adminUser && request.Password == adminPass)
+                    {
+                        var token = _authService.GenerateJwtToken("admin", "Administrador");
+                        return Ok(new { Token = token, Role = "Administrador" });
+                    }
+                    else if (request.Username == docenteUser && request.Password == docentePass)
+                    {
+                        var token = _authService.GenerateJwtToken("docente", "Docente");
+                        return Ok(new { Token = token, Role = "Docente" });
+                    }
+                }
+
+                return BadRequest(new { Message = ex.Message });
             }
 
             return Unauthorized(new { Message = "Credenciales inválidas" });

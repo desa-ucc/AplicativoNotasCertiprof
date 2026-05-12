@@ -12,7 +12,7 @@ namespace Backend.Controllers
 
     [ApiController]
     [Route("api/[controller]")]
-    [Authorize(Policy = "DocentePolicy")]
+    [Authorize]
     public class CertiprofController : ControllerBase
     {
         private readonly IFileProcessingService _fileProcessingService;
@@ -22,7 +22,7 @@ namespace Backend.Controllers
             _fileProcessingService = fileProcessingService;
         }
 
-        [AllowAnonymous]
+        [Authorize(Policy = "AdminPolicy")]
         [HttpPost("process-report")]
         public async Task<IActionResult> ProcessReport(IFormFile file)
         {
@@ -109,6 +109,7 @@ namespace Backend.Controllers
             public string? CertificationName { get; set; }
         }
 
+        [Authorize(Policy = "AdminPolicy")]
         [HttpPost("edit")]
         public async Task<IActionResult> EditRecord([FromBody] EditRecordRequest request, [FromServices] Backend.Data.AppDbContext dbContext)
         {
@@ -135,6 +136,39 @@ namespace Backend.Controllers
                 }
 
                 return Ok(new { Message = "Registro actualizado exitosamente." });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { Message = ex.Message });
+            }
+        }
+
+
+        [Authorize(Policy = "AdminPolicy")]
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> DeleteRecord(int id, [FromServices] Backend.Data.AppDbContext dbContext)
+        {
+            try
+            {
+                using (var command = dbContext.Database.GetDbConnection().CreateCommand())
+                {
+                    command.CommandText = "sp_EliminarRegistroCertificacion";
+                    command.CommandType = System.Data.CommandType.StoredProcedure;
+
+                    var pId = command.CreateParameter();
+                    pId.ParameterName = "@Id";
+                    pId.Value = id;
+                    command.Parameters.Add(pId);
+
+                    if (dbContext.Database.GetDbConnection().State != System.Data.ConnectionState.Open)
+                    {
+                        dbContext.Database.OpenConnection();
+                    }
+
+                    await command.ExecuteNonQueryAsync();
+                }
+
+                return Ok(new { Message = "Registro eliminado exitosamente." });
             }
             catch (Exception ex)
             {

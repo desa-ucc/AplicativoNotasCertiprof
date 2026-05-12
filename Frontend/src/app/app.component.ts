@@ -14,6 +14,10 @@ export class AppComponent {
 
   constructor(private router: Router) {}
 
+  get userRole(): string | null {
+    return localStorage.getItem('role');
+  }
+
   isLoggedIn(): boolean {
     return !!localStorage.getItem('token');
   }

@@ -37,7 +37,8 @@ builder.Services.AddAuthentication("Bearer")
 
 builder.Services.AddAuthorization(options =>
 {
-    options.AddPolicy("DocentePolicy", policy => policy.RequireRole("Docente", "Admin"));
+    options.AddPolicy("DocentePolicy", policy => policy.RequireRole("Docente", "Administrador"));
+    options.AddPolicy("AdminPolicy", policy => policy.RequireRole("Administrador"));
 });
 
 builder.Services.AddCors(options =>
