@@ -22,7 +22,7 @@ export const authGuard: CanActivateFn = (route: ActivatedRouteSnapshot, state: R
           const hasAccess = menu.some((m: any) => m.path === targetPath);
 
           if (!hasAccess) {
-              // Try to redirect to the first available module if history isn't allowed, else login
+              console.warn(`AuthGuard: User doesn't have access to ${targetPath}. Redirecting...`);
               if (menu.length > 0) {
                  router.navigate([menu[0].path]);
               } else {
@@ -30,11 +30,16 @@ export const authGuard: CanActivateFn = (route: ActivatedRouteSnapshot, state: R
               }
               return false;
           }
+
+          return true; // Explicitly allow if access is found
       } catch (e) {
+          console.error("AuthGuard: Failed to parse menu", e);
           router.navigate(['/login']);
           return false;
       }
   }
 
-  return true;
+  console.warn("AuthGuard: No menu found, rejecting access.");
+  router.navigate(['/login']);
+  return false;
 };

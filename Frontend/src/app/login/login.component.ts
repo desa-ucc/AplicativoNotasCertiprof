@@ -29,7 +29,12 @@ export class LoginComponent {
           next: (res) => {
             localStorage.setItem('token', res.token);
             localStorage.setItem('role', res.role);
-            this.router.navigate(['/upload']);
+            if (res.menu && res.menu.length > 0) {
+                localStorage.setItem('menu', JSON.stringify(res.menu));
+                this.router.navigate([res.menu[0].path]);
+            } else {
+                this.router.navigate(['/upload']);
+            }
           },
           error: () => {
             this.errorMessage = 'Credenciales inválidas';

@@ -35,7 +35,7 @@ namespace Backend.Controllers
                 using (var command = _dbContext.Database.GetDbConnection().CreateCommand())
                 {
                     // Query directly the cert_usuarios table. Using ADO.NET the House Way.
-                    command.CommandText = "SELECT u.id, u.username, u.password_hash, r.nombre_rol as role_name FROM cert_usuarios u JOIN cert_roles r ON u.rol_id = r.id WHERE u.username = @Username";
+                    command.CommandText = "SELECT u.id, u.username, u.password_hash, u.rol_id, r.nombre_rol as role_name FROM cert_usuarios u JOIN cert_roles r ON u.rol_id = r.id WHERE u.username = @Username";
 
                     var pUser = command.CreateParameter();
                     pUser.ParameterName = "@Username";
@@ -53,6 +53,7 @@ namespace Backend.Controllers
                         {
                             var passwordHashValue = reader.GetValue(reader.GetOrdinal("password_hash"));
                             var roleName = reader.GetString(reader.GetOrdinal("role_name"));
+                            var rolId = reader.GetInt32(reader.GetOrdinal("rol_id"));
 
                             byte[]? storedHashBytes = null;
 
@@ -85,7 +86,33 @@ namespace Backend.Controllers
                                     if (hashedBytes.SequenceEqual(storedHashBytes))
                                     {
                                         var token = _authService.GenerateJwtToken(request.Username, roleName);
-                                        return Ok(new { Token = token, Role = roleName });
+                                        var menuList = new System.Collections.Generic.List<object>();
+
+                                        using (var menuCmd = _dbContext.Database.GetDbConnection().CreateCommand())
+                                        {
+                                            menuCmd.CommandText = "sp_ObtenerMenuPorRol";
+                                            menuCmd.CommandType = System.Data.CommandType.StoredProcedure;
+                                            var pRolId = menuCmd.CreateParameter();
+                                            pRolId.ParameterName = "@RolId";
+                                            pRolId.Value = rolId;
+                                            menuCmd.Parameters.Add(pRolId);
+
+                                            reader.Close();
+
+                                            using (var menuReader = await menuCmd.ExecuteReaderAsync())
+                                            {
+                                                while (await menuReader.ReadAsync())
+                                                {
+                                                    menuList.Add(new {
+                                                        name = menuReader.GetString(menuReader.GetOrdinal("NombreModulo")),
+                                                        path = menuReader.GetString(menuReader.GetOrdinal("Ruta")),
+                                                        icon = menuReader.IsDBNull(menuReader.GetOrdinal("Icono")) ? "pi-folder" : menuReader.GetString(menuReader.GetOrdinal("Icono"))
+                                                    });
+                                                }
+                                            }
+                                        }
+
+                                        return Ok(new { Token = token, Role = roleName, Menu = menuList });
                                     }
                                 }
                             }
@@ -106,12 +133,20 @@ namespace Backend.Controllers
                     if (request.Username == adminUser && request.Password == adminPass)
                     {
                         var token = _authService.GenerateJwtToken("admin", "Administrador");
-                        return Ok(new { Token = token, Role = "Administrador" });
+                        var adminMenu = new[] {
+                            new { name = "Cargar Archivo", path = "/upload", icon = "pi-upload" },
+                            new { name = "Historial", path = "/history", icon = "pi-database" },
+                            new { name = "Seguridad", path = "/security", icon = "pi-shield" }
+                        };
+                        return Ok(new { Token = token, Role = "Administrador", Menu = adminMenu });
                     }
                     else if (request.Username == docenteUser && request.Password == docentePass)
                     {
                         var token = _authService.GenerateJwtToken("docente", "Docente");
-                        return Ok(new { Token = token, Role = "Docente" });
+                        var docenteMenu = new[] {
+                            new { name = "Historial", path = "/history", icon = "pi-database" }
+                        };
+                        return Ok(new { Token = token, Role = "Docente", Menu = docenteMenu });
                     }
                 }
 

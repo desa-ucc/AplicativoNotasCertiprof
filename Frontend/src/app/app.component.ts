@@ -1,5 +1,7 @@
 import { Component } from '@angular/core';
-import { RouterOutlet, RouterLink, RouterLinkActive, Router } from '@angular/router';
+import { RouterOutlet, RouterLink, RouterLinkActive, Router, NavigationEnd } from '@angular/router';
+import { filter } from 'rxjs/operators';
+import { OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
 @Component({
@@ -9,21 +11,33 @@ import { CommonModule } from '@angular/common';
   templateUrl: './app.component.html',
   styleUrl: './app.component.css'
 })
-export class AppComponent {
-  get userMenu(): any[] {
-    const menuStr = localStorage.getItem('menu');
-    if (menuStr) {
-        try {
-            return JSON.parse(menuStr);
-        } catch (e) {
-            return [];
-        }
-    }
-    return [];
-  }
+export class AppComponent implements OnInit {
+  userMenu: any[] = [];
   title = 'Frontend';
 
   constructor(private router: Router) {}
+
+  ngOnInit() {
+    this.refreshMenu();
+    this.router.events.pipe(
+      filter(event => event instanceof NavigationEnd)
+    ).subscribe(() => {
+      this.refreshMenu();
+    });
+  }
+
+  refreshMenu() {
+    const menuStr = localStorage.getItem('menu');
+    if (menuStr) {
+        try {
+            this.userMenu = JSON.parse(menuStr);
+        } catch (e) {
+            this.userMenu = [];
+        }
+    } else {
+        this.userMenu = [];
+    }
+  }
 
   get userRole(): string | null {
     return localStorage.getItem('role');
