@@ -16,6 +16,7 @@ export class SecurityComponent implements OnInit {
   users: any[] = [];
   roles: any[] = [];
   modules: any[] = [];
+  isLoadingModules = true;
 
   // User Modal State
   isEditing = false;
@@ -58,8 +59,8 @@ export class SecurityComponent implements OnInit {
   fetchModules() {
     this.http.get<any[]>('/api/users/modules')
       .subscribe({
-        next: (data) => this.modules = data,
-        error: (err) => console.error('Error fetching modules:', err)
+        next: (data) => { this.modules = data; this.isLoadingModules = false; },
+        error: (err) => { console.error('Error fetching modules:', err); this.isLoadingModules = false; }
       });
   }
 
@@ -145,7 +146,8 @@ export class SecurityComponent implements OnInit {
     this.http.get<any[]>(`/api/users/roles/${role.id}/modules`)
       .subscribe({
         next: (data) => {
-          data.forEach(m => this.rolePermissions.add(m.id));
+          this.rolePermissions.clear(); // Clear again just to be safe
+          data.forEach(m => this.rolePermissions.add(parseInt(m.id, 10)));
         },
         error: (err) => console.error('Error fetching role permissions:', err)
       });

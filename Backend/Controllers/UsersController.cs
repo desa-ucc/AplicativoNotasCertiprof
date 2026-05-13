@@ -145,7 +145,8 @@ namespace Backend.Controllers
             {
                 using (var command = _dbContext.Database.GetDbConnection().CreateCommand())
                 {
-                    command.CommandText = "SELECT id, nombre_modulo, ruta FROM cert_modulos";
+                    command.CommandText = "sp_ListarModulosSistema";
+                    command.CommandType = System.Data.CommandType.StoredProcedure;
 
                     if (_dbContext.Database.GetDbConnection().State != System.Data.ConnectionState.Open)
                     {
@@ -220,7 +221,7 @@ namespace Backend.Controllers
             {
                 using (var command = _dbContext.Database.GetDbConnection().CreateCommand())
                 {
-                    command.CommandText = "sp_ActualizarPermisosRol";
+                    command.CommandText = "sp_GuardarPermisosRol";
                     command.CommandType = System.Data.CommandType.StoredProcedure;
 
                     var pRolId = command.CreateParameter(); pRolId.ParameterName = "@RolId"; pRolId.Value = id; command.Parameters.Add(pRolId);
