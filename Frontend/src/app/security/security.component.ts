@@ -64,7 +64,25 @@ export class SecurityComponent implements OnInit {
       });
   }
 
+
+  createRole() {
+    const roleName = prompt('Ingrese el nombre del nuevo rol:');
+    if (roleName) {
+      this.http.post('/api/users/roles', { name: roleName }).subscribe({
+        next: () => {
+          this.fetchRoles();
+          alert('Rol creado exitosamente.');
+        },
+        error: (err) => {
+          console.error('Error creating role:', err);
+          alert('Error al crear el rol.');
+        }
+      });
+    }
+  }
+
   // --- Users Management ---
+
 
   openCreateModal() {
     this.isCreating = true;
@@ -146,7 +164,7 @@ export class SecurityComponent implements OnInit {
     this.http.get<any[]>(`/api/users/roles/${role.id}/modules`)
       .subscribe({
         next: (data) => {
-          this.rolePermissions.clear(); // Clear again just to be safe
+          this.rolePermissions.clear();
           data.forEach(m => this.rolePermissions.add(parseInt(m.id, 10)));
         },
         error: (err) => console.error('Error fetching role permissions:', err)
@@ -179,7 +197,12 @@ export class SecurityComponent implements OnInit {
       moduleIds: Array.from(this.rolePermissions)
     }).subscribe({
       next: () => {
-        alert('Permisos actualizados. Tenga en cuenta que los usuarios deben volver a iniciar sesión para ver los cambios en su menú principal.');
+        const currentRole = localStorage.getItem('role');
+        if (currentRole && currentRole === this.selectedRole.name) {
+             alert('Permisos actualizados. Por favor cierre sesión y vuelva a ingresar para aplicar los cambios a su cuenta.');
+        } else {
+             alert('Permisos actualizados correctamente.');
+        }
         this.closePermissionsModal();
       },
       error: (err) => {

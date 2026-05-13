@@ -69,7 +69,6 @@ namespace Backend.Controllers
             try
             {
                 string hashString;
-                // Note: Legacy system requires raw SHA256. Ideally, a salt should be appended here.
                 using (var sha256 = System.Security.Cryptography.SHA256.Create())
                 {
                     var hashedBytes = sha256.ComputeHash(System.Text.Encoding.UTF8.GetBytes(request.Password));
@@ -137,6 +136,33 @@ namespace Backend.Controllers
             }
         }
 
+        public class CreateRoleRequest { public string Name { get; set; } = string.Empty; }
+
+        [HttpPost("roles")]
+        public async Task<IActionResult> CreateRole([FromBody] CreateRoleRequest request)
+        {
+            try
+            {
+                using (var command = _dbContext.Database.GetDbConnection().CreateCommand())
+                {
+                    command.CommandText = "sp_CrearRol";
+                    command.CommandType = System.Data.CommandType.StoredProcedure;
+                    var pName = command.CreateParameter(); pName.ParameterName = "@NombreRol"; pName.Value = request.Name; command.Parameters.Add(pName);
+
+                    if (_dbContext.Database.GetDbConnection().State != System.Data.ConnectionState.Open)
+                    {
+                        await _dbContext.Database.OpenConnectionAsync();
+                    }
+                    await command.ExecuteNonQueryAsync();
+                }
+                return Ok(new { Message = "Rol creado exitosamente." });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { Message = ex.Message });
+            }
+        }
+
         [HttpGet("modules")]
         public async Task<IActionResult> GetModules()
         {
@@ -145,7 +171,7 @@ namespace Backend.Controllers
             {
                 using (var command = _dbContext.Database.GetDbConnection().CreateCommand())
                 {
-                    command.CommandText = "sp_ListarModulosSistema";
+                    command.CommandText = "sp_ListarTodosLosModulos";
                     command.CommandType = System.Data.CommandType.StoredProcedure;
 
                     if (_dbContext.Database.GetDbConnection().State != System.Data.ConnectionState.Open)
@@ -221,7 +247,7 @@ namespace Backend.Controllers
             {
                 using (var command = _dbContext.Database.GetDbConnection().CreateCommand())
                 {
-                    command.CommandText = "sp_GuardarPermisosRol";
+                    command.CommandText = "sp_ActualizarPermisosRol";
                     command.CommandType = System.Data.CommandType.StoredProcedure;
 
                     var pRolId = command.CreateParameter(); pRolId.ParameterName = "@RolId"; pRolId.Value = id; command.Parameters.Add(pRolId);
