@@ -10,6 +10,17 @@ import { CommonModule } from '@angular/common';
   styleUrl: './app.component.css'
 })
 export class AppComponent {
+  get userMenu(): any[] {
+    const menuStr = localStorage.getItem('menu');
+    if (menuStr) {
+        try {
+            return JSON.parse(menuStr);
+        } catch (e) {
+            return [];
+        }
+    }
+    return [];
+  }
   title = 'Frontend';
 
   constructor(private router: Router) {}

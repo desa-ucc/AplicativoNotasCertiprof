@@ -77,10 +77,11 @@ namespace Backend.Controllers
 
                 using (var command = _dbContext.Database.GetDbConnection().CreateCommand())
                 {
-                    command.CommandText = "INSERT INTO cert_usuarios (username, password_hash, rol_id) VALUES (@Username, @Hash, @RolId)";
+                    command.CommandText = "sp_CrearUsuario";
+                    command.CommandType = System.Data.CommandType.StoredProcedure;
 
                     var pUser = command.CreateParameter(); pUser.ParameterName = "@Username"; pUser.Value = request.Username; command.Parameters.Add(pUser);
-                    var pHash = command.CreateParameter(); pHash.ParameterName = "@Hash"; pHash.Value = hashString; command.Parameters.Add(pHash);
+                    var pHash = command.CreateParameter(); pHash.ParameterName = "@PasswordHash"; pHash.Value = hashString; command.Parameters.Add(pHash);
                     var pRol = command.CreateParameter(); pRol.ParameterName = "@RolId"; pRol.Value = request.RolId; command.Parameters.Add(pRol);
 
                     if (_dbContext.Database.GetDbConnection().State != System.Data.ConnectionState.Open)
@@ -106,7 +107,8 @@ namespace Backend.Controllers
             {
                 using (var command = _dbContext.Database.GetDbConnection().CreateCommand())
                 {
-                    command.CommandText = "DELETE FROM cert_usuarios WHERE id = @Id";
+                    command.CommandText = "sp_EliminarUsuario";
+                    command.CommandType = System.Data.CommandType.StoredProcedure;
 
                     var pId = command.CreateParameter(); pId.ParameterName = "@Id"; pId.Value = id; command.Parameters.Add(pId);
 

@@ -11,18 +11,32 @@ import { FormsModule } from '@angular/forms';
   styleUrls: ['./security.component.css']
 })
 export class SecurityComponent implements OnInit {
+  activeTab: 'users' | 'roles' = 'users';
+
   users: any[] = [];
   roles: any[] = [];
+  modules: any[] = [];
 
+  // User Modal State
   isEditing = false;
   isCreating = false;
   userForm: any = { username: '', password: '', rolId: 1 };
+
+  // Roles/Permissions Modal State
+  isEditingPermissions = false;
+  selectedRole: any = null;
+  rolePermissions: Set<number> = new Set();
 
   constructor(private http: HttpClient) {}
 
   ngOnInit(): void {
     this.fetchRoles();
     this.fetchUsers();
+    this.fetchModules();
+  }
+
+  setTab(tab: 'users' | 'roles') {
+    this.activeTab = tab;
   }
 
   fetchRoles() {
@@ -40,6 +54,16 @@ export class SecurityComponent implements OnInit {
         error: (err) => console.error('Error fetching users:', err)
       });
   }
+
+  fetchModules() {
+    this.http.get<any[]>('/api/users/modules')
+      .subscribe({
+        next: (data) => this.modules = data,
+        error: (err) => console.error('Error fetching modules:', err)
+      });
+  }
+
+  // --- Users Management ---
 
   openCreateModal() {
     this.isCreating = true;
@@ -62,7 +86,7 @@ export class SecurityComponent implements OnInit {
   saveUser() {
     if (this.isCreating) {
       if (!this.userForm.username || !this.userForm.password) {
-        alert('Por favor complete todos los campos');
+        alert('Por favor complete todos los campos requeridos');
         return;
       }
       this.http.post('/api/users', { username: this.userForm.username, password: this.userForm.password, rolId: parseInt(this.userForm.rolId) })
@@ -108,5 +132,58 @@ export class SecurityComponent implements OnInit {
           }
         });
     }
+  }
+
+  // --- Roles & Permissions Management ---
+
+  openPermissionsModal(role: any) {
+    this.selectedRole = role;
+    this.isEditingPermissions = true;
+    this.rolePermissions.clear();
+
+    // Fetch existing permissions for this role
+    this.http.get<any[]>(`/api/users/roles/${role.id}/modules`)
+      .subscribe({
+        next: (data) => {
+          data.forEach(m => this.rolePermissions.add(m.id));
+        },
+        error: (err) => console.error('Error fetching role permissions:', err)
+      });
+  }
+
+  closePermissionsModal() {
+    this.isEditingPermissions = false;
+    this.selectedRole = null;
+    this.rolePermissions.clear();
+  }
+
+  togglePermission(moduleId: number, event: Event) {
+    const isChecked = (event.target as HTMLInputElement).checked;
+    if (isChecked) {
+      this.rolePermissions.add(moduleId);
+    } else {
+      this.rolePermissions.delete(moduleId);
+    }
+  }
+
+  hasPermission(moduleId: number): boolean {
+    return this.rolePermissions.has(moduleId);
+  }
+
+  savePermissions() {
+    if (!this.selectedRole) return;
+
+    this.http.put(`/api/users/roles/${this.selectedRole.id}/permissions`, {
+      moduleIds: Array.from(this.rolePermissions)
+    }).subscribe({
+      next: () => {
+        alert('Permisos actualizados. Tenga en cuenta que los usuarios deben volver a iniciar sesión para ver los cambios en su menú principal.');
+        this.closePermissionsModal();
+      },
+      error: (err) => {
+        console.error('Error updating permissions:', err);
+        alert('Error al actualizar permisos.');
+      }
+    });
   }
 }
