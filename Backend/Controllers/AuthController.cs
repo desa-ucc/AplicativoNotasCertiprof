@@ -35,7 +35,7 @@ namespace Backend.Controllers
                 using (var command = _dbContext.Database.GetDbConnection().CreateCommand())
                 {
                     // Query directly the cert_usuarios table. Using ADO.NET the House Way.
-                    command.CommandText = "SELECT u.id, u.username, u.password_hash, r.nombre_rol as role_name FROM cert_usuarios u JOIN cert_roles r ON u.rol_id = r.id WHERE u.username = @Username";
+                    command.CommandText = "SELECT u.id, u.username, u.password_hash, r.name as role_name FROM cert_usuarios u JOIN cert_roles r ON u.rol_id = r.id WHERE u.username = @Username";
 
                     var pUser = command.CreateParameter();
                     pUser.ParameterName = "@Username";
@@ -51,42 +51,19 @@ namespace Backend.Controllers
                     {
                         if (await reader.ReadAsync())
                         {
-                            var passwordHashValue = reader.GetValue(reader.GetOrdinal("password_hash"));
+                            var storedHash = reader.GetString(reader.GetOrdinal("password_hash"));
                             var roleName = reader.GetString(reader.GetOrdinal("role_name"));
 
-                            byte[]? storedHashBytes = null;
-
-                            if (passwordHashValue is byte[] bytes)
+                            // Simple SHA256 hash comparison
+                            using (var sha256 = System.Security.Cryptography.SHA256.Create())
                             {
-                                storedHashBytes = bytes;
-                            }
-                            else if (passwordHashValue is string hashStringValue)
-                            {
-                                if (hashStringValue.StartsWith("0x", StringComparison.OrdinalIgnoreCase))
-                                {
-                                    hashStringValue = hashStringValue[2..];
-                                }
+                                var hashedBytes = sha256.ComputeHash(System.Text.Encoding.UTF8.GetBytes(request.Password));
+                                var hashString = BitConverter.ToString(hashedBytes).Replace("-", "").ToLower();
 
-                                if (hashStringValue.Length % 2 == 0)
+                                if (hashString == storedHash.ToLower())
                                 {
-                                    storedHashBytes = new byte[hashStringValue.Length / 2];
-                                    for (int i = 0; i < storedHashBytes.Length; i++)
-                                    {
-                                        storedHashBytes[i] = Convert.ToByte(hashStringValue.Substring(i * 2, 2), 16);
-                                    }
-                                }
-                            }
-
-                            if (storedHashBytes != null)
-                            {
-                                using (var sha256 = System.Security.Cryptography.SHA256.Create())
-                                {
-                                    var hashedBytes = sha256.ComputeHash(System.Text.Encoding.UTF8.GetBytes(request.Password));
-                                    if (hashedBytes.SequenceEqual(storedHashBytes))
-                                    {
-                                        var token = _authService.GenerateJwtToken(request.Username, roleName);
-                                        return Ok(new { Token = token, Role = roleName });
-                                    }
+                                    var token = _authService.GenerateJwtToken(request.Username, roleName);
+                                    return Ok(new { Token = token, Role = roleName });
                                 }
                             }
                         }
