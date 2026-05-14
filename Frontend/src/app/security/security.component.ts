@@ -57,7 +57,7 @@ export class SecurityComponent implements OnInit {
   }
 
   fetchModules() {
-    this.http.get<any[]>('/api/users/modules')
+    this.http.get<any[]>('/api/security/modules')
       .subscribe({
         next: (data) => { this.modules = data; this.isLoadingModules = false; },
         error: (err) => { console.error('Error fetching modules:', err); this.isLoadingModules = false; }

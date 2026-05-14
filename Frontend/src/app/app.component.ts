@@ -43,13 +43,12 @@ export class AppComponent implements OnInit {
     return localStorage.getItem('role');
   }
 
-  isLoggedIn(): boolean {
+  get isLoggedIn(): boolean {
     return !!localStorage.getItem('token');
   }
 
   logout() {
-    localStorage.removeItem('token');
-    localStorage.removeItem('role');
+    localStorage.clear();
     this.router.navigate(['/login']);
   }
 }

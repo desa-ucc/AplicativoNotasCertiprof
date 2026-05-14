@@ -163,7 +163,7 @@ namespace Backend.Controllers
             }
         }
 
-        [HttpGet("modules")]
+        [HttpGet("/api/security/modules")]
         public async Task<IActionResult> GetModules()
         {
             var records = new List<object>();
