@@ -1,40 +1,42 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, FormsModule],
   templateUrl: './login.component.html',
   styleUrls: ['./login.component.css']
 })
 export class LoginComponent {
-  loginForm: FormGroup;
+  username = '';
+  passwordPlain = '';
   errorMessage = '';
 
-  constructor(private fb: FormBuilder, private http: HttpClient, private router: Router) {
-    this.loginForm = this.fb.group({
-      username: ['', Validators.required],
-      password: ['', Validators.required]
-    });
-  }
+  constructor(private http: HttpClient, private router: Router) {}
 
-  onSubmit() {
-    if (this.loginForm.valid) {
-      this.http.post<any>('/api/auth/login', this.loginForm.value)
-        .subscribe({
-          next: (res) => {
-            localStorage.setItem('token', res.token);
-            localStorage.setItem('role', res.role);
-            this.router.navigate(['/upload']);
-          },
-          error: () => {
-            this.errorMessage = 'Credenciales inválidas';
-          }
-        });
+  login() {
+    if (!this.username || !this.passwordPlain) {
+      this.errorMessage = 'Debe ingresar usuario y contraseña';
+      return;
     }
+
+    this.http.post<any>('/api/auth/login', { username: this.username, password: this.passwordPlain })
+      .subscribe({
+        next: (res) => {
+          localStorage.setItem('token', res.token);
+          localStorage.setItem('role', res.role);
+          if (res.menu) {
+             localStorage.setItem('menu', JSON.stringify(res.menu));
+          }
+          this.router.navigate(['/upload']);
+        },
+        error: () => {
+          this.errorMessage = 'Credenciales inválidas';
+        }
+      });
   }
 }

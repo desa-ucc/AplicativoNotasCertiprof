@@ -30,11 +30,12 @@ export class AppComponent {
   }
 
   isLoggedIn(): boolean {
-    return !!localStorage.getItem('token') && this.router.url !== '/login';
+    return !!localStorage.getItem('token');
   }
 
   logout() {
-    localStorage.clear();
+    localStorage.removeItem('token');
+    localStorage.removeItem('role');
     this.router.navigate(['/login']);
   }
 }
