@@ -1,6 +1,5 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
@@ -12,8 +11,7 @@ import { Router } from '@angular/router';
   templateUrl: './login.component.html',
   styleUrls: ['./login.component.css']
 })
-export class LoginComponent implements OnInit {
-  ngOnInit() { localStorage.clear(); }
+export class LoginComponent {
   loginForm: FormGroup;
   errorMessage = '';
 
@@ -26,21 +24,12 @@ export class LoginComponent implements OnInit {
 
   onSubmit() {
     if (this.loginForm.valid) {
-      const payload = {
-        username: this.loginForm.value.username,
-        passwordPlain: this.loginForm.value.password
-      };
-      this.http.post<any>('/api/auth/login', payload)
+      this.http.post<any>('/api/auth/login', this.loginForm.value)
         .subscribe({
           next: (res) => {
             localStorage.setItem('token', res.token);
             localStorage.setItem('role', res.role);
-            if (res.menu && res.menu.length > 0) {
-                localStorage.setItem('menu', JSON.stringify(res.menu));
-                this.router.navigate([res.menu[0].path]);
-            } else {
-                this.router.navigate(['/upload']);
-            }
+            this.router.navigate(['/upload']);
           },
           error: () => {
             this.errorMessage = 'Credenciales inválidas';

@@ -16,7 +16,6 @@ export class SecurityComponent implements OnInit {
   users: any[] = [];
   roles: any[] = [];
   modules: any[] = [];
-  isLoadingModules = true;
 
   // User Modal State
   isEditing = false;
@@ -59,30 +58,12 @@ export class SecurityComponent implements OnInit {
   fetchModules() {
     this.http.get<any[]>('/api/security/modules')
       .subscribe({
-        next: (data) => { this.modules = data; this.isLoadingModules = false; },
-        error: (err) => { console.error('Error fetching modules:', err); this.isLoadingModules = false; }
+        next: (data) => this.modules = data,
+        error: (err) => console.error('Error fetching modules:', err)
       });
-  }
-
-
-  createRole() {
-    const roleName = prompt('Ingrese el nombre del nuevo rol:');
-    if (roleName) {
-      this.http.post('/api/users/roles', { name: roleName }).subscribe({
-        next: () => {
-          this.fetchRoles();
-          alert('Rol creado exitosamente.');
-        },
-        error: (err) => {
-          console.error('Error creating role:', err);
-          alert('Error al crear el rol.');
-        }
-      });
-    }
   }
 
   // --- Users Management ---
-
 
   openCreateModal() {
     this.isCreating = true;
@@ -161,11 +142,10 @@ export class SecurityComponent implements OnInit {
     this.rolePermissions.clear();
 
     // Fetch existing permissions for this role
-    this.http.get<any[]>(`/api/users/roles/${role.id}/modules`)
+    this.http.get<any[]>(`/api/security/roles/${role.id}/modules`)
       .subscribe({
         next: (data) => {
-          this.rolePermissions.clear();
-          data.forEach(m => this.rolePermissions.add(parseInt(m.id, 10)));
+          data.forEach(m => this.rolePermissions.add(m.id));
         },
         error: (err) => console.error('Error fetching role permissions:', err)
       });
@@ -193,16 +173,11 @@ export class SecurityComponent implements OnInit {
   savePermissions() {
     if (!this.selectedRole) return;
 
-    this.http.put(`/api/users/roles/${this.selectedRole.id}/permissions`, {
+    this.http.put(`/api/security/roles/${this.selectedRole.id}/permissions`, {
       moduleIds: Array.from(this.rolePermissions)
     }).subscribe({
       next: () => {
-        const currentRole = localStorage.getItem('role');
-        if (currentRole && currentRole === this.selectedRole.name) {
-             alert('Permisos actualizados. Por favor cierre sesión y vuelva a ingresar para aplicar los cambios a su cuenta.');
-        } else {
-             alert('Permisos actualizados correctamente.');
-        }
+        alert('Permisos actualizados. Tenga en cuenta que los usuarios deben volver a iniciar sesión para ver los cambios en su menú principal.');
         this.closePermissionsModal();
       },
       error: (err) => {
