@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Backend.Data;
@@ -34,8 +35,8 @@ namespace Backend.Controllers
             {
                 using (var command = _dbContext.Database.GetDbConnection().CreateCommand())
                 {
-                    // Query directly the cert_usuarios table. Using ADO.NET the House Way.
-                    command.CommandText = "SELECT u.id, u.username, u.password_hash, r.nombre_rol as role_name FROM cert_usuarios u JOIN cert_roles r ON u.rol_id = r.id WHERE u.username = @Username";
+                    // 1. Verify credentials and get role details using raw SQL
+                    command.CommandText = "SELECT u.id, u.username, u.password_hash, u.rol_id, r.nombre_rol as role_name FROM cert_usuarios u JOIN cert_roles r ON u.rol_id = r.id WHERE u.username = @Username";
 
                     var pUser = command.CreateParameter();
                     pUser.ParameterName = "@Username";
@@ -47,12 +48,17 @@ namespace Backend.Controllers
                         await _dbContext.Database.OpenConnectionAsync();
                     }
 
+                    int? rolId = null;
+                    string roleName = "";
+                    bool credentialsValid = false;
+
                     using (var reader = await command.ExecuteReaderAsync())
                     {
                         if (await reader.ReadAsync())
                         {
                             var passwordHashValue = reader.GetValue(reader.GetOrdinal("password_hash"));
-                            var roleName = reader.GetString(reader.GetOrdinal("role_name"));
+                            rolId = reader.GetInt32(reader.GetOrdinal("rol_id"));
+                            roleName = reader.GetString(reader.GetOrdinal("role_name"));
 
                             byte[]? storedHashBytes = null;
 
@@ -84,12 +90,43 @@ namespace Backend.Controllers
                                     var hashedBytes = sha256.ComputeHash(System.Text.Encoding.UTF8.GetBytes(request.Password));
                                     if (hashedBytes.SequenceEqual(storedHashBytes))
                                     {
-                                        var token = _authService.GenerateJwtToken(request.Username, roleName);
-                                        return Ok(new { Token = token, Role = roleName });
+                                        credentialsValid = true;
                                     }
                                 }
                             }
                         }
+                    }
+
+                    // 2. If valid, fetch the allowed menu modules for this role via SP
+                    if (credentialsValid && rolId.HasValue)
+                    {
+                        var menu = new List<object>();
+
+                        using (var menuCmd = _dbContext.Database.GetDbConnection().CreateCommand())
+                        {
+                            menuCmd.CommandText = "sp_ObtenerMenuPorRol";
+                            menuCmd.CommandType = System.Data.CommandType.StoredProcedure;
+
+                            var pRol = menuCmd.CreateParameter();
+                            pRol.ParameterName = "@RolId";
+                            pRol.Value = rolId.Value;
+                            menuCmd.Parameters.Add(pRol);
+
+                            using (var menuReader = await menuCmd.ExecuteReaderAsync())
+                            {
+                                while (await menuReader.ReadAsync())
+                                {
+                                    menu.Add(new {
+                                        id = menuReader.GetInt32(menuReader.GetOrdinal("ModuloId")),
+                                        name = menuReader.GetString(menuReader.GetOrdinal("NombreModulo")),
+                                        path = menuReader.GetString(menuReader.GetOrdinal("RutaFrontEnd"))
+                                    });
+                                }
+                            }
+                        }
+
+                        var token = _authService.GenerateJwtToken(request.Username, roleName);
+                        return Ok(new { Token = token, Role = roleName, Menu = menu });
                     }
                 }
             }
@@ -106,12 +143,21 @@ namespace Backend.Controllers
                     if (request.Username == adminUser && request.Password == adminPass)
                     {
                         var token = _authService.GenerateJwtToken("admin", "Administrador");
-                        return Ok(new { Token = token, Role = "Administrador" });
+                        var fallbackMenu = new List<object> {
+                            new { id = 1, name = "Cargar Archivo", path = "/upload" },
+                            new { id = 2, name = "Historial", path = "/history" },
+                            new { id = 3, name = "Seguridad", path = "/security" }
+                        };
+                        return Ok(new { Token = token, Role = "Administrador", Menu = fallbackMenu });
                     }
                     else if (request.Username == docenteUser && request.Password == docentePass)
                     {
                         var token = _authService.GenerateJwtToken("docente", "Docente");
-                        return Ok(new { Token = token, Role = "Docente" });
+                        var fallbackMenu = new List<object> {
+                            new { id = 1, name = "Cargar Archivo", path = "/upload" },
+                            new { id = 2, name = "Historial", path = "/history" }
+                        };
+                        return Ok(new { Token = token, Role = "Docente", Menu = fallbackMenu });
                     }
                 }
 
