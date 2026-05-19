@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Backend.Data;
@@ -27,34 +28,43 @@ namespace Backend.Controllers
             public string Password { get; set; } = string.Empty;
         }
 
+        public class MenuItem
+        {
+            public string Path { get; set; } = string.Empty;
+            public string Name { get; set; } = string.Empty;
+            public string Icon { get; set; } = string.Empty;
+        }
+
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginRequest request)
         {
             try
             {
+                if (_dbContext.Database.GetDbConnection().State != System.Data.ConnectionState.Open)
+                {
+                    await _dbContext.Database.OpenConnectionAsync();
+                }
+
+                int? roleId = null;
+                string roleName = string.Empty;
+                byte[]? storedHashBytes = null;
+                bool isUserValid = false;
+
                 using (var command = _dbContext.Database.GetDbConnection().CreateCommand())
                 {
-                    // Query directly the cert_usuarios table. Using ADO.NET the House Way.
-                    command.CommandText = "SELECT u.id, u.username, u.password_hash, r.nombre_rol as role_name FROM cert_usuarios u JOIN cert_roles r ON u.rol_id = r.id WHERE u.username = @Username";
-
+                    command.CommandText = "SELECT u.id, u.username, u.password_hash, r.id as role_id, r.nombre_rol as role_name FROM cert_usuarios u JOIN cert_roles r ON u.rol_id = r.id WHERE u.username = @Username";
                     var pUser = command.CreateParameter();
                     pUser.ParameterName = "@Username";
                     pUser.Value = request.Username;
                     command.Parameters.Add(pUser);
-
-                    if (_dbContext.Database.GetDbConnection().State != System.Data.ConnectionState.Open)
-                    {
-                        await _dbContext.Database.OpenConnectionAsync();
-                    }
 
                     using (var reader = await command.ExecuteReaderAsync())
                     {
                         if (await reader.ReadAsync())
                         {
                             var passwordHashValue = reader.GetValue(reader.GetOrdinal("password_hash"));
-                            var roleName = reader.GetString(reader.GetOrdinal("role_name"));
-
-                            byte[]? storedHashBytes = null;
+                            roleName = reader.GetString(reader.GetOrdinal("role_name"));
+                            roleId = reader.GetInt32(reader.GetOrdinal("role_id"));
 
                             if (passwordHashValue is byte[] bytes)
                             {
@@ -84,18 +94,55 @@ namespace Backend.Controllers
                                     var hashedBytes = sha256.ComputeHash(System.Text.Encoding.UTF8.GetBytes(request.Password));
                                     if (hashedBytes.SequenceEqual(storedHashBytes))
                                     {
-                                        var token = _authService.GenerateJwtToken(request.Username, roleName);
-                                        return Ok(new { Token = token, Role = roleName });
+                                        isUserValid = true;
                                     }
                                 }
                             }
                         }
                     }
                 }
+
+                if (isUserValid && roleId.HasValue)
+                {
+                    var token = _authService.GenerateJwtToken(request.Username, roleName);
+                    var menu = new List<MenuItem>();
+
+                    try
+                    {
+                        using (var command = _dbContext.Database.GetDbConnection().CreateCommand())
+                        {
+                            command.CommandText = "sp_ObtenerMenuPorRol";
+                            command.CommandType = System.Data.CommandType.StoredProcedure;
+
+                            var pRoleId = command.CreateParameter();
+                            pRoleId.ParameterName = "@RolId";
+                            pRoleId.Value = roleId.Value;
+                            command.Parameters.Add(pRoleId);
+
+                            using (var reader = await command.ExecuteReaderAsync())
+                            {
+                                while (await reader.ReadAsync())
+                                {
+                                    menu.Add(new MenuItem
+                                    {
+                                        Name = reader.GetString(reader.GetOrdinal("Nombre")),
+                                        Path = reader.GetString(reader.GetOrdinal("Ruta")),
+                                        Icon = reader.GetString(reader.GetOrdinal("Icono"))
+                                    });
+                                }
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        // Log or ignore SP error
+                    }
+
+                    return Ok(new { Token = token, Role = roleName, Menu = menu });
+                }
             }
             catch (Exception ex)
             {
-                // Fallback for testing if cert_usuarios/cert_roles don't exist yet in local testing
                 if (ex.Message.Contains("Invalid object name 'cert_usuarios'") || ex.Message.Contains("Invalid object name 'cert_roles'"))
                 {
                     var adminUser = Environment.GetEnvironmentVariable("ADMIN_USERNAME") ?? "admin";
@@ -103,15 +150,25 @@ namespace Backend.Controllers
                     var docenteUser = Environment.GetEnvironmentVariable("DOCENTE_USERNAME") ?? "docente";
                     var docentePass = Environment.GetEnvironmentVariable("DOCENTE_PASSWORD") ?? "docente123";
 
+                    var defaultAdminMenu = new List<MenuItem> {
+                        new MenuItem { Name = "Cargar Archivo", Path = "/upload", Icon = "upload_file" },
+                        new MenuItem { Name = "Historial", Path = "/history", Icon = "history" },
+                        new MenuItem { Name = "Seguridad", Path = "/security", Icon = "security" }
+                    };
+
+                    var defaultDocenteMenu = new List<MenuItem> {
+                        new MenuItem { Name = "Historial", Path = "/history", Icon = "history" }
+                    };
+
                     if (request.Username == adminUser && request.Password == adminPass)
                     {
                         var token = _authService.GenerateJwtToken("admin", "Administrador");
-                        return Ok(new { Token = token, Role = "Administrador" });
+                        return Ok(new { Token = token, Role = "Administrador", Menu = defaultAdminMenu });
                     }
                     else if (request.Username == docenteUser && request.Password == docentePass)
                     {
-                        var token = _authService.GenerateJwtToken("docente", "Docente");
-                        return Ok(new { Token = token, Role = "Docente" });
+                        var token = _authService.GenerateJwtToken("docente", "Consulta");
+                        return Ok(new { Token = token, Role = "Consulta", Menu = defaultDocenteMenu });
                     }
                 }
 
