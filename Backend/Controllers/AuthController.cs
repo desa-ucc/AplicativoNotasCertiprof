@@ -1,19 +1,30 @@
 using System;
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 using System.Collections.Generic;
 using System.Data;
 >>>>>>> parent of 4b8b460 (fix: Direct ADO.NET implementation for Login to resolve 400/401 binding and hashing issues)
 using System.Linq;
+=======
+using System.Collections.Generic;
+using System.Data;
+using System.Text.Json.Serialization;
+>>>>>>> origin/fix-excel-upload-db-mapping-8388625477352838879-12307756902101735074
 using System.Threading.Tasks;
 using Backend.Data;
 using Backend.Services;
 using Microsoft.AspNetCore.Mvc;
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 using Microsoft.Data.SqlClient;
 >>>>>>> parent of 4b8b460 (fix: Direct ADO.NET implementation for Login to resolve 400/401 binding and hashing issues)
 using Microsoft.EntityFrameworkCore;
+=======
+using Microsoft.Data.SqlClient;
+using Microsoft.Extensions.Configuration;
+>>>>>>> origin/fix-excel-upload-db-mapping-8388625477352838879-12307756902101735074
 
 namespace Backend.Controllers
 {
@@ -21,32 +32,49 @@ namespace Backend.Controllers
     [Route("api/[controller]")]
     public class AuthController : ControllerBase
     {
-        private readonly AppDbContext _dbContext;
         private readonly IAuthService _authService;
+        private readonly IConfiguration _configuration;
 
-        public AuthController(AppDbContext dbContext, IAuthService authService)
+        public AuthController(IAuthService authService, IConfiguration configuration)
         {
-            _dbContext = dbContext;
             _authService = authService;
+            _configuration = configuration;
         }
 
         public class LoginRequest
         {
+            [JsonPropertyName("username")]
             public string Username { get; set; } = string.Empty;
+<<<<<<< HEAD
 <<<<<<< HEAD
             public string Password { get; set; } = string.Empty;
 =======
             public string PasswordPlain { get; set; } = string.Empty;
 >>>>>>> parent of 4b8b460 (fix: Direct ADO.NET implementation for Login to resolve 400/401 binding and hashing issues)
+=======
+
+            [JsonPropertyName("passwordPlain")]
+            public string PasswordPlain { get; set; } = string.Empty;
+>>>>>>> origin/fix-excel-upload-db-mapping-8388625477352838879-12307756902101735074
         }
 
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginRequest request)
         {
+            if (request == null || string.IsNullOrEmpty(request.Username) || string.IsNullOrEmpty(request.PasswordPlain))
+                return BadRequest(new { message = "Faltan credenciales en el payload" });
+
             try
             {
-                using (var command = _dbContext.Database.GetDbConnection().CreateCommand())
+                string connectionString = _configuration.GetConnectionString("DefaultConnection") ?? "";
+
+                int? rolId = null;
+                string roleName = "";
+                bool credentialsValid = false;
+
+                using (SqlConnection conn = new SqlConnection(connectionString))
                 {
+<<<<<<< HEAD
 <<<<<<< HEAD
                     // Query directly the cert_usuarios table. Using ADO.NET the House Way.
                     command.CommandText = "SELECT u.id, u.username, u.password_hash, r.nombre_rol as role_name FROM cert_usuarios u JOIN cert_roles r ON u.rol_id = r.id WHERE u.username = @Username";
@@ -57,17 +85,36 @@ namespace Backend.Controllers
                     command.Parameters.Add(pUser);
 
                     if (_dbContext.Database.GetDbConnection().State != System.Data.ConnectionState.Open)
+=======
+                    using (SqlCommand cmd = new SqlCommand("sp_ValidarLogin", conn))
+>>>>>>> origin/fix-excel-upload-db-mapping-8388625477352838879-12307756902101735074
                     {
-                        await _dbContext.Database.OpenConnectionAsync();
+                        cmd.CommandType = System.Data.CommandType.StoredProcedure;
+                        cmd.Parameters.Add(new SqlParameter("@Username", System.Data.SqlDbType.VarChar, 100) { Value = request.Username });
+                        cmd.Parameters.Add(new SqlParameter("@PasswordPlain", System.Data.SqlDbType.VarChar, 100) { Value = request.PasswordPlain });
+
+                        await conn.OpenAsync();
+                        using (SqlDataReader reader = await cmd.ExecuteReaderAsync())
+                        {
+                            if (await reader.ReadAsync())
+                            {
+                                rolId = reader.GetInt32(reader.GetOrdinal("rol_id"));
+                                roleName = reader.GetString(reader.GetOrdinal("role_name"));
+                                credentialsValid = true;
+                            }
+                        }
                     }
 
-                    using (var reader = await command.ExecuteReaderAsync())
+                    if (credentialsValid && rolId.HasValue)
                     {
-                        if (await reader.ReadAsync())
-                        {
-                            var passwordHashValue = reader.GetValue(reader.GetOrdinal("password_hash"));
-                            var roleName = reader.GetString(reader.GetOrdinal("role_name"));
+                        var menu = new List<object>();
 
+                        using (SqlCommand menuCmd = new SqlCommand("sp_ObtenerMenuPorRol", conn))
+                        {
+                            menuCmd.CommandType = System.Data.CommandType.StoredProcedure;
+                            menuCmd.Parameters.Add(new SqlParameter("@RolId", SqlDbType.Int) { Value = rolId.Value });
+
+<<<<<<< HEAD
                             byte[]? storedHashBytes = null;
 
                             if (passwordHashValue is byte[] bytes)
@@ -127,39 +174,23 @@ namespace Backend.Controllers
 
                             using (var menuReader = await menuCmd.ExecuteReaderAsync())
 >>>>>>> parent of 4b8b460 (fix: Direct ADO.NET implementation for Login to resolve 400/401 binding and hashing issues)
+=======
+                            using (SqlDataReader menuReader = await menuCmd.ExecuteReaderAsync())
+>>>>>>> origin/fix-excel-upload-db-mapping-8388625477352838879-12307756902101735074
                             {
-                                storedHashBytes = bytes;
-                            }
-                            else if (passwordHashValue is string hashStringValue)
-                            {
-                                if (hashStringValue.StartsWith("0x", StringComparison.OrdinalIgnoreCase))
+                                while (await menuReader.ReadAsync())
                                 {
-                                    hashStringValue = hashStringValue[2..];
-                                }
-
-                                if (hashStringValue.Length % 2 == 0)
-                                {
-                                    storedHashBytes = new byte[hashStringValue.Length / 2];
-                                    for (int i = 0; i < storedHashBytes.Length; i++)
-                                    {
-                                        storedHashBytes[i] = Convert.ToByte(hashStringValue.Substring(i * 2, 2), 16);
-                                    }
-                                }
-                            }
-
-                            if (storedHashBytes != null)
-                            {
-                                using (var sha256 = System.Security.Cryptography.SHA256.Create())
-                                {
-                                    var hashedBytes = sha256.ComputeHash(System.Text.Encoding.UTF8.GetBytes(request.Password));
-                                    if (hashedBytes.SequenceEqual(storedHashBytes))
-                                    {
-                                        var token = _authService.GenerateJwtToken(request.Username, roleName);
-                                        return Ok(new { Token = token, Role = roleName });
-                                    }
+                                    menu.Add(new {
+                                        id = menuReader.GetInt32(menuReader.GetOrdinal("ModuloId")),
+                                        name = menuReader.GetString(menuReader.GetOrdinal("NombreModulo")),
+                                        path = menuReader.GetString(menuReader.GetOrdinal("RutaFrontEnd"))
+                                    });
                                 }
                             }
                         }
+
+                        var token = _authService.GenerateJwtToken(request.Username, roleName);
+                        return Ok(new { Token = token, Role = roleName, RolId = rolId.Value, Menu = menu });
                     }
                 }
             }
@@ -167,25 +198,38 @@ namespace Backend.Controllers
             {
                 // Fallback for testing if cert_usuarios/cert_roles don't exist yet in local testing
 <<<<<<< HEAD
+<<<<<<< HEAD
                 if (ex.Message.Contains("Invalid object name 'cert_usuarios'") || ex.Message.Contains("Invalid object name 'cert_roles'"))
 =======
                 if (ex.Message.Contains("Could not find stored procedure") || ex.Message.Contains("Invalid object name"))
 >>>>>>> parent of 4b8b460 (fix: Direct ADO.NET implementation for Login to resolve 400/401 binding and hashing issues)
+=======
+                if (ex.Message.Contains("Could not find stored procedure") || ex.Message.Contains("Invalid object name") || ex.Message.Contains("Login failed"))
+>>>>>>> origin/fix-excel-upload-db-mapping-8388625477352838879-12307756902101735074
                 {
                     var adminUser = Environment.GetEnvironmentVariable("ADMIN_USERNAME") ?? "admin";
                     var adminPass = Environment.GetEnvironmentVariable("ADMIN_PASSWORD") ?? "admin123";
                     var docenteUser = Environment.GetEnvironmentVariable("DOCENTE_USERNAME") ?? "docente";
                     var docentePass = Environment.GetEnvironmentVariable("DOCENTE_PASSWORD") ?? "docente123";
 
-                    if (request.Username == adminUser && request.Password == adminPass)
+                    if (request.Username == adminUser && request.PasswordPlain == adminPass)
                     {
                         var token = _authService.GenerateJwtToken("admin", "Administrador");
-                        return Ok(new { Token = token, Role = "Administrador" });
+                        var fallbackMenu = new List<object> {
+                            new { id = 1, name = "Cargar Archivo", path = "/upload" },
+                            new { id = 2, name = "Historial", path = "/history" },
+                            new { id = 3, name = "Seguridad", path = "/security" }
+                        };
+                        return Ok(new { Token = token, Role = "Administrador", RolId = 1, Menu = fallbackMenu });
                     }
-                    else if (request.Username == docenteUser && request.Password == docentePass)
+                    else if (request.Username == docenteUser && request.PasswordPlain == docentePass)
                     {
                         var token = _authService.GenerateJwtToken("docente", "Docente");
-                        return Ok(new { Token = token, Role = "Docente" });
+                        var fallbackMenu = new List<object> {
+                            new { id = 1, name = "Cargar Archivo", path = "/upload" },
+                            new { id = 2, name = "Historial", path = "/history" }
+                        };
+                        return Ok(new { Token = token, Role = "Docente", RolId = 2, Menu = fallbackMenu });
                     }
                 }
 

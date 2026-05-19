@@ -24,7 +24,12 @@ export class LoginComponent {
       return;
     }
 
-    this.http.post<any>('/api/auth/login', { username: this.username, password: this.passwordPlain })
+    const payload = {
+      username: this.username,
+      passwordPlain: this.passwordPlain
+    };
+
+    this.http.post<any>('/api/auth/login', payload)
       .subscribe({
         next: (res) => {
           localStorage.setItem('token', res.token);
