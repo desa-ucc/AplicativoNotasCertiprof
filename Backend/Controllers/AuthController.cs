@@ -1,9 +1,18 @@
 using System;
+<<<<<<< HEAD
+=======
+using System.Collections.Generic;
+using System.Data;
+>>>>>>> parent of 4b8b460 (fix: Direct ADO.NET implementation for Login to resolve 400/401 binding and hashing issues)
 using System.Linq;
 using System.Threading.Tasks;
 using Backend.Data;
 using Backend.Services;
 using Microsoft.AspNetCore.Mvc;
+<<<<<<< HEAD
+=======
+using Microsoft.Data.SqlClient;
+>>>>>>> parent of 4b8b460 (fix: Direct ADO.NET implementation for Login to resolve 400/401 binding and hashing issues)
 using Microsoft.EntityFrameworkCore;
 
 namespace Backend.Controllers
@@ -24,7 +33,11 @@ namespace Backend.Controllers
         public class LoginRequest
         {
             public string Username { get; set; } = string.Empty;
+<<<<<<< HEAD
             public string Password { get; set; } = string.Empty;
+=======
+            public string PasswordPlain { get; set; } = string.Empty;
+>>>>>>> parent of 4b8b460 (fix: Direct ADO.NET implementation for Login to resolve 400/401 binding and hashing issues)
         }
 
         [HttpPost("login")]
@@ -34,6 +47,7 @@ namespace Backend.Controllers
             {
                 using (var command = _dbContext.Database.GetDbConnection().CreateCommand())
                 {
+<<<<<<< HEAD
                     // Query directly the cert_usuarios table. Using ADO.NET the House Way.
                     command.CommandText = "SELECT u.id, u.username, u.password_hash, r.nombre_rol as role_name FROM cert_usuarios u JOIN cert_roles r ON u.rol_id = r.id WHERE u.username = @Username";
 
@@ -57,6 +71,62 @@ namespace Backend.Controllers
                             byte[]? storedHashBytes = null;
 
                             if (passwordHashValue is byte[] bytes)
+=======
+                    // 1. Verify credentials and get role details using sp_ValidarLogin
+                    command.CommandText = "sp_ValidarLogin";
+                    command.CommandType = System.Data.CommandType.StoredProcedure;
+
+                    // Fix: Explicitly define SqlDbType.VarChar to prevent HASHBYTES mismatch
+                    var pUser = command.CreateParameter();
+                    pUser.ParameterName = "@Username";
+                    ((SqlParameter)pUser).SqlDbType = SqlDbType.VarChar;
+                    ((SqlParameter)pUser).Size = 100;
+                    pUser.Value = request.Username;
+                    command.Parameters.Add(pUser);
+
+                    var pPass = command.CreateParameter();
+                    pPass.ParameterName = "@PasswordPlain";
+                    ((SqlParameter)pPass).SqlDbType = SqlDbType.VarChar;
+                    ((SqlParameter)pPass).Size = 100;
+                    pPass.Value = request.PasswordPlain;
+                    command.Parameters.Add(pPass);
+
+                    if (_dbContext.Database.GetDbConnection().State != System.Data.ConnectionState.Open)
+                    {
+                        await _dbContext.Database.OpenConnectionAsync();
+                    }
+
+                    int? rolId = null;
+                    string roleName = "";
+                    bool credentialsValid = false;
+
+                    using (var reader = await command.ExecuteReaderAsync())
+                    {
+                        if (await reader.ReadAsync())
+                        {
+                            rolId = reader.GetInt32(reader.GetOrdinal("rol_id"));
+                            roleName = reader.GetString(reader.GetOrdinal("role_name"));
+                            credentialsValid = true;
+                        }
+                    }
+
+                    // 2. If valid, fetch the allowed menu modules for this role via SP
+                    if (credentialsValid && rolId.HasValue)
+                    {
+                        var menu = new List<object>();
+
+                        using (var menuCmd = _dbContext.Database.GetDbConnection().CreateCommand())
+                        {
+                            menuCmd.CommandText = "sp_ObtenerMenuPorRol";
+                            menuCmd.CommandType = System.Data.CommandType.StoredProcedure;
+
+                            var pRol = menuCmd.CreateParameter();
+                            pRol.ParameterName = "@RolId";
+                            pRol.Value = rolId.Value;
+                            menuCmd.Parameters.Add(pRol);
+
+                            using (var menuReader = await menuCmd.ExecuteReaderAsync())
+>>>>>>> parent of 4b8b460 (fix: Direct ADO.NET implementation for Login to resolve 400/401 binding and hashing issues)
                             {
                                 storedHashBytes = bytes;
                             }
@@ -96,7 +166,11 @@ namespace Backend.Controllers
             catch (Exception ex)
             {
                 // Fallback for testing if cert_usuarios/cert_roles don't exist yet in local testing
+<<<<<<< HEAD
                 if (ex.Message.Contains("Invalid object name 'cert_usuarios'") || ex.Message.Contains("Invalid object name 'cert_roles'"))
+=======
+                if (ex.Message.Contains("Could not find stored procedure") || ex.Message.Contains("Invalid object name"))
+>>>>>>> parent of 4b8b460 (fix: Direct ADO.NET implementation for Login to resolve 400/401 binding and hashing issues)
                 {
                     var adminUser = Environment.GetEnvironmentVariable("ADMIN_USERNAME") ?? "admin";
                     var adminPass = Environment.GetEnvironmentVariable("ADMIN_PASSWORD") ?? "admin123";
