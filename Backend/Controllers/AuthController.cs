@@ -84,8 +84,35 @@ namespace Backend.Controllers
                                     var hashedBytes = sha256.ComputeHash(System.Text.Encoding.UTF8.GetBytes(request.Password));
                                     if (hashedBytes.SequenceEqual(storedHashBytes))
                                     {
+
                                         var token = _authService.GenerateJwtToken(request.Username, roleName);
-                                        return Ok(new { Token = token, Role = roleName });
+
+                                        var menuList = new System.Collections.Generic.List<object>();
+                                        using (var menuCommand = _dbContext.Database.GetDbConnection().CreateCommand())
+                                        {
+                                            menuCommand.CommandText = "sp_ObtenerMenuPorRol";
+                                            menuCommand.CommandType = System.Data.CommandType.StoredProcedure;
+
+                                            var pRol = menuCommand.CreateParameter();
+                                            pRol.ParameterName = "@RolNombre";
+                                            pRol.Value = roleName;
+                                            menuCommand.Parameters.Add(pRol);
+
+                                            using (var menuReader = await menuCommand.ExecuteReaderAsync())
+                                            {
+                                                while (await menuReader.ReadAsync())
+                                                {
+                                                    menuList.Add(new {
+                                                        name = menuReader.GetString(menuReader.GetOrdinal("Nombre")),
+                                                        path = menuReader.GetString(menuReader.GetOrdinal("Ruta")),
+                                                        icon = menuReader.IsDBNull(menuReader.GetOrdinal("Icono")) ? "" : menuReader.GetString(menuReader.GetOrdinal("Icono"))
+                                                    });
+                                                }
+                                            }
+                                        }
+
+                                        return Ok(new { Token = token, Role = roleName, Menu = menuList });
+
                                     }
                                 }
                             }
@@ -106,12 +133,20 @@ namespace Backend.Controllers
                     if (request.Username == adminUser && request.Password == adminPass)
                     {
                         var token = _authService.GenerateJwtToken("admin", "Administrador");
-                        return Ok(new { Token = token, Role = "Administrador" });
+                        var fallbackMenuAdmin = new[] {
+                            new { name = "Cargar Archivo", path = "/upload", icon = "upload_file" },
+                            new { name = "Historial", path = "/history", icon = "history" },
+                            new { name = "Seguridad", path = "/security", icon = "security" }
+                        };
+                        return Ok(new { Token = token, Role = "Administrador", Menu = fallbackMenuAdmin });
                     }
                     else if (request.Username == docenteUser && request.Password == docentePass)
                     {
                         var token = _authService.GenerateJwtToken("docente", "Docente");
-                        return Ok(new { Token = token, Role = "Docente" });
+                        var fallbackMenuDocente = new[] {
+                            new { name = "Historial", path = "/history", icon = "history" }
+                        };
+                        return Ok(new { Token = token, Role = "Docente", Menu = fallbackMenuDocente });
                     }
                 }
 
