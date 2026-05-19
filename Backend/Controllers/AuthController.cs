@@ -1,10 +1,12 @@
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
 using System.Threading.Tasks;
 using Backend.Data;
 using Backend.Services;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 
 namespace Backend.Controllers
@@ -39,13 +41,18 @@ namespace Backend.Controllers
                     command.CommandText = "sp_ValidarLogin";
                     command.CommandType = System.Data.CommandType.StoredProcedure;
 
+                    // Fix: Explicitly define SqlDbType.VarChar to prevent HASHBYTES mismatch
                     var pUser = command.CreateParameter();
                     pUser.ParameterName = "@Username";
+                    ((SqlParameter)pUser).SqlDbType = SqlDbType.VarChar;
+                    ((SqlParameter)pUser).Size = 100;
                     pUser.Value = request.Username;
                     command.Parameters.Add(pUser);
 
                     var pPass = command.CreateParameter();
                     pPass.ParameterName = "@PasswordPlain";
+                    ((SqlParameter)pPass).SqlDbType = SqlDbType.VarChar;
+                    ((SqlParameter)pPass).Size = 100;
                     pPass.Value = request.PasswordPlain;
                     command.Parameters.Add(pPass);
 
@@ -97,7 +104,7 @@ namespace Backend.Controllers
                         }
 
                         var token = _authService.GenerateJwtToken(request.Username, roleName);
-                        return Ok(new { Token = token, Role = roleName, Menu = menu });
+                        return Ok(new { Token = token, Role = roleName, RolId = rolId.Value, Menu = menu });
                     }
                 }
             }
@@ -119,7 +126,7 @@ namespace Backend.Controllers
                             new { id = 2, name = "Historial", path = "/history" },
                             new { id = 3, name = "Seguridad", path = "/security" }
                         };
-                        return Ok(new { Token = token, Role = "Administrador", Menu = fallbackMenu });
+                        return Ok(new { Token = token, Role = "Administrador", RolId = 1, Menu = fallbackMenu });
                     }
                     else if (request.Username == docenteUser && request.PasswordPlain == docentePass)
                     {
@@ -128,7 +135,7 @@ namespace Backend.Controllers
                             new { id = 1, name = "Cargar Archivo", path = "/upload" },
                             new { id = 2, name = "Historial", path = "/history" }
                         };
-                        return Ok(new { Token = token, Role = "Docente", Menu = fallbackMenu });
+                        return Ok(new { Token = token, Role = "Docente", RolId = 2, Menu = fallbackMenu });
                     }
                 }
 
