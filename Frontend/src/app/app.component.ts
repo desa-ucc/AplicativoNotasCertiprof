@@ -36,6 +36,11 @@ export class AppComponent {
   logout() {
     localStorage.removeItem('token');
     localStorage.removeItem('role');
+    localStorage.removeItem('menu');
     this.router.navigate(['/login']);
+  }
+
+  isActive(path: string): boolean {
+    return this.router.url === path;
   }
 }
