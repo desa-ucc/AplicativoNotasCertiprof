@@ -1,13 +1,13 @@
 using System;
 using System.Collections.Generic;
 using System.Data;
-using System.Linq;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using Backend.Data;
 using Backend.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Data.SqlClient;
-using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 
 namespace Backend.Controllers
 {
@@ -15,82 +15,68 @@ namespace Backend.Controllers
     [Route("api/[controller]")]
     public class AuthController : ControllerBase
     {
-        private readonly AppDbContext _dbContext;
         private readonly IAuthService _authService;
+        private readonly IConfiguration _configuration;
 
-        public AuthController(AppDbContext dbContext, IAuthService authService)
+        public AuthController(IAuthService authService, IConfiguration configuration)
         {
-            _dbContext = dbContext;
             _authService = authService;
+            _configuration = configuration;
         }
 
         public class LoginRequest
         {
+            [JsonPropertyName("username")]
             public string Username { get; set; } = string.Empty;
+
+            [JsonPropertyName("passwordPlain")]
             public string PasswordPlain { get; set; } = string.Empty;
         }
 
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginRequest request)
         {
+            if (request == null || string.IsNullOrEmpty(request.Username) || string.IsNullOrEmpty(request.PasswordPlain))
+                return BadRequest(new { message = "Faltan credenciales en el payload" });
+
             try
             {
-                using (var command = _dbContext.Database.GetDbConnection().CreateCommand())
+                string connectionString = _configuration.GetConnectionString("DefaultConnection") ?? "";
+
+                int? rolId = null;
+                string roleName = "";
+                bool credentialsValid = false;
+
+                using (SqlConnection conn = new SqlConnection(connectionString))
                 {
-                    // 1. Verify credentials and get role details using sp_ValidarLogin
-                    command.CommandText = "sp_ValidarLogin";
-                    command.CommandType = System.Data.CommandType.StoredProcedure;
-
-                    // Fix: Explicitly define SqlDbType.VarChar to prevent HASHBYTES mismatch
-                    var pUser = command.CreateParameter();
-                    pUser.ParameterName = "@Username";
-                    ((SqlParameter)pUser).SqlDbType = SqlDbType.VarChar;
-                    ((SqlParameter)pUser).Size = 100;
-                    pUser.Value = request.Username;
-                    command.Parameters.Add(pUser);
-
-                    var pPass = command.CreateParameter();
-                    pPass.ParameterName = "@PasswordPlain";
-                    ((SqlParameter)pPass).SqlDbType = SqlDbType.VarChar;
-                    ((SqlParameter)pPass).Size = 100;
-                    pPass.Value = request.PasswordPlain;
-                    command.Parameters.Add(pPass);
-
-                    if (_dbContext.Database.GetDbConnection().State != System.Data.ConnectionState.Open)
+                    using (SqlCommand cmd = new SqlCommand("sp_ValidarLogin", conn))
                     {
-                        await _dbContext.Database.OpenConnectionAsync();
-                    }
+                        cmd.CommandType = System.Data.CommandType.StoredProcedure;
+                        cmd.Parameters.Add(new SqlParameter("@Username", System.Data.SqlDbType.VarChar, 100) { Value = request.Username });
+                        cmd.Parameters.Add(new SqlParameter("@PasswordPlain", System.Data.SqlDbType.VarChar, 100) { Value = request.PasswordPlain });
 
-                    int? rolId = null;
-                    string roleName = "";
-                    bool credentialsValid = false;
-
-                    using (var reader = await command.ExecuteReaderAsync())
-                    {
-                        if (await reader.ReadAsync())
+                        await conn.OpenAsync();
+                        using (SqlDataReader reader = await cmd.ExecuteReaderAsync())
                         {
-                            rolId = reader.GetInt32(reader.GetOrdinal("rol_id"));
-                            roleName = reader.GetString(reader.GetOrdinal("role_name"));
-                            credentialsValid = true;
+                            if (await reader.ReadAsync())
+                            {
+                                rolId = reader.GetInt32(reader.GetOrdinal("rol_id"));
+                                roleName = reader.GetString(reader.GetOrdinal("role_name"));
+                                credentialsValid = true;
+                            }
                         }
                     }
 
-                    // 2. If valid, fetch the allowed menu modules for this role via SP
                     if (credentialsValid && rolId.HasValue)
                     {
                         var menu = new List<object>();
 
-                        using (var menuCmd = _dbContext.Database.GetDbConnection().CreateCommand())
+                        using (SqlCommand menuCmd = new SqlCommand("sp_ObtenerMenuPorRol", conn))
                         {
-                            menuCmd.CommandText = "sp_ObtenerMenuPorRol";
                             menuCmd.CommandType = System.Data.CommandType.StoredProcedure;
+                            menuCmd.Parameters.Add(new SqlParameter("@RolId", SqlDbType.Int) { Value = rolId.Value });
 
-                            var pRol = menuCmd.CreateParameter();
-                            pRol.ParameterName = "@RolId";
-                            pRol.Value = rolId.Value;
-                            menuCmd.Parameters.Add(pRol);
-
-                            using (var menuReader = await menuCmd.ExecuteReaderAsync())
+                            using (SqlDataReader menuReader = await menuCmd.ExecuteReaderAsync())
                             {
                                 while (await menuReader.ReadAsync())
                                 {
@@ -111,7 +97,7 @@ namespace Backend.Controllers
             catch (Exception ex)
             {
                 // Fallback for testing if cert_usuarios/cert_roles don't exist yet in local testing
-                if (ex.Message.Contains("Could not find stored procedure") || ex.Message.Contains("Invalid object name"))
+                if (ex.Message.Contains("Could not find stored procedure") || ex.Message.Contains("Invalid object name") || ex.Message.Contains("Login failed"))
                 {
                     var adminUser = Environment.GetEnvironmentVariable("ADMIN_USERNAME") ?? "admin";
                     var adminPass = Environment.GetEnvironmentVariable("ADMIN_PASSWORD") ?? "admin123";
