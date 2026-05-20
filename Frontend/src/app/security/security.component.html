@@ -64,9 +64,9 @@
             <div>
               <label class="block font-label-md text-label-md text-on-surface-variant mb-3">Módulos Permitidos</label>
               <div class="mt-2 flex flex-col gap-2 max-h-40 overflow-y-auto custom-scrollbar p-2 border border-outline-variant/30 rounded-lg">
-                <label *ngFor="let mod of modules" class="flex items-center gap-3 text-sm text-on-surface cursor-pointer hover:bg-surface-container-low p-1 rounded">
-                  <input type="checkbox" (change)="toggleNewRoleModule(mod.id, $event)" class="w-4 h-4 rounded border-outline-variant text-[#76bc21] focus:ring-[#76bc21]">
-                  {{ mod.name }}
+                <label *ngFor="let mod of modulosDisponibles" class="flex items-center gap-3 text-sm text-on-surface cursor-pointer">
+                  <input type="checkbox" [value]="mod.id" (change)="toggleNewRoleModule(mod.id, $event)" class="w-4 h-4 rounded text-[#76bc21]">
+                  {{ mod.nombre }}
                 </label>
               </div>
             </div>
@@ -153,9 +153,9 @@
             <div>
               <label class="block font-label-md text-label-md text-on-surface-variant mb-3">Módulos Permitidos</label>
               <div class="mt-2 flex flex-col gap-2 max-h-40 overflow-y-auto custom-scrollbar p-2 border border-outline-variant/30 rounded-lg">
-                <label *ngFor="let mod of modules" class="flex items-center gap-3 text-sm text-on-surface cursor-pointer hover:bg-surface-container-low p-1 rounded">
-                  <input type="checkbox" (change)="toggleNewRoleModule(mod.id, $event)" class="w-4 h-4 rounded border-outline-variant text-[#76bc21] focus:ring-[#76bc21]">
-                  {{ mod.name }}
+                <label *ngFor="let mod of modulosDisponibles" class="flex items-center gap-3 text-sm text-on-surface cursor-pointer">
+                  <input type="checkbox" [value]="mod.id" (change)="toggleNewRoleModule(mod.id, $event)" class="w-4 h-4 rounded text-[#76bc21]">
+                  {{ mod.nombre }}
                 </label>
               </div>
             </div>
@@ -206,9 +206,9 @@
             <div>
               <label class="block font-label-md text-label-md text-on-surface-variant mb-3">Módulos Permitidos</label>
               <div class="mt-2 flex flex-col gap-2 max-h-40 overflow-y-auto custom-scrollbar p-2 border border-outline-variant/30 rounded-lg">
-                <label *ngFor="let mod of modules" class="flex items-center gap-3 text-sm text-on-surface cursor-pointer hover:bg-surface-container-low p-1 rounded">
-                  <input type="checkbox" (change)="toggleNewRoleModule(mod.id, $event)" class="w-4 h-4 rounded border-outline-variant text-[#76bc21] focus:ring-[#76bc21]">
-                  {{ mod.name }}
+                <label *ngFor="let mod of modulosDisponibles" class="flex items-center gap-3 text-sm text-on-surface cursor-pointer">
+                  <input type="checkbox" [value]="mod.id" (change)="toggleNewRoleModule(mod.id, $event)" class="w-4 h-4 rounded text-[#76bc21]">
+                  {{ mod.nombre }}
                 </label>
               </div>
             </div>
@@ -285,9 +285,9 @@
             <div>
               <label class="block font-label-md text-label-md text-on-surface-variant mb-3">Módulos Permitidos</label>
               <div class="mt-2 flex flex-col gap-2 max-h-40 overflow-y-auto custom-scrollbar p-2 border border-outline-variant/30 rounded-lg">
-                <label *ngFor="let mod of modules" class="flex items-center gap-3 text-sm text-on-surface cursor-pointer hover:bg-surface-container-low p-1 rounded">
-                  <input type="checkbox" (change)="toggleNewRoleModule(mod.id, $event)" class="w-4 h-4 rounded border-outline-variant text-[#76bc21] focus:ring-[#76bc21]">
-                  {{ mod.name }}
+                <label *ngFor="let mod of modulosDisponibles" class="flex items-center gap-3 text-sm text-on-surface cursor-pointer">
+                  <input type="checkbox" [value]="mod.id" (change)="toggleNewRoleModule(mod.id, $event)" class="w-4 h-4 rounded text-[#76bc21]">
+                  {{ mod.nombre }}
                 </label>
               </div>
             </div>
@@ -342,9 +342,9 @@
             <div>
               <label class="block font-label-md text-label-md text-on-surface-variant mb-3">Módulos Permitidos</label>
               <div class="mt-2 flex flex-col gap-2 max-h-40 overflow-y-auto custom-scrollbar p-2 border border-outline-variant/30 rounded-lg">
-                <label *ngFor="let mod of modules" class="flex items-center gap-3 text-sm text-on-surface cursor-pointer hover:bg-surface-container-low p-1 rounded">
-                  <input type="checkbox" (change)="toggleNewRoleModule(mod.id, $event)" class="w-4 h-4 rounded border-outline-variant text-[#76bc21] focus:ring-[#76bc21]">
-                  {{ mod.name }}
+                <label *ngFor="let mod of modulosDisponibles" class="flex items-center gap-3 text-sm text-on-surface cursor-pointer">
+                  <input type="checkbox" [value]="mod.id" (change)="toggleNewRoleModule(mod.id, $event)" class="w-4 h-4 rounded text-[#76bc21]">
+                  {{ mod.nombre }}
                 </label>
               </div>
             </div>
@@ -399,9 +399,9 @@
             <div>
               <label class="block font-label-md text-label-md text-on-surface-variant mb-3">Módulos Permitidos</label>
               <div class="mt-2 flex flex-col gap-2 max-h-40 overflow-y-auto custom-scrollbar p-2 border border-outline-variant/30 rounded-lg">
-                <label *ngFor="let mod of modules" class="flex items-center gap-3 text-sm text-on-surface cursor-pointer hover:bg-surface-container-low p-1 rounded">
-                  <input type="checkbox" (change)="toggleNewRoleModule(mod.id, $event)" class="w-4 h-4 rounded border-outline-variant text-[#76bc21] focus:ring-[#76bc21]">
-                  {{ mod.name }}
+                <label *ngFor="let mod of modulosDisponibles" class="flex items-center gap-3 text-sm text-on-surface cursor-pointer">
+                  <input type="checkbox" [value]="mod.id" (change)="toggleNewRoleModule(mod.id, $event)" class="w-4 h-4 rounded text-[#76bc21]">
+                  {{ mod.nombre }}
                 </label>
               </div>
             </div>

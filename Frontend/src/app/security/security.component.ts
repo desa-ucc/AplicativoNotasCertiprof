@@ -68,6 +68,7 @@ export class SecurityComponent implements OnInit {
   users: any[] = [];
   roles: any[] = [];
   modules: any[] = [];
+  modulosDisponibles: any[] = [];
 
   // User Modal State
   isEditing = false;
@@ -110,8 +111,12 @@ export class SecurityComponent implements OnInit {
   fetchModules() {
     this.http.get<any[]>('/api/security/modules')
       .subscribe({
-        next: (data) => this.modules = data,
-        error: (err) => console.error('Error fetching modules:', err)
+        next: (res) => {
+            this.modules = res;
+            this.modulosDisponibles = res;
+            console.log("Módulos cargados:", res);
+        },
+        error: (err) => console.error('Error trayendo módulos', err)
       });
   }
 

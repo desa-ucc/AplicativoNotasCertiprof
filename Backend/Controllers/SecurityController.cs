@@ -110,7 +110,7 @@ namespace Backend.Controllers
             {
                 using (var command = _dbContext.Database.GetDbConnection().CreateCommand())
                 {
-                    command.CommandText = "sp_ListarTodosLosModulos";
+                    command.CommandText = "sp_ObtenerModulos";
                     command.CommandType = System.Data.CommandType.StoredProcedure;
 
                     if (_dbContext.Database.GetDbConnection().State != System.Data.ConnectionState.Open)
@@ -124,9 +124,10 @@ namespace Backend.Controllers
                         {
                             records.Add(new
                             {
-                                id = reader.GetInt32(reader.GetOrdinal("Id")),
-                                nombre = reader.GetString(reader.GetOrdinal("NombreModulo")),
-                                ruta = reader.GetString(reader.GetOrdinal("RutaModulo"))
+                                id = reader.GetInt32(reader.GetOrdinal("id")),
+                                nombre = reader.GetString(reader.GetOrdinal("nombre")),
+                                ruta = reader.GetString(reader.GetOrdinal("ruta")),
+                                icono = reader.IsDBNull(reader.GetOrdinal("icono")) ? null : reader.GetString(reader.GetOrdinal("icono"))
                             });
                         }
                     }
@@ -139,9 +140,9 @@ namespace Backend.Controllers
                 {
                     return Ok(new[]
                     {
-                        new { id = 1, nombre = "Cargar Archivo", ruta = "/upload" },
-                        new { id = 2, nombre = "Historial", ruta = "/history" },
-                        new { id = 3, nombre = "Seguridad", ruta = "/security" }
+                        new { id = 1, nombre = "Cargar Archivo", ruta = "/upload", icono = "upload_file" },
+                        new { id = 2, nombre = "Historial", ruta = "/history", icono = "history" },
+                        new { id = 3, nombre = "Seguridad", ruta = "/security", icono = "security" }
                     });
                 }
                 return BadRequest(new { Message = ex.Message });
