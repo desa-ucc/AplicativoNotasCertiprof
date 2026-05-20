@@ -27,14 +27,19 @@ export class LoginComponent {
     this.http.post<any>('/api/auth/login', { username: this.username, passwordPlain: this.passwordPlain })
       .subscribe({
         next: (res) => {
+          console.log("Login OK, token recibido");
           localStorage.setItem('token', res.token);
           localStorage.setItem('role', res.role);
+
+          let targetPath = '/upload'; // Default fallback
           if (res.menu && res.menu.length > 0) {
              localStorage.setItem('menu', JSON.stringify(res.menu));
-             this.router.navigate([res.menu[0].path]);
-          } else {
-             this.router.navigate(['/upload']);
+             targetPath = res.menu[0].path;
           }
+
+          this.router.navigate([targetPath]).then(success => {
+              if(!success) console.error("Fallo la redirección del Router a " + targetPath);
+          });
         },
         error: () => {
           this.errorMessage = 'Credenciales inválidas';
