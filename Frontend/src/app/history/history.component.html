@@ -10,14 +10,14 @@
     <div class="p-md border-b border-surface-container-highest flex flex-col sm:flex-row justify-between items-center gap-md bg-surface-bright">
       <div class="relative w-full sm:w-80">
         <span class="material-symbols-outlined absolute left-sm top-1/2 -translate-y-1/2 text-outline-variant" style="font-variation-settings: 'FILL' 0;">search</span>
-        <input class="w-full bg-surface border border-outline-variant rounded-lg py-2 pl-10 pr-4 font-body-md text-body-md text-on-surface focus:outline-none focus:border-secondary focus:ring-1 focus:ring-secondary transition-colors" placeholder="Buscar por Cédula o Email..." type="text"/>
+        <input [(ngModel)]="searchTerm" (input)="aplicarFiltros()" class="w-full bg-surface border border-outline-variant rounded-lg py-2 pl-10 pr-4 font-body-md text-body-md text-on-surface focus:outline-none focus:border-secondary focus:ring-1 focus:ring-secondary transition-colors" placeholder="Buscar por Cédula o Email..." type="text"/>
       </div>
       <div class="flex gap-sm w-full sm:w-auto">
-        <button class="flex items-center gap-xs px-4 py-2 border border-outline-variant rounded-lg text-on-surface-variant font-label-md text-label-md hover:bg-surface-container-low transition-colors">
+        <button (click)="abrirFiltros()" class="flex items-center gap-xs px-4 py-2 border border-outline-variant rounded-lg text-on-surface-variant font-label-md text-label-md hover:bg-surface-container-low transition-colors">
           <span class="material-symbols-outlined text-[18px]" style="font-variation-settings: 'FILL' 0;">filter_list</span>
           Filtros
         </button>
-        <button class="flex items-center gap-xs px-4 py-2 bg-[#76bc21] text-white rounded-lg font-label-md text-label-md hover:bg-[#65a31c] transition-colors font-bold">
+        <button (click)="exportarExcel()" class="flex items-center gap-xs px-4 py-2 bg-[#76bc21] text-white rounded-lg font-label-md text-label-md hover:bg-[#65a31c] transition-colors font-bold">
           <span class="material-symbols-outlined text-[18px]" style="font-variation-settings: 'FILL' 0;">download</span>
           Exportar
         </button>
@@ -59,13 +59,13 @@
               </span>
             </td>
             <td class="py-sm px-md font-body-md text-body-md text-on-surface-variant">{{ record.created_at | date:'dd MMM yyyy' }}</td>
-            <td class="py-sm px-md text-right">
-              <div class="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity" *ngIf="userRole !== 'Consulta'">
-                <button (click)="openEditModal(record)" class="text-outline-variant hover:text-secondary transition-colors p-1" title="Editar">
-                  <span class="material-symbols-outlined text-[20px]" style="font-variation-settings: 'FILL' 0;">edit</span>
+            <td class="px-6 py-5 text-right">
+              <div class="flex justify-end gap-2" *ngIf="userRole !== 'Consulta'">
+                <button (click)="openEditModal(record)" class="p-2 text-[#006971] hover:bg-[#006971]/10 rounded-lg transition-colors" title="Editar">
+                  <span class="material-symbols-outlined text-[20px]">edit</span>
                 </button>
-                <button (click)="deleteRecord(record.id)" class="text-outline-variant hover:text-error transition-colors p-1" title="Eliminar">
-                  <span class="material-symbols-outlined text-[20px]" style="font-variation-settings: 'FILL' 0;">delete</span>
+                <button (click)="deleteRecord(record.id)" class="p-2 text-red-600 hover:bg-red-600/10 rounded-lg transition-colors" title="Eliminar">
+                  <span class="material-symbols-outlined text-[20px]">delete</span>
                 </button>
               </div>
             </td>

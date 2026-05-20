@@ -11,6 +11,8 @@ import { FormsModule } from '@angular/forms';
   styleUrls: ['./security.component.css']
 })
 export class SecurityComponent implements OnInit {
+  abrirModalNuevoRol() {}
+
   activeTab: 'users' | 'roles' = 'users';
 
   users: any[] = [];

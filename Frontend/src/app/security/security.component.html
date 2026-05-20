@@ -101,7 +101,7 @@
         <h3 class="font-title-lg text-title-lg text-secondary flex items-center gap-2">Perfiles de Acceso</h3>
         <p class="mt-1 text-sm text-on-surface-variant">Controle a qué módulos (pantallas) tiene acceso cada rol.</p>
     </div>
-    <button class="px-4 py-2 bg-primary-container text-on-primary-container rounded-lg font-bold text-sm shadow-sm hover:brightness-105 transition-all">
+    <button (click)="abrirModalNuevoRol()" class="px-4 py-2 bg-[#76bc21] text-white rounded-lg font-bold text-sm shadow-sm hover:brightness-105 transition-all">
         + Nuevo Rol
     </button>
 </div>
@@ -115,14 +115,11 @@
         </tr>
     </thead>
     <tbody class="divide-y divide-surface-container-highest">
-        <tr *ngFor="let role of roles" class="hover:bg-surface-container/50 transition-colors duration-150">
-        <td class="px-gutter py-4 whitespace-nowrap text-body-md font-medium text-on-surface">{{ role.nombre_rol }}</td>
-        <td class="px-gutter py-4 whitespace-nowrap text-right text-sm font-medium">
-            <button (click)="openPermissionsModal(role)" class="inline-flex items-center gap-2 text-primary hover:text-surface-tint transition-colors font-semibold bg-primary-container/20 px-3 py-1.5 rounded-lg">
-            <span class="material-symbols-outlined text-[18px]">settings</span>
-            Modificar Permisos
-            </button>
-        </td>
+        <tr *ngFor="let rol of roles" class="hover:bg-surface-container-low transition-colors">
+            <td class="py-4 font-bold text-on-surface pl-4">{{ rol.nombre_rol }}</td>
+            <td class="py-4 text-right pr-4">
+                <button (click)="openPermissionsModal(rol)" class="text-[#006971] hover:underline font-bold text-sm">Configuración</button>
+            </td>
         </tr>
     </tbody>
     </table>

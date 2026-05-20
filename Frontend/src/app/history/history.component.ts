@@ -11,6 +11,12 @@ import { FormsModule } from '@angular/forms';
   styleUrls: ['./history.component.css']
 })
 export class HistoryComponent implements OnInit {
+  searchTerm = '';
+
+  aplicarFiltros() {}
+  abrirFiltros() {}
+  exportarExcel() {}
+
   histories: any[] = [];
 
   isEditing = false;
