@@ -27,15 +27,15 @@
     <div class="overflow-x-auto">
       <table class="w-full text-left border-collapse">
         <thead>
-          <tr class="bg-gray-50 border-b border-surface-container-highest">
-            <th class="py-sm px-md font-label-md text-label-md text-on-secondary-fixed-variant uppercase tracking-wider">Cédula</th>
-            <th class="py-sm px-md font-label-md text-label-md text-on-secondary-fixed-variant uppercase tracking-wider">Email</th>
-            <th class="py-sm px-md font-label-md text-label-md text-on-secondary-fixed-variant uppercase tracking-wider">Usuario</th>
-            <th class="py-sm px-md font-label-md text-label-md text-on-secondary-fixed-variant uppercase tracking-wider">Certificación</th>
-            <th class="py-sm px-md font-label-md text-label-md text-on-secondary-fixed-variant uppercase tracking-wider">Porcentaje</th>
-            <th class="py-sm px-md font-label-md text-label-md text-on-secondary-fixed-variant uppercase tracking-wider">Estado</th>
-            <th class="py-sm px-md font-label-md text-label-md text-on-secondary-fixed-variant uppercase tracking-wider">Fecha</th>
-            <th class="py-sm px-md font-label-md text-label-md text-on-secondary-fixed-variant uppercase tracking-wider text-right">Acciones</th>
+          <tr class="bg-[#006971] text-white">
+            <th class="py-sm px-md font-label-md text-label-md text-white uppercase tracking-wider">Cédula</th>
+            <th class="py-sm px-md font-label-md text-label-md text-white uppercase tracking-wider">Email</th>
+            <th class="py-sm px-md font-label-md text-label-md text-white uppercase tracking-wider">Usuario</th>
+            <th class="py-sm px-md font-label-md text-label-md text-white uppercase tracking-wider">Certificación</th>
+            <th class="py-sm px-md font-label-md text-label-md text-white uppercase tracking-wider">Nota</th>
+            <th class="py-sm px-md font-label-md text-label-md text-white uppercase tracking-wider">Estado</th>
+            <th class="py-sm px-md font-label-md text-label-md text-white uppercase tracking-wider">Fecha</th>
+            <th class="py-sm px-md font-label-md text-label-md text-white uppercase tracking-wider text-right">Acciones</th>
           </tr>
         </thead>
         <tbody class="divide-y divide-surface-container-highest bg-surface-container-lowest">
@@ -48,7 +48,7 @@
             <td class="py-sm px-md font-body-md text-body-md text-on-surface font-semibold">{{ record.first_name }} {{ record.last_name }}</td>
             <td class="py-sm px-md font-body-md text-body-md text-on-surface-variant max-w-[200px] truncate" [title]="record.certification_name">{{ record.certification_name }}</td>
             <td class="py-sm px-md">
-              <span class="font-bold text-on-surface">{{ record.percentage }}%</span>
+              <span class="font-bold text-on-surface">{{ record.percentage }}</span>
             </td>
             <td class="py-sm px-md">
               <span *ngIf="record.status?.toLowerCase() === 'aprobado' || record.percentage >= 70" class="inline-flex items-center px-2 py-1 rounded-full text-[11px] font-bold tracking-wide bg-[#76bc21]/20 text-[#3d6a00] uppercase border border-[#76bc21]/30">
@@ -94,6 +94,38 @@
       </div>
     </div>
   </div>
+
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
+      <div class="bg-white p-6 rounded-xl border border-[#c1cab2]/20 shadow-[0px_4px_20px_rgba(0,61,76,0.08)]">
+          <div class="flex justify-between items-start mb-4">
+              <div class="p-3 bg-[#008B96]/10 rounded-lg text-[#008B96]">
+                  <span class="material-symbols-outlined">verified</span>
+              </div>
+          </div>
+          <h4 class="text-[20px] font-semibold text-[#1b1c1c]">Certificaciones Activas</h4>
+          <p class="text-[48px] font-bold text-[#1b1c1c] mt-1">{{ histories.length }}</p>
+      </div>
+      <div class="bg-white p-6 rounded-xl border border-[#c1cab2]/20 shadow-[0px_4px_20px_rgba(0,61,76,0.08)]">
+          <div class="flex justify-between items-start mb-4">
+              <div class="p-3 bg-[#006971]/10 rounded-lg text-[#006971]">
+                  <span class="material-symbols-outlined">groups</span>
+              </div>
+          </div>
+          <h4 class="text-[20px] font-semibold text-[#1b1c1c]">Usuarios Registrados</h4>
+          <p class="text-[48px] font-bold text-[#1b1c1c] mt-1">452</p>
+      </div>
+      <div class="bg-white p-6 rounded-xl border border-[#c1cab2]/20 shadow-[0px_4px_20px_rgba(0,61,76,0.08)] relative overflow-hidden">
+          <div class="absolute top-0 right-0 w-32 h-32 bg-[#76BC21]/5 rounded-full -mr-10 -mt-10"></div>
+          <div class="flex justify-between items-start mb-4">
+              <div class="p-3 bg-[#76BC21]/10 rounded-lg text-[#76BC21]">
+                  <span class="material-symbols-outlined">speed</span>
+              </div>
+          </div>
+          <h4 class="text-[20px] font-semibold text-[#1b1c1c]">Tasa de Aprobación</h4>
+          <p class="text-[48px] font-bold text-[#1b1c1c] mt-1">94.2</p>
+      </div>
+  </div>
+
 </div>
 
 <!-- Refined Edit Modal -->
