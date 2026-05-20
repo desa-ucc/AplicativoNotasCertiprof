@@ -37,7 +37,7 @@ namespace Backend.Controllers
                 using (var command = _dbContext.Database.GetDbConnection().CreateCommand())
                 {
                     command.CommandText = @"
-                        SELECT u.id, u.username, u.password_hash, r.nombre_rol as role_name
+                        SELECT u.id, u.username, u.password_hash, u.rol_id, r.nombre_rol as role_name
                         FROM cert_usuarios u
                         JOIN cert_roles r ON u.rol_id = r.id
                         WHERE u.username = @Username AND u.activo = 1";
@@ -45,6 +45,7 @@ namespace Backend.Controllers
 
                     var pUser = command.CreateParameter();
                     pUser.ParameterName = "@Username";
+                    pUser.DbType = System.Data.DbType.String;
                     pUser.Value = request.Username ?? string.Empty;
                     command.Parameters.Add(pUser);
 
@@ -59,6 +60,7 @@ namespace Backend.Controllers
                         {
                             var passwordHashValue = reader.GetValue(reader.GetOrdinal("password_hash"));
                             var roleName = reader.GetString(reader.GetOrdinal("role_name"));
+                            var rolId = reader.GetInt32(reader.GetOrdinal("rol_id"));
 
                             byte[]? storedHashBytes = null;
 
@@ -99,8 +101,9 @@ namespace Backend.Controllers
                                             menuCommand.CommandType = System.Data.CommandType.StoredProcedure;
 
                                             var pRol = menuCommand.CreateParameter();
-                                            pRol.ParameterName = "@RolNombre";
-                                            pRol.Value = roleName;
+                                            pRol.ParameterName = "@RolId";
+                                            pRol.DbType = System.Data.DbType.Int32;
+                                            pRol.Value = rolId;
                                             menuCommand.Parameters.Add(pRol);
 
                                             using (var menuReader = await menuCommand.ExecuteReaderAsync())
