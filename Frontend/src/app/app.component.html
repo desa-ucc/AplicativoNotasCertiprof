@@ -26,11 +26,11 @@
     <div class="px-6 pt-10 pb-4 mb-6">
       <div class="flex items-center gap-2 mb-1">
         <span class="w-8 h-8 rounded-lg bg-[#76bc21] flex items-center justify-center text-[#003D4C]">
-          <span class="material-symbols-outlined text-[20px] font-bold">water_drop</span>
+          <span class="material-symbols-outlined text-[20px] font-bold">school</span>
         </span>
         <h1 class="text-xl font-bold tracking-tight text-white">Aplicativo notas <span class="text-[#76bc21]">Certiprof</span></h1>
       </div>
-      <p class="text-[10px] uppercase tracking-[0.25em] font-medium text-white/40 ml-10">Petroleum Systems</p>
+      <p class="text-[10px] uppercase tracking-[0.25em] font-medium text-white/40 ml-10">Sistema Universidad Castro Carazo</p>
     </div>
 
     <ul class="flex-1 flex flex-col gap-1 px-4 m-0 list-none">
@@ -39,7 +39,7 @@
            routerLinkActive="bg-[rgba(118,188,33,0.1)] border-l-4 border-[#76bc21] text-white structural-active"
            [routerLinkActiveOptions]="{exact: true}"
            class="group flex items-center gap-3 px-4 py-3.5 rounded-xl text-white/60 hover:text-white hover:bg-white/5 transition-all duration-300">
-          <span class="material-symbols-outlined text-[22px] group-[.structural-active]:text-[#76bc21] group-[.structural-active]:[font-variation-settings:'FILL'_1]">{{ item.icon }}</span>
+          <i [class]="item.icon + ' text-[22px] group-[.structural-active]:text-[#76bc21]'"></i>
           <span class="font-medium text-[14px] group-[.structural-active]:font-semibold">{{ item.name }}</span>
         </a>
       </li>
