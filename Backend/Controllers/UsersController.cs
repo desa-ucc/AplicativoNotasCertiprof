@@ -19,6 +19,43 @@ namespace Backend.Controllers
             _dbContext = dbContext;
         }
 
+
+        [HttpGet("roles")]
+        public async Task<IActionResult> GetRoles()
+        {
+            var records = new List<object>();
+            try
+            {
+                using (var command = _dbContext.Database.GetDbConnection().CreateCommand())
+                {
+                    command.CommandText = "SELECT id, nombre_rol FROM cert_roles WHERE activo = 1";
+                    command.CommandType = System.Data.CommandType.Text;
+
+                    if (_dbContext.Database.GetDbConnection().State != System.Data.ConnectionState.Open)
+                    {
+                        await _dbContext.Database.OpenConnectionAsync();
+                    }
+
+                    using (var reader = await command.ExecuteReaderAsync())
+                    {
+                        while (await reader.ReadAsync())
+                        {
+                            records.Add(new
+                            {
+                                id = reader.GetInt32(reader.GetOrdinal("id")),
+                                nombre_rol = reader.GetString(reader.GetOrdinal("nombre_rol"))
+                            });
+                        }
+                    }
+                }
+                return Ok(records);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { Message = ex.Message });
+            }
+        }
+
         [HttpGet]
         public async Task<IActionResult> GetUsers()
         {
