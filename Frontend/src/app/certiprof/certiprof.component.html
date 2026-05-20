@@ -1,58 +1,71 @@
-<div class="p-8 max-w-4xl mx-auto">
-  <h1 class="text-3xl font-bold mb-6 text-gray-800">Procesar Reporte de Certiprof</h1>
+<div class="mb-lg">
+<h2 class="text-headline-lg font-headline-lg text-on-background">Procesar Reporte de Certiprof</h2>
+<p class="text-body-lg font-body-lg text-on-surface-variant mt-xs">Sube tus archivos de reporte para su procesamiento y validación en el sistema.</p>
+</div>
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-lg">
+<!-- Main Upload Area -->
+<div class="lg:col-span-2 space-y-md">
+<!-- Dropzone -->
+<div
+  class="bg-surface-container-lowest rounded-xl border-2 border-dashed border-outline-variant hover:border-tertiary transition-colors cursor-pointer group flex flex-col items-center justify-center py-xl px-lg text-center shadow-sm" style="box-shadow: 0px 4px 20px rgba(0, 61, 76, 0.04);"
+  [ngClass]="{'border-primary bg-primary-container/10': isDragging}"
+  (dragover)="onDragOver($event)"
+  (dragleave)="onDragLeave($event)"
+  (drop)="onDrop($event)"
+>
+<div class="w-20 h-20 rounded-full bg-surface-container-low flex items-center justify-center mb-md group-hover:bg-secondary-container transition-colors" [ngClass]="{'bg-primary-container': isDragging}">
+<span class="material-symbols-outlined text-4xl text-on-surface-variant group-hover:text-on-secondary-container transition-colors" style="font-size: 40px;" [ngClass]="{'text-primary': isDragging}">cloud_upload</span>
+</div>
+<h3 class="text-title-lg font-title-lg text-on-background mb-xs">Sube un archivo o arrastra y suelta aquí</h3>
+<p class="text-body-md font-body-md text-on-surface-variant mb-md">CSV o Excel (.csv o .xlsx) hasta 50MB</p>
+<div class="relative">
+  <input id="file-upload" name="file-upload" type="file" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer" accept=".csv,.xlsx" (change)="onFileSelected($event)">
+  <button class="bg-primary-container text-[#333333] px-md py-sm rounded-full font-label-md text-label-md flex items-center gap-xs hover:bg-primary-fixed transition-colors shadow-sm pointer-events-none">
+  <span class="material-symbols-outlined text-[18px]">add</span>
+                              Seleccionar Archivo
+  </button>
+</div>
+</div>
+<!-- Action Area -->
+<div class="bg-surface-container-lowest rounded-xl flex flex-col sm:flex-row items-center justify-between shadow-sm border border-surface-variant px-md py-sm gap-4" style="box-shadow: rgba(0, 61, 76, 0.04) 0px 4px 20px;">
+<div class="flex items-center gap-sm">
+<span class="material-symbols-outlined text-outline">info</span>
+<span class="text-body-md font-body-md text-on-surface-variant" *ngIf="!selectedFile">Asegúrate de que el formato coincida con la plantilla estándar.</span>
+<span class="text-body-md font-body-md text-on-surface-variant font-bold text-tertiary" *ngIf="selectedFile">{{ selectedFile.name }}</span>
+</div>
 
-  <div
-    class="border-4 border-dashed rounded-lg p-12 text-center transition-colors duration-200"
-    [ngClass]="{'border-blue-500 bg-blue-50': isDragging, 'border-gray-300 hover:border-gray-400': !isDragging}"
-    (dragover)="onDragOver($event)"
-    (dragleave)="onDragLeave($event)"
-    (drop)="onDrop($event)"
+<div class="flex flex-col items-end gap-2 w-full sm:w-auto">
+  <button
+    (click)="processFile()"
+    [disabled]="isProcessing || !selectedFile"
+    class="bg-primary-container text-[#333333] rounded-lg font-label-md text-label-md shadow-sm hover:bg-primary-fixed hover:-translate-y-0.5 transition-all px-md py-1.5 disabled:opacity-50 disabled:hover:translate-y-0 w-full sm:w-auto flex items-center justify-center gap-2"
   >
-    <div class="mb-4">
-      <svg class="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48" aria-hidden="true">
-        <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-      </svg>
-    </div>
-
-    <div class="flex text-sm text-gray-600 justify-center">
-      <label for="file-upload" class="relative cursor-pointer bg-white rounded-md font-medium text-blue-600 hover:text-blue-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-blue-500">
-        <span>Sube un archivo</span>
-        <input id="file-upload" name="file-upload" type="file" class="sr-only" accept=".csv,.xlsx" (change)="onFileSelected($event)">
-      </label>
-      <p class="pl-1">o arrastra y suelta aquí</p>
-    </div>
-    <p class="text-xs text-gray-500 mt-2">CSV o Excel (.csv o .xlsx)</p>
-  </div>
-
-  <div *ngIf="selectedFile" class="mt-8 space-y-4">
-    <div class="flex items-center justify-between bg-gray-50 p-4 rounded-lg border border-gray-200">
-      <div>
-        <p class="text-sm font-medium text-gray-900">Archivo seleccionado:</p>
-        <p class="text-sm text-gray-500">{{ selectedFile.name }}</p>
-      </div>
-      <div class="flex gap-2">
-        <button
-          (click)="processFile()"
-          [disabled]="isProcessing"
-          class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:bg-blue-300"
-        >
-          <span *ngIf="isProcessing">Procesando...</span>
-          <span *ngIf="!isProcessing">Carga de Datos</span>
-        </button>
-      </div>
-    </div>
-
-    <div *ngIf="successMessage" class="rounded-md bg-green-50 p-4 mt-4">
-      <div class="flex">
-        <div class="flex-shrink-0">
-          <svg class="h-5 w-5 text-green-400" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z" clip-rule="evenodd" />
-          </svg>
-        </div>
-        <div class="ml-3">
-          <h3 class="text-sm font-medium text-green-800">{{ successMessage }}</h3>
-        </div>
-      </div>
-    </div>
-  </div>
+                              <span *ngIf="isProcessing" class="material-symbols-outlined animate-spin text-[18px]">sync</span>
+                              <span *ngIf="isProcessing">Procesando...</span>
+                              <span *ngIf="!isProcessing">Procesar Ahora</span>
+  </button>
+  <span *ngIf="successMessage" class="text-xs font-bold text-primary">{{ successMessage }}</span>
+</div>
+</div>
+</div>
+<!-- Sidebar / Recent Files -->
+<div class="lg:col-span-1">
+<div class="bg-surface-container-lowest rounded-xl p-md shadow-sm border border-surface-variant h-full" style="box-shadow: 0px 4px 20px rgba(0, 61, 76, 0.04);">
+<h3 class="text-title-lg font-title-lg text-on-background mb-md border-b border-surface-variant pb-xs">Archivos Recientes</h3>
+<ul class="space-y-sm mt-md">
+<li class="flex items-start gap-sm p-sm rounded-lg hover:bg-surface-container-low transition-colors group">
+<div class="w-10 h-10 rounded bg-tertiary-container/20 flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-on-tertiary-container">description</span>
+</div>
+<div class="flex-1 min-w-0">
+<p class="text-body-md font-body-md text-on-surface font-semibold truncate group-hover:text-tertiary transition-colors">Ningún archivo procesado recientemente</p>
+<div class="flex items-center gap-xs mt-1">
+<span class="inline-block w-2 h-2 rounded-full bg-outline-variant"></span>
+<span class="text-label-md font-label-md text-on-surface-variant">Esperando carga...</span>
+</div>
+</div>
+</li>
+</ul>
+</div>
+</div>
 </div>

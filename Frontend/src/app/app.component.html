@@ -1,49 +1,52 @@
 <div *ngIf="loggedIn">
   <!-- TopNavBar -->
-  <nav class="fixed top-0 right-0 h-16 flex items-center justify-between px-md z-30 bg-surface/95 backdrop-blur-md docked w-[calc(100%-280px)] border-b border-outline-variant/30 shadow-sm dark:shadow-none hidden md:flex">
-    <!-- Search Bar (on_left as per JSON) -->
-    <div class="flex items-center flex-1">
-      <div class="relative w-64">
-        <span class="material-symbols-outlined absolute left-sm top-1/2 -translate-y-1/2 text-outline-variant" style="font-variation-settings: 'FILL' 0;">search</span>
-        <input class="w-full bg-surface-container-low border border-outline-variant/50 rounded-full py-2 pl-10 pr-4 text-body-md text-on-surface focus:outline-none focus:border-tertiary focus:ring-1 focus:ring-tertiary transition-colors" placeholder="Search..." type="text"/>
-      </div>
-    </div>
-    <!-- Trailing Actions & Profile -->
-    <div class="flex items-center gap-md">
-      <button class="text-on-surface-variant hover:bg-surface-container-low transition-colors scale-95 duration-75 p-2 rounded-full flex items-center justify-center">
-        <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">notifications</span>
-      </button>
-      <button (click)="logout()" class="text-on-surface-variant hover:bg-surface-container-low transition-colors scale-95 duration-75 p-2 rounded-full flex items-center justify-center" title="Cerrar Sesión">
-        <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">logout</span>
-      </button>
-      <div class="h-8 w-8 rounded-full bg-primary-container overflow-hidden ml-sm border border-outline-variant/30 flex items-center justify-center">
-        <img alt="Administrator Profile" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDNqwFKXv87ukUTv01X4ZJHnKYFZ_q2xjb0e6A-9xs_pD-y1boGksDtpUENS1F3ZM3kOuyn2VZ2cAIERreBIwrBaMFroQfIhXW-THd4TyCEl4aJS1Dg-JB8ztu0qJBdR8hUX0oCnwXn6pIrUn-UOWUwKrYD_7NdqcuURw3GWGl98sBSIAQN04TkVUERbuvQMS_YViclwkyYk6zAGlemF2AZCKy1P6hcFUvskhojOad4Bt0l2pArW0HO_KDXD37ank7ErXUhic5e-NA"/>
-      </div>
-    </div>
-  </nav>
+  <header class="fixed top-0 right-0 h-16 flex items-center justify-between px-md z-30 bg-surface/95 backdrop-blur-md border-b border-outline-variant/30 shadow-sm dark:shadow-none docked w-[calc(100%-280px)] hidden md:flex">
+  <div class="flex items-center">
+  <!-- Empty for alignment -->
+  </div>
+  <div class="flex items-center gap-md">
+  <div class="relative">
+  <input class="pl-10 pr-4 py-2 bg-surface-container-low border border-outline-variant rounded-full text-body-md font-body-md text-on-surface focus:outline-none focus:border-tertiary focus:ring-1 focus:ring-tertiary transition-all" placeholder="Search..." type="text">
+  <span class="material-symbols-outlined absolute left-3 top-2.5 text-on-surface-variant">search</span>
+  </div>
+  <button class="w-10 h-10 flex items-center justify-center rounded-full text-on-surface-variant hover:bg-surface-container-low transition-colors scale-95 duration-75">
+  <span class="material-symbols-outlined">notifications</span>
+  </button>
+  <button class="w-10 h-10 flex items-center justify-center rounded-full text-on-surface-variant hover:bg-surface-container-low transition-colors scale-95 duration-75">
+  <span class="material-symbols-outlined">settings</span>
+  </button>
+  <button (click)="logout()" class="w-10 h-10 flex items-center justify-center rounded-full text-error hover:bg-error-container transition-colors scale-95 duration-75" title="Cerrar Sesión">
+  <span class="material-symbols-outlined">logout</span>
+  </button>
+  </div>
+  </header>
 
   <!-- SideNavBar -->
-  <aside class="fixed left-0 top-0 h-full flex flex-col z-40 bg-on-secondary-fixed-variant dark:bg-on-secondary-fixed docked w-sidebar-width hidden md:flex">
-    <!-- Header -->
-    <div class="p-lg flex flex-col items-start border-b border-surface/10 mb-md">
-      <div class="h-12 w-12 rounded-lg bg-surface-container-lowest flex items-center justify-center mb-md overflow-hidden">
-        <img alt="AVATAR Admin Logo" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDRRqf1lOBjM-LCdV-k_ZgCjssiU2L13lVsWoREGE7khT0m7ZzHy6N9IeoQv7XgD2FtqMpaFJmhFmIQ9tlRxLqMvJb9qSOzArrMWFvLyhWCP_3eaAP-Tulp_G2d5XvtyBT-7tCKLzx7kBN9K_BkUSvUNem7OmPr7zMQ-A5NNMrSeMW8unXiAUzyIE-e0x_6enWCB2PVSfKcso7h9_v5JTpuS4bZtwgZ4Gi8Yu4dXvdKT6BuWI2gOuN9bZanYrA0AFcxaVrl1jhaIaM"/>
-      </div>
-      <h1 class="text-headline-md font-headline-md font-bold text-surface-container-lowest">AVATAR Admin</h1>
-      <p class="font-body-md text-body-md text-surface-container-lowest/70 mt-xs">Management Suite ({{userRole}})</p>
-    </div>
-    <!-- Navigation Links -->
-    <nav class="flex-1 flex flex-col gap-xs px-sm">
-      <a *ngFor="let item of menuItems"
-         [routerLink]="item.path"
-         routerLinkActive="border-l-4 border-primary-container text-surface-container-lowest bg-on-secondary-fixed/50 rounded-r-lg ml-[-12px]"
-         [routerLinkActiveOptions]="{exact: true}"
-         class="flex items-center gap-base px-md py-sm text-outline-variant hover:text-surface-container-lowest transition-all duration-200 ease-in-out hover:bg-on-secondary-fixed-variant/80 rounded-lg group">
-        <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">{{ item.icon }}</span>
-        <span class="font-label-md text-label-md font-bold">{{ item.name }}</span>
-      </a>
-    </nav>
-  </aside>
+  <nav class="fixed left-0 top-0 h-full w-sidebar-width z-40 flex flex-col bg-on-secondary-fixed-variant dark:bg-on-secondary-fixed docked flat no shadows hidden md:flex">
+  <div class="p-lg border-b border-surface/10">
+  <h1 class="text-headline-md font-headline-md font-bold text-surface-container-lowest">AVATAR Admin</h1>
+  <p class="text-label-md font-label-md text-secondary-fixed mt-xs">Management Suite ({{userRole}})</p>
+  </div>
+  <ul class="flex-1 py-md flex flex-col gap-xs px-sm m-0 list-none">
+  <li *ngFor="let item of menuItems">
+  <a [routerLink]="item.path"
+     routerLinkActive="border-l-4 border-primary-container text-surface-container-lowest bg-on-secondary-fixed/50"
+     [routerLinkActiveOptions]="{exact: true}"
+     class="flex items-center gap-base px-md py-sm text-outline-variant hover:text-surface-container-lowest transition-all duration-200 ease-in-out hover:bg-on-secondary-fixed-variant/80">
+  <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">{{ item.icon }}</span>
+  <span class="font-body-md text-body-md">{{ item.name }}</span>
+  </a>
+  </li>
+  </ul>
+  <div class="p-md border-t border-surface/10 flex items-center gap-sm">
+  <div class="w-10 h-10 rounded-full bg-surface-container-highest overflow-hidden flex items-center justify-center">
+  <span class="material-symbols-outlined text-on-surface-variant">person</span>
+  </div>
+  <div>
+  <p class="font-label-md text-label-md text-surface-container-lowest">Perfil Usuario</p>
+  </div>
+  </div>
+  </nav>
 </div>
 
 <!-- Main Content Area -->
