@@ -17,7 +17,7 @@
           <span class="material-symbols-outlined text-[18px]" style="font-variation-settings: 'FILL' 0;">filter_list</span>
           Filtros
         </button>
-        <button class="flex items-center gap-xs px-4 py-2 bg-primary-container text-on-primary-container rounded-lg font-label-md text-label-md hover:bg-primary-container/90 transition-colors font-bold">
+        <button class="flex items-center gap-xs px-4 py-2 bg-[#76bc21] text-white rounded-lg font-label-md text-label-md hover:bg-[#65a31c] transition-colors font-bold">
           <span class="material-symbols-outlined text-[18px]" style="font-variation-settings: 'FILL' 0;">download</span>
           Exportar
         </button>
@@ -27,7 +27,7 @@
     <div class="overflow-x-auto">
       <table class="w-full text-left border-collapse">
         <thead>
-          <tr class="bg-surface-container-low border-b border-surface-container-highest">
+          <tr class="bg-gray-50 border-b border-surface-container-highest">
             <th class="py-sm px-md font-label-md text-label-md text-on-secondary-fixed-variant uppercase tracking-wider">Cédula</th>
             <th class="py-sm px-md font-label-md text-label-md text-on-secondary-fixed-variant uppercase tracking-wider">Email</th>
             <th class="py-sm px-md font-label-md text-label-md text-on-secondary-fixed-variant uppercase tracking-wider">Usuario</th>
@@ -48,19 +48,14 @@
             <td class="py-sm px-md font-body-md text-body-md text-on-surface font-semibold">{{ record.first_name }} {{ record.last_name }}</td>
             <td class="py-sm px-md font-body-md text-body-md text-on-surface-variant max-w-[200px] truncate" [title]="record.certification_name">{{ record.certification_name }}</td>
             <td class="py-sm px-md">
-              <div class="flex items-center gap-xs">
-                <div class="w-full bg-surface-container-highest rounded-full h-1.5 min-w-[60px]">
-                  <div [ngClass]="{'bg-primary-container': record.percentage >= 80, 'bg-tertiary-container': record.percentage >= 50 && record.percentage < 80, 'bg-error': record.percentage < 50}" class="h-1.5 rounded-full" [style.width.%]="record.percentage"></div>
-                </div>
-                <span class="font-code text-code" [ngClass]="{'text-on-surface': record.percentage >= 50, 'text-error': record.percentage < 50}">{{ record.percentage }}%</span>
-              </div>
+              <span class="font-bold text-on-surface">{{ record.percentage }}%</span>
             </td>
             <td class="py-sm px-md">
-              <span *ngIf="record.status?.toLowerCase() === 'aprobado'" class="inline-flex items-center px-2 py-1 rounded-full text-[11px] font-bold tracking-wide bg-primary-container/20 text-primary uppercase border border-primary-container/30">
-                Approved
+              <span *ngIf="record.status?.toLowerCase() === 'aprobado' || record.percentage >= 70" class="inline-flex items-center px-2 py-1 rounded-full text-[11px] font-bold tracking-wide bg-[#76bc21]/20 text-[#3d6a00] uppercase border border-[#76bc21]/30">
+                APROBADO
               </span>
-              <span *ngIf="record.status?.toLowerCase() !== 'aprobado'" class="inline-flex items-center px-2 py-1 rounded-full text-[11px] font-bold tracking-wide bg-error-container text-on-error-container uppercase border border-error/30">
-                Failed
+              <span *ngIf="record.status?.toLowerCase() !== 'aprobado' && record.percentage < 70" class="inline-flex items-center px-2 py-1 rounded-full text-[11px] font-bold tracking-wide bg-red-500/20 text-red-700 uppercase border border-red-500/30">
+                REPROBADO
               </span>
             </td>
             <td class="py-sm px-md font-body-md text-body-md text-on-surface-variant">{{ record.created_at | date:'dd MMM yyyy' }}</td>
