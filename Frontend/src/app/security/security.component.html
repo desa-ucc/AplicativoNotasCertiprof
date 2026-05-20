@@ -97,8 +97,13 @@
 <!-- ROLES TAB (CARD LAYOUT) -->
 <div *ngIf="activeTab === 'roles'" class="bg-surface-container-lowest rounded-xl shadow-[0px_4px_20px_rgba(0,61,76,0.08)] overflow-hidden">
 <div class="p-md border-b border-surface-container flex justify-between items-center bg-surface-container-low/30">
-    <h3 class="font-title-lg text-title-lg text-secondary flex items-center gap-2">Perfiles de Acceso</h3>
-    <p class="mt-1 text-sm text-on-surface-variant">Controle a qué módulos (pantallas) tiene acceso cada rol.</p>
+    <div>
+        <h3 class="font-title-lg text-title-lg text-secondary flex items-center gap-2">Perfiles de Acceso</h3>
+        <p class="mt-1 text-sm text-on-surface-variant">Controle a qué módulos (pantallas) tiene acceso cada rol.</p>
+    </div>
+    <button class="px-4 py-2 bg-primary-container text-on-primary-container rounded-lg font-bold text-sm shadow-sm hover:brightness-105 transition-all">
+        + Nuevo Rol
+    </button>
 </div>
 
 <div class="overflow-x-auto min-h-[400px]">
