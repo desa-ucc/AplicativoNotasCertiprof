@@ -36,81 +36,91 @@ namespace Backend.Controllers
             {
                 using (var command = _dbContext.Database.GetDbConnection().CreateCommand())
                 {
-                    command.CommandText = "sp_ValidarLogin";
-                    command.CommandType = System.Data.CommandType.StoredProcedure;
+                    command.CommandText = @"
+                        SELECT u.id, u.username, u.password_hash, r.nombre_rol as role_name
+                        FROM cert_usuarios u
+                        JOIN cert_roles r ON u.rol_id = r.id
+                        WHERE u.username = @Username AND u.activo = 1";
+                    command.CommandType = System.Data.CommandType.Text;
 
-                    command.Parameters.Add(new SqlParameter("@Username", SqlDbType.VarChar, 100) { Value = request.Username ?? string.Empty });
-                    command.Parameters.Add(new SqlParameter("@PasswordPlain", SqlDbType.VarChar, 100) { Value = request.PasswordPlain ?? string.Empty });
+                    var pUser = command.CreateParameter();
+                    pUser.ParameterName = "@Username";
+                    pUser.Value = request.Username ?? string.Empty;
+                    command.Parameters.Add(pUser);
 
                     if (_dbContext.Database.GetDbConnection().State != System.Data.ConnectionState.Open)
                     {
                         await _dbContext.Database.OpenConnectionAsync();
                     }
 
-                    int? rolId = null;
-                    string username = null;
-                    bool activo = false;
-
                     using (var reader = await command.ExecuteReaderAsync())
                     {
                         if (await reader.ReadAsync())
                         {
-                            rolId = reader.GetInt32(reader.GetOrdinal("rol_id"));
-                            username = reader.GetString(reader.GetOrdinal("username"));
-                            activo = reader.GetBoolean(reader.GetOrdinal("activo"));
-                        }
-                    }
+                            var passwordHashValue = reader.GetValue(reader.GetOrdinal("password_hash"));
+                            var roleName = reader.GetString(reader.GetOrdinal("role_name"));
 
-                    if (rolId.HasValue && activo)
-                    {
-                        string roleName = "Consulta"; // Default fallback
+                            byte[]? storedHashBytes = null;
 
-                        // Try to fetch Role Name since it's needed for token
-                        using (var roleCommand = _dbContext.Database.GetDbConnection().CreateCommand())
-                        {
-                            roleCommand.CommandText = "SELECT nombre_rol FROM cert_roles WHERE id = @RolId";
-                            var pRolId = roleCommand.CreateParameter();
-                            pRolId.ParameterName = "@RolId";
-                            pRolId.Value = rolId.Value;
-                            roleCommand.Parameters.Add(pRolId);
-
-                            using (var roleReader = await roleCommand.ExecuteReaderAsync())
+                            if (passwordHashValue is byte[] bytes)
                             {
-                                if (await roleReader.ReadAsync())
+                                storedHashBytes = bytes;
+                            }
+                            else if (passwordHashValue is string hashStringValue)
+                            {
+                                if (hashStringValue.StartsWith("0x", StringComparison.OrdinalIgnoreCase))
                                 {
-                                    roleName = roleReader.GetString(0);
+                                    hashStringValue = hashStringValue[2..];
+                                }
+
+                                if (hashStringValue.Length % 2 == 0)
+                                {
+                                    storedHashBytes = new byte[hashStringValue.Length / 2];
+                                    for (int i = 0; i < storedHashBytes.Length; i++)
+                                    {
+                                        storedHashBytes[i] = Convert.ToByte(hashStringValue.Substring(i * 2, 2), 16);
+                                    }
+                                }
+                            }
+
+                            if (storedHashBytes != null)
+                            {
+                                using (var sha256 = System.Security.Cryptography.SHA256.Create())
+                                {
+                                    var hashedBytes = sha256.ComputeHash(System.Text.Encoding.UTF8.GetBytes(request.PasswordPlain ?? string.Empty));
+                                    if (hashedBytes.SequenceEqual(storedHashBytes))
+                                    {
+                                        var token = _authService.GenerateJwtToken(request.Username ?? string.Empty, roleName);
+
+                                        var menuList = new System.Collections.Generic.List<object>();
+                                        using (var menuCommand = _dbContext.Database.GetDbConnection().CreateCommand())
+                                        {
+                                            menuCommand.CommandText = "sp_ObtenerMenuPorRol";
+                                            menuCommand.CommandType = System.Data.CommandType.StoredProcedure;
+
+                                            var pRol = menuCommand.CreateParameter();
+                                            pRol.ParameterName = "@RolNombre";
+                                            pRol.Value = roleName;
+                                            menuCommand.Parameters.Add(pRol);
+
+                                            using (var menuReader = await menuCommand.ExecuteReaderAsync())
+                                            {
+                                                while (await menuReader.ReadAsync())
+                                                {
+                                                    menuList.Add(new {
+                                                        name = menuReader.GetString(menuReader.GetOrdinal("Nombre")),
+                                                        path = menuReader.GetString(menuReader.GetOrdinal("Ruta")),
+                                                        icon = menuReader.IsDBNull(menuReader.GetOrdinal("Icono")) ? "" : menuReader.GetString(menuReader.GetOrdinal("Icono"))
+                                                    });
+                                                }
+                                            }
+                                        }
+
+                                        return Ok(new { Token = token, Role = roleName, Menu = menuList });
+                                    }
                                 }
                             }
                         }
-
-                        var token = _authService.GenerateJwtToken(username, roleName);
-
-                        var menuList = new System.Collections.Generic.List<object>();
-                        using (var menuCommand = _dbContext.Database.GetDbConnection().CreateCommand())
-                        {
-                            menuCommand.CommandText = "sp_ObtenerMenuPorRol";
-                            menuCommand.CommandType = System.Data.CommandType.StoredProcedure;
-
-                            var pRol = menuCommand.CreateParameter();
-                            pRol.ParameterName = "@RolNombre";
-                            pRol.Value = roleName;
-                            menuCommand.Parameters.Add(pRol);
-
-                            using (var menuReader = await menuCommand.ExecuteReaderAsync())
-                            {
-                                while (await menuReader.ReadAsync())
-                                {
-                                    menuList.Add(new {
-                                        name = menuReader.GetString(menuReader.GetOrdinal("Nombre")),
-                                        path = menuReader.GetString(menuReader.GetOrdinal("Ruta")),
-                                        icon = menuReader.IsDBNull(menuReader.GetOrdinal("Icono")) ? "" : menuReader.GetString(menuReader.GetOrdinal("Icono"))
-                                    });
-                                }
-                            }
-                        }
-
-                        // Return what was asked
-                        return Ok(new { Token = token, RoleId = rolId.Value, Role = roleName, Menu = menuList });
                     }
 
                 }
