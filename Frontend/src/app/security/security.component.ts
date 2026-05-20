@@ -11,7 +11,57 @@ import { FormsModule } from '@angular/forms';
   styleUrls: ['./security.component.css']
 })
 export class SecurityComponent implements OnInit {
-  abrirModalNuevoRol() {}
+
+  // New Role Modal State
+  isRoleModalOpen = false;
+  newRoleName = '';
+  selectedNewRoleModules: Set<number> = new Set();
+
+  abrirModalNuevoRol() {
+    this.isRoleModalOpen = true;
+    this.newRoleName = '';
+    this.selectedNewRoleModules.clear();
+  }
+
+  cerrarModalNuevoRol() {
+    this.isRoleModalOpen = false;
+    this.newRoleName = '';
+    this.selectedNewRoleModules.clear();
+  }
+
+  toggleNewRoleModule(moduleId: number, event: Event) {
+    const isChecked = (event.target as HTMLInputElement).checked;
+    if (isChecked) {
+      this.selectedNewRoleModules.add(moduleId);
+    } else {
+      this.selectedNewRoleModules.delete(moduleId);
+    }
+  }
+
+  guardarRol() {
+    if (!this.newRoleName.trim()) {
+      alert('El nombre del rol es obligatorio.');
+      return;
+    }
+
+    const payload = {
+      nombreRol: this.newRoleName,
+      moduleIds: Array.from(this.selectedNewRoleModules)
+    };
+
+    this.http.post('/api/security/roles', payload).subscribe({
+      next: () => {
+        alert('Rol creado exitosamente.');
+        this.cerrarModalNuevoRol();
+        this.fetchRoles();
+      },
+      error: (err) => {
+        console.error('Error al crear rol:', err);
+        alert('Error al crear el rol.');
+      }
+    });
+  }
+
 
   activeTab: 'users' | 'roles' = 'users';
 

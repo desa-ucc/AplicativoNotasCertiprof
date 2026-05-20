@@ -37,6 +37,57 @@
 <button class="p-2 text-on-surface-variant hover:bg-surface-container rounded-lg transition-colors">
 <span class="material-symbols-outlined">download</span>
 </button>
+
+  <!-- Modal for Create New Role -->
+  <div *ngIf="isRoleModalOpen" class="relative z-50" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+    <div class="fixed inset-0 bg-on-background/40 backdrop-blur-sm transition-opacity"></div>
+    <div class="fixed inset-0 z-10 overflow-y-auto">
+      <div class="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
+        <div class="relative transform overflow-hidden rounded-2xl bg-surface-container-lowest text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg border border-outline-variant/20">
+
+          <div class="bg-surface-container-lowest px-6 pt-6 pb-4 border-b border-surface-container flex justify-between items-start">
+            <div>
+              <h3 class="text-title-lg font-title-lg text-on-surface" id="modal-title">Crear Nuevo Rol</h3>
+              <p class="mt-1 text-sm text-on-surface-variant">Defina el nombre del rol y asigne los módulos correspondientes.</p>
+            </div>
+            <button (click)="cerrarModalNuevoRol()" class="text-outline-variant hover:text-on-surface transition-colors mt-1">
+              <span class="material-symbols-outlined">close</span>
+            </button>
+          </div>
+
+          <div class="px-6 py-6 bg-surface-bright space-y-5">
+            <div>
+              <label for="newRoleName" class="block font-label-md text-label-md text-on-surface-variant mb-1">Nombre del Rol</label>
+              <input type="text" name="newRoleName" id="newRoleName" [(ngModel)]="newRoleName" class="block w-full rounded-lg bg-surface border border-outline-variant shadow-sm focus:border-primary focus:ring-1 focus:ring-primary sm:text-sm px-3 py-2 transition-shadow text-on-surface" placeholder="ej. Auditor">
+            </div>
+
+            <div>
+              <label class="block font-label-md text-label-md text-on-surface-variant mb-3">Módulos Permitidos</label>
+              <div class="space-y-3 max-h-[30vh] overflow-y-auto">
+                <div *ngFor="let module of modules" class="flex items-center justify-between p-3 rounded-lg border border-surface-variant hover:bg-surface-container-low transition-colors">
+                  <div>
+                    <span class="text-sm font-medium text-on-surface">{{ module.name }}</span>
+                    <span class="block text-xs text-outline font-mono">{{ module.path }}</span>
+                  </div>
+                  <label class="relative inline-flex items-center cursor-pointer">
+                    <input type="checkbox" (change)="toggleNewRoleModule(module.id, $event)" class="sr-only peer">
+                    <div class="w-11 h-6 bg-surface-dim peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-primary/20 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-outline-variant after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+                  </label>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="bg-surface-container px-6 py-4 flex items-center justify-end gap-3 rounded-b-2xl border-t border-surface-container-highest">
+            <button type="button" (click)="cerrarModalNuevoRol()" class="inline-flex justify-center rounded-lg border border-outline-variant bg-surface-container-lowest px-4 py-2 text-sm font-medium text-on-surface-variant shadow-sm hover:bg-surface-container-low transition-colors">Cancelar</button>
+            <button type="button" (click)="guardarRol()" class="inline-flex justify-center rounded-lg border border-transparent bg-[#76bc21] text-white px-4 py-2 text-sm font-bold shadow-sm hover:brightness-105 transition-colors">Guardar Rol</button>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+
 </div>
 </div>
 <!-- Table/Empty State -->
@@ -81,6 +132,57 @@
 </div>
 <div class="absolute -bottom-2 -right-2 bg-tertiary text-white w-10 h-10 rounded-full flex items-center justify-center shadow-lg">
 <span class="material-symbols-outlined">add</span>
+
+  <!-- Modal for Create New Role -->
+  <div *ngIf="isRoleModalOpen" class="relative z-50" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+    <div class="fixed inset-0 bg-on-background/40 backdrop-blur-sm transition-opacity"></div>
+    <div class="fixed inset-0 z-10 overflow-y-auto">
+      <div class="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
+        <div class="relative transform overflow-hidden rounded-2xl bg-surface-container-lowest text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg border border-outline-variant/20">
+
+          <div class="bg-surface-container-lowest px-6 pt-6 pb-4 border-b border-surface-container flex justify-between items-start">
+            <div>
+              <h3 class="text-title-lg font-title-lg text-on-surface" id="modal-title">Crear Nuevo Rol</h3>
+              <p class="mt-1 text-sm text-on-surface-variant">Defina el nombre del rol y asigne los módulos correspondientes.</p>
+            </div>
+            <button (click)="cerrarModalNuevoRol()" class="text-outline-variant hover:text-on-surface transition-colors mt-1">
+              <span class="material-symbols-outlined">close</span>
+            </button>
+          </div>
+
+          <div class="px-6 py-6 bg-surface-bright space-y-5">
+            <div>
+              <label for="newRoleName" class="block font-label-md text-label-md text-on-surface-variant mb-1">Nombre del Rol</label>
+              <input type="text" name="newRoleName" id="newRoleName" [(ngModel)]="newRoleName" class="block w-full rounded-lg bg-surface border border-outline-variant shadow-sm focus:border-primary focus:ring-1 focus:ring-primary sm:text-sm px-3 py-2 transition-shadow text-on-surface" placeholder="ej. Auditor">
+            </div>
+
+            <div>
+              <label class="block font-label-md text-label-md text-on-surface-variant mb-3">Módulos Permitidos</label>
+              <div class="space-y-3 max-h-[30vh] overflow-y-auto">
+                <div *ngFor="let module of modules" class="flex items-center justify-between p-3 rounded-lg border border-surface-variant hover:bg-surface-container-low transition-colors">
+                  <div>
+                    <span class="text-sm font-medium text-on-surface">{{ module.name }}</span>
+                    <span class="block text-xs text-outline font-mono">{{ module.path }}</span>
+                  </div>
+                  <label class="relative inline-flex items-center cursor-pointer">
+                    <input type="checkbox" (change)="toggleNewRoleModule(module.id, $event)" class="sr-only peer">
+                    <div class="w-11 h-6 bg-surface-dim peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-primary/20 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-outline-variant after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+                  </label>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="bg-surface-container px-6 py-4 flex items-center justify-end gap-3 rounded-b-2xl border-t border-surface-container-highest">
+            <button type="button" (click)="cerrarModalNuevoRol()" class="inline-flex justify-center rounded-lg border border-outline-variant bg-surface-container-lowest px-4 py-2 text-sm font-medium text-on-surface-variant shadow-sm hover:bg-surface-container-low transition-colors">Cancelar</button>
+            <button type="button" (click)="guardarRol()" class="inline-flex justify-center rounded-lg border border-transparent bg-[#76bc21] text-white px-4 py-2 text-sm font-bold shadow-sm hover:brightness-105 transition-colors">Guardar Rol</button>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+
 </div>
 </div>
 <h4 class="font-headline-md text-headline-md text-secondary mb-2">No hay usuarios registrados</h4>
@@ -89,6 +191,57 @@
 <span class="material-symbols-outlined">person_add_alt</span>
                                 Crear primer usuario
                             </button>
+
+  <!-- Modal for Create New Role -->
+  <div *ngIf="isRoleModalOpen" class="relative z-50" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+    <div class="fixed inset-0 bg-on-background/40 backdrop-blur-sm transition-opacity"></div>
+    <div class="fixed inset-0 z-10 overflow-y-auto">
+      <div class="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
+        <div class="relative transform overflow-hidden rounded-2xl bg-surface-container-lowest text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg border border-outline-variant/20">
+
+          <div class="bg-surface-container-lowest px-6 pt-6 pb-4 border-b border-surface-container flex justify-between items-start">
+            <div>
+              <h3 class="text-title-lg font-title-lg text-on-surface" id="modal-title">Crear Nuevo Rol</h3>
+              <p class="mt-1 text-sm text-on-surface-variant">Defina el nombre del rol y asigne los módulos correspondientes.</p>
+            </div>
+            <button (click)="cerrarModalNuevoRol()" class="text-outline-variant hover:text-on-surface transition-colors mt-1">
+              <span class="material-symbols-outlined">close</span>
+            </button>
+          </div>
+
+          <div class="px-6 py-6 bg-surface-bright space-y-5">
+            <div>
+              <label for="newRoleName" class="block font-label-md text-label-md text-on-surface-variant mb-1">Nombre del Rol</label>
+              <input type="text" name="newRoleName" id="newRoleName" [(ngModel)]="newRoleName" class="block w-full rounded-lg bg-surface border border-outline-variant shadow-sm focus:border-primary focus:ring-1 focus:ring-primary sm:text-sm px-3 py-2 transition-shadow text-on-surface" placeholder="ej. Auditor">
+            </div>
+
+            <div>
+              <label class="block font-label-md text-label-md text-on-surface-variant mb-3">Módulos Permitidos</label>
+              <div class="space-y-3 max-h-[30vh] overflow-y-auto">
+                <div *ngFor="let module of modules" class="flex items-center justify-between p-3 rounded-lg border border-surface-variant hover:bg-surface-container-low transition-colors">
+                  <div>
+                    <span class="text-sm font-medium text-on-surface">{{ module.name }}</span>
+                    <span class="block text-xs text-outline font-mono">{{ module.path }}</span>
+                  </div>
+                  <label class="relative inline-flex items-center cursor-pointer">
+                    <input type="checkbox" (change)="toggleNewRoleModule(module.id, $event)" class="sr-only peer">
+                    <div class="w-11 h-6 bg-surface-dim peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-primary/20 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-outline-variant after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+                  </label>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="bg-surface-container px-6 py-4 flex items-center justify-end gap-3 rounded-b-2xl border-t border-surface-container-highest">
+            <button type="button" (click)="cerrarModalNuevoRol()" class="inline-flex justify-center rounded-lg border border-outline-variant bg-surface-container-lowest px-4 py-2 text-sm font-medium text-on-surface-variant shadow-sm hover:bg-surface-container-low transition-colors">Cancelar</button>
+            <button type="button" (click)="guardarRol()" class="inline-flex justify-center rounded-lg border border-transparent bg-[#76bc21] text-white px-4 py-2 text-sm font-bold shadow-sm hover:brightness-105 transition-colors">Guardar Rol</button>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+
 </div>
 </div>
 </div>
@@ -123,6 +276,57 @@
         </tr>
     </tbody>
     </table>
+
+  <!-- Modal for Create New Role -->
+  <div *ngIf="isRoleModalOpen" class="relative z-50" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+    <div class="fixed inset-0 bg-on-background/40 backdrop-blur-sm transition-opacity"></div>
+    <div class="fixed inset-0 z-10 overflow-y-auto">
+      <div class="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
+        <div class="relative transform overflow-hidden rounded-2xl bg-surface-container-lowest text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg border border-outline-variant/20">
+
+          <div class="bg-surface-container-lowest px-6 pt-6 pb-4 border-b border-surface-container flex justify-between items-start">
+            <div>
+              <h3 class="text-title-lg font-title-lg text-on-surface" id="modal-title">Crear Nuevo Rol</h3>
+              <p class="mt-1 text-sm text-on-surface-variant">Defina el nombre del rol y asigne los módulos correspondientes.</p>
+            </div>
+            <button (click)="cerrarModalNuevoRol()" class="text-outline-variant hover:text-on-surface transition-colors mt-1">
+              <span class="material-symbols-outlined">close</span>
+            </button>
+          </div>
+
+          <div class="px-6 py-6 bg-surface-bright space-y-5">
+            <div>
+              <label for="newRoleName" class="block font-label-md text-label-md text-on-surface-variant mb-1">Nombre del Rol</label>
+              <input type="text" name="newRoleName" id="newRoleName" [(ngModel)]="newRoleName" class="block w-full rounded-lg bg-surface border border-outline-variant shadow-sm focus:border-primary focus:ring-1 focus:ring-primary sm:text-sm px-3 py-2 transition-shadow text-on-surface" placeholder="ej. Auditor">
+            </div>
+
+            <div>
+              <label class="block font-label-md text-label-md text-on-surface-variant mb-3">Módulos Permitidos</label>
+              <div class="space-y-3 max-h-[30vh] overflow-y-auto">
+                <div *ngFor="let module of modules" class="flex items-center justify-between p-3 rounded-lg border border-surface-variant hover:bg-surface-container-low transition-colors">
+                  <div>
+                    <span class="text-sm font-medium text-on-surface">{{ module.name }}</span>
+                    <span class="block text-xs text-outline font-mono">{{ module.path }}</span>
+                  </div>
+                  <label class="relative inline-flex items-center cursor-pointer">
+                    <input type="checkbox" (change)="toggleNewRoleModule(module.id, $event)" class="sr-only peer">
+                    <div class="w-11 h-6 bg-surface-dim peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-primary/20 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-outline-variant after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+                  </label>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="bg-surface-container px-6 py-4 flex items-center justify-end gap-3 rounded-b-2xl border-t border-surface-container-highest">
+            <button type="button" (click)="cerrarModalNuevoRol()" class="inline-flex justify-center rounded-lg border border-outline-variant bg-surface-container-lowest px-4 py-2 text-sm font-medium text-on-surface-variant shadow-sm hover:bg-surface-container-low transition-colors">Cancelar</button>
+            <button type="button" (click)="guardarRol()" class="inline-flex justify-center rounded-lg border border-transparent bg-[#76bc21] text-white px-4 py-2 text-sm font-bold shadow-sm hover:brightness-105 transition-colors">Guardar Rol</button>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+
 </div>
 </div>
 
@@ -135,6 +339,57 @@
 <div class="relative z-10">
 <h5 class="font-title-lg text-title-lg mb-2">Seguridad Nivel Corporativo</h5>
 <p class="text-surface-variant opacity-90 max-w-lg">Todos los cambios en roles y permisos son registrados en la cadena de auditoría. Asegúrese de seguir los protocolos de ciberseguridad industrial establecidos por Avatar Petroleum.</p>
+
+  <!-- Modal for Create New Role -->
+  <div *ngIf="isRoleModalOpen" class="relative z-50" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+    <div class="fixed inset-0 bg-on-background/40 backdrop-blur-sm transition-opacity"></div>
+    <div class="fixed inset-0 z-10 overflow-y-auto">
+      <div class="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
+        <div class="relative transform overflow-hidden rounded-2xl bg-surface-container-lowest text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg border border-outline-variant/20">
+
+          <div class="bg-surface-container-lowest px-6 pt-6 pb-4 border-b border-surface-container flex justify-between items-start">
+            <div>
+              <h3 class="text-title-lg font-title-lg text-on-surface" id="modal-title">Crear Nuevo Rol</h3>
+              <p class="mt-1 text-sm text-on-surface-variant">Defina el nombre del rol y asigne los módulos correspondientes.</p>
+            </div>
+            <button (click)="cerrarModalNuevoRol()" class="text-outline-variant hover:text-on-surface transition-colors mt-1">
+              <span class="material-symbols-outlined">close</span>
+            </button>
+          </div>
+
+          <div class="px-6 py-6 bg-surface-bright space-y-5">
+            <div>
+              <label for="newRoleName" class="block font-label-md text-label-md text-on-surface-variant mb-1">Nombre del Rol</label>
+              <input type="text" name="newRoleName" id="newRoleName" [(ngModel)]="newRoleName" class="block w-full rounded-lg bg-surface border border-outline-variant shadow-sm focus:border-primary focus:ring-1 focus:ring-primary sm:text-sm px-3 py-2 transition-shadow text-on-surface" placeholder="ej. Auditor">
+            </div>
+
+            <div>
+              <label class="block font-label-md text-label-md text-on-surface-variant mb-3">Módulos Permitidos</label>
+              <div class="space-y-3 max-h-[30vh] overflow-y-auto">
+                <div *ngFor="let module of modules" class="flex items-center justify-between p-3 rounded-lg border border-surface-variant hover:bg-surface-container-low transition-colors">
+                  <div>
+                    <span class="text-sm font-medium text-on-surface">{{ module.name }}</span>
+                    <span class="block text-xs text-outline font-mono">{{ module.path }}</span>
+                  </div>
+                  <label class="relative inline-flex items-center cursor-pointer">
+                    <input type="checkbox" (change)="toggleNewRoleModule(module.id, $event)" class="sr-only peer">
+                    <div class="w-11 h-6 bg-surface-dim peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-primary/20 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-outline-variant after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+                  </label>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="bg-surface-container px-6 py-4 flex items-center justify-end gap-3 rounded-b-2xl border-t border-surface-container-highest">
+            <button type="button" (click)="cerrarModalNuevoRol()" class="inline-flex justify-center rounded-lg border border-outline-variant bg-surface-container-lowest px-4 py-2 text-sm font-medium text-on-surface-variant shadow-sm hover:bg-surface-container-low transition-colors">Cancelar</button>
+            <button type="button" (click)="guardarRol()" class="inline-flex justify-center rounded-lg border border-transparent bg-[#76bc21] text-white px-4 py-2 text-sm font-bold shadow-sm hover:brightness-105 transition-colors">Guardar Rol</button>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+
 </div>
 </div>
 <div class="bg-tertiary-container text-on-tertiary-container p-gutter rounded-xl flex flex-col justify-center">
@@ -147,6 +402,57 @@
                             Ver documentación
                             <span class="material-symbols-outlined text-sm">open_in_new</span>
 </a>
+
+  <!-- Modal for Create New Role -->
+  <div *ngIf="isRoleModalOpen" class="relative z-50" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+    <div class="fixed inset-0 bg-on-background/40 backdrop-blur-sm transition-opacity"></div>
+    <div class="fixed inset-0 z-10 overflow-y-auto">
+      <div class="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
+        <div class="relative transform overflow-hidden rounded-2xl bg-surface-container-lowest text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg border border-outline-variant/20">
+
+          <div class="bg-surface-container-lowest px-6 pt-6 pb-4 border-b border-surface-container flex justify-between items-start">
+            <div>
+              <h3 class="text-title-lg font-title-lg text-on-surface" id="modal-title">Crear Nuevo Rol</h3>
+              <p class="mt-1 text-sm text-on-surface-variant">Defina el nombre del rol y asigne los módulos correspondientes.</p>
+            </div>
+            <button (click)="cerrarModalNuevoRol()" class="text-outline-variant hover:text-on-surface transition-colors mt-1">
+              <span class="material-symbols-outlined">close</span>
+            </button>
+          </div>
+
+          <div class="px-6 py-6 bg-surface-bright space-y-5">
+            <div>
+              <label for="newRoleName" class="block font-label-md text-label-md text-on-surface-variant mb-1">Nombre del Rol</label>
+              <input type="text" name="newRoleName" id="newRoleName" [(ngModel)]="newRoleName" class="block w-full rounded-lg bg-surface border border-outline-variant shadow-sm focus:border-primary focus:ring-1 focus:ring-primary sm:text-sm px-3 py-2 transition-shadow text-on-surface" placeholder="ej. Auditor">
+            </div>
+
+            <div>
+              <label class="block font-label-md text-label-md text-on-surface-variant mb-3">Módulos Permitidos</label>
+              <div class="space-y-3 max-h-[30vh] overflow-y-auto">
+                <div *ngFor="let module of modules" class="flex items-center justify-between p-3 rounded-lg border border-surface-variant hover:bg-surface-container-low transition-colors">
+                  <div>
+                    <span class="text-sm font-medium text-on-surface">{{ module.name }}</span>
+                    <span class="block text-xs text-outline font-mono">{{ module.path }}</span>
+                  </div>
+                  <label class="relative inline-flex items-center cursor-pointer">
+                    <input type="checkbox" (change)="toggleNewRoleModule(module.id, $event)" class="sr-only peer">
+                    <div class="w-11 h-6 bg-surface-dim peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-primary/20 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-outline-variant after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+                  </label>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="bg-surface-container px-6 py-4 flex items-center justify-end gap-3 rounded-b-2xl border-t border-surface-container-highest">
+            <button type="button" (click)="cerrarModalNuevoRol()" class="inline-flex justify-center rounded-lg border border-outline-variant bg-surface-container-lowest px-4 py-2 text-sm font-medium text-on-surface-variant shadow-sm hover:bg-surface-container-low transition-colors">Cancelar</button>
+            <button type="button" (click)="guardarRol()" class="inline-flex justify-center rounded-lg border border-transparent bg-[#76bc21] text-white px-4 py-2 text-sm font-bold shadow-sm hover:brightness-105 transition-colors">Guardar Rol</button>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+
 </div>
 </div>
 </div>
