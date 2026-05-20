@@ -1,4 +1,4 @@
-<div *ngIf="isLoggedIn()">
+<div *ngIf="loggedIn">
   <!-- TopNavBar -->
   <nav class="fixed top-0 right-0 h-16 flex items-center justify-between px-md z-30 bg-surface/95 backdrop-blur-md docked w-[calc(100%-280px)] border-b border-outline-variant/30 shadow-sm dark:shadow-none hidden md:flex">
     <!-- Search Bar (on_left as per JSON) -->
@@ -34,7 +34,7 @@
     </div>
     <!-- Navigation Links -->
     <nav class="flex-1 flex flex-col gap-xs px-sm">
-      <a *ngFor="let item of userMenu"
+      <a *ngFor="let item of menuItems"
          [routerLink]="item.path"
          routerLinkActive="border-l-4 border-primary-container text-surface-container-lowest bg-on-secondary-fixed/50 rounded-r-lg ml-[-12px]"
          [routerLinkActiveOptions]="{exact: true}"
@@ -47,6 +47,6 @@
 </div>
 
 <!-- Main Content Area -->
-<div [ngClass]="{'md:ml-sidebar-width pt-20 px-lg pb-xl': isLoggedIn()}">
+<div [ngClass]="{'md:ml-sidebar-width pt-20 px-lg pb-xl': loggedIn}">
   <router-outlet></router-outlet>
 </div>
