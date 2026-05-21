@@ -96,6 +96,7 @@ namespace Backend.Services
         {
             return new
             {
+                cedula = GetValueDict(rawRec, new[] { "cedula", "Cédula", "Cedula" }),
                 status = GetValueDict(rawRec, new[] { "status", "Estado" }),
                 percentage = GetValueDict(rawRec, new[] { "percentage", "notas", "Notas", "Grade" }),
                 first_name = GetValueDict(rawRec, new[] { "first_name", "first name", "Nombres" }),

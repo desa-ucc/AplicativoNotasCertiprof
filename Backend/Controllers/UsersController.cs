@@ -137,6 +137,79 @@ namespace Backend.Controllers
             }
         }
 
+
+        public class UpdateUserRequest
+        {
+            public int Id { get; set; }
+            public string Username { get; set; } = string.Empty;
+            public string Password { get; set; } = string.Empty;
+            public int RolId { get; set; }
+        }
+
+        [HttpPut]
+        public async Task<IActionResult> UpdateUser([FromBody] UpdateUserRequest request)
+        {
+            try
+            {
+                if (_dbContext.Database.GetDbConnection().State != System.Data.ConnectionState.Open)
+                {
+                    await _dbContext.Database.OpenConnectionAsync();
+                }
+
+                using (var command = _dbContext.Database.GetDbConnection().CreateCommand())
+                {
+                    string query = "";
+                    if (string.IsNullOrWhiteSpace(request.Password))
+                    {
+                        query = "UPDATE cert_usuarios SET username = @Username, rol_id = @RolId WHERE id = @Id";
+                        command.CommandText = query;
+                        command.CommandType = System.Data.CommandType.Text;
+                    }
+                    else
+                    {
+                        query = "UPDATE cert_usuarios SET username = @Username, password_hash = @PasswordHash, rol_id = @RolId WHERE id = @Id";
+                        command.CommandText = query;
+                        command.CommandType = System.Data.CommandType.Text;
+
+                        string hashString;
+                        using (var sha256 = System.Security.Cryptography.SHA256.Create())
+                        {
+                            var hashedBytes = sha256.ComputeHash(System.Text.Encoding.UTF8.GetBytes(request.Password));
+                            hashString = BitConverter.ToString(hashedBytes).Replace("-", "").ToLower();
+                        }
+
+                        var pHash = command.CreateParameter();
+                        pHash.ParameterName = "@PasswordHash";
+                        pHash.Value = hashString;
+                        command.Parameters.Add(pHash);
+                    }
+
+                    var pId = command.CreateParameter();
+                    pId.ParameterName = "@Id";
+                    pId.Value = request.Id;
+                    command.Parameters.Add(pId);
+
+                    var pUser = command.CreateParameter();
+                    pUser.ParameterName = "@Username";
+                    pUser.Value = request.Username;
+                    command.Parameters.Add(pUser);
+
+                    var pRol = command.CreateParameter();
+                    pRol.ParameterName = "@RolId";
+                    pRol.Value = request.RolId;
+                    command.Parameters.Add(pRol);
+
+                    await command.ExecuteNonQueryAsync();
+                }
+
+                return Ok(new { Message = "Usuario actualizado exitosamente." });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { Message = ex.Message });
+            }
+        }
+
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteUser(int id)
         {
