@@ -225,6 +225,25 @@ namespace Backend.Services
                     paramStatus.Value = (object)rec.status ?? DBNull.Value;
                     command.Parameters.Add(paramStatus);
 
+                    var paramFecha = command.CreateParameter();
+                    paramFecha.ParameterName = "@CreatedAt";
+                    if (!string.IsNullOrWhiteSpace(rec.created_at))
+                    {
+                        if (DateTime.TryParse(rec.created_at, System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.None, out DateTime dt))
+                        {
+                            paramFecha.Value = dt;
+                        }
+                        else
+                        {
+                            paramFecha.Value = DBNull.Value;
+                        }
+                    }
+                    else
+                    {
+                        paramFecha.Value = DBNull.Value;
+                    }
+                    command.Parameters.Add(paramFecha);
+
                     if (_dbContext.Database.GetDbConnection().State != System.Data.ConnectionState.Open)
                     {
                         _dbContext.Database.OpenConnection();

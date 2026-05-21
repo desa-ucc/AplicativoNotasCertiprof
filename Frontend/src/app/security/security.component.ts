@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
+import * as XLSX from 'xlsx';
 
 @Component({
   selector: 'app-security',
@@ -11,6 +12,27 @@ import { FormsModule } from '@angular/forms';
   styleUrls: ['./security.component.css']
 })
 export class SecurityComponent implements OnInit {
+
+  abrirFiltrosUsuarios() {
+    alert("Funcionalidad de filtros en desarrollo.");
+  }
+
+  exportarUsuariosExcel() {
+    if (this.users.length === 0) {
+      alert("No hay usuarios para exportar.");
+      return;
+    }
+    const dataExportar = this.users.map(u => ({
+        'ID': u.id,
+        'Usuario': u.username,
+        'Rol Asignado': u.role_name
+    }));
+    const ws: XLSX.WorkSheet = XLSX.utils.json_to_sheet(dataExportar);
+    const wb: XLSX.WorkBook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Usuarios');
+    XLSX.writeFile(wb, 'Directorio_Usuarios.xlsx');
+  }
+
 
   abrirModalConfiguracion(rol: any) {
     this.openPermissionsModal(rol);
