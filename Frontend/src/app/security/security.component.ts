@@ -12,6 +12,34 @@ import { FormsModule } from '@angular/forms';
 })
 export class SecurityComponent implements OnInit {
 
+  abrirModalConfiguracion(rol: any) {
+    this.openPermissionsModal(rol);
+  }
+
+  editarNombreRol(rol: any) {
+    const nuevoNombre = window.prompt("Ingrese el nuevo nombre para el rol:", rol.nombre_rol);
+    if (nuevoNombre && nuevoNombre.trim() !== "" && nuevoNombre !== rol.nombre_rol) {
+        this.http.put(`/api/security/roles/${rol.id}`, { nombre: nuevoNombre }).subscribe({
+            next: () => {
+                this.fetchRoles();
+            },
+            error: (err) => alert("Error al actualizar el nombre del rol")
+        });
+    }
+  }
+
+  eliminarRol(rol: any) {
+    if (window.confirm(`¿Seguro que desea eliminar el rol ${rol.nombre_rol}?`)) {
+        this.http.delete(`/api/security/roles/${rol.id}`).subscribe({
+            next: () => {
+                this.fetchRoles();
+            },
+            error: (err) => alert("Error al eliminar el rol")
+        });
+    }
+  }
+
+
   // New Role Modal State
   isRoleModalOpen = false;
   newRoleName = '';

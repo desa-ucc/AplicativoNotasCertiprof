@@ -225,6 +225,98 @@ namespace Backend.Controllers
             }
         }
 
+
+        public class EditRoleRequest
+        {
+            public string Nombre { get; set; } = string.Empty;
+        }
+
+        [HttpPut("roles/{id}")]
+        public async Task<IActionResult> EditRole(int id, [FromBody] EditRoleRequest request)
+        {
+            if (string.IsNullOrWhiteSpace(request.Nombre)) return BadRequest(new { Message = "El nombre no puede estar vacío." });
+            try
+            {
+                if (_dbContext.Database.GetDbConnection().State != System.Data.ConnectionState.Open)
+                {
+                    await _dbContext.Database.OpenConnectionAsync();
+                }
+
+                using (var command = _dbContext.Database.GetDbConnection().CreateCommand())
+                {
+                    command.CommandText = "UPDATE cert_roles SET nombre_rol = @Nombre WHERE id = @Id";
+                    command.CommandType = System.Data.CommandType.Text;
+
+                    var pName = command.CreateParameter();
+                    pName.ParameterName = "@Nombre";
+                    pName.Value = request.Nombre;
+                    command.Parameters.Add(pName);
+
+                    var pId = command.CreateParameter();
+                    pId.ParameterName = "@Id";
+                    pId.Value = id;
+                    command.Parameters.Add(pId);
+
+                    await command.ExecuteNonQueryAsync();
+                }
+                return Ok(new { Message = "Rol actualizado" });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { Message = ex.Message });
+            }
+        }
+
+        [HttpDelete("roles/{id}")]
+        public async Task<IActionResult> DeleteRole(int id)
+        {
+            try
+            {
+                if (_dbContext.Database.GetDbConnection().State != System.Data.ConnectionState.Open)
+                {
+                    await _dbContext.Database.OpenConnectionAsync();
+                }
+
+                using (var transaction = await _dbContext.Database.GetDbConnection().BeginTransactionAsync())
+                {
+                    try
+                    {
+                        // 1. Delete from cert_permisos
+                        using (var cmdPerms = _dbContext.Database.GetDbConnection().CreateCommand())
+                        {
+                            cmdPerms.Transaction = transaction;
+                            cmdPerms.CommandText = "DELETE FROM cert_permisos WHERE rol_id = @Id";
+                            cmdPerms.CommandType = System.Data.CommandType.Text;
+                            var pId1 = cmdPerms.CreateParameter(); pId1.ParameterName = "@Id"; pId1.Value = id; cmdPerms.Parameters.Add(pId1);
+                            await cmdPerms.ExecuteNonQueryAsync();
+                        }
+
+                        // 2. Delete from cert_roles
+                        using (var cmdRoles = _dbContext.Database.GetDbConnection().CreateCommand())
+                        {
+                            cmdRoles.Transaction = transaction;
+                            cmdRoles.CommandText = "DELETE FROM cert_roles WHERE id = @Id";
+                            cmdRoles.CommandType = System.Data.CommandType.Text;
+                            var pId2 = cmdRoles.CreateParameter(); pId2.ParameterName = "@Id"; pId2.Value = id; cmdRoles.Parameters.Add(pId2);
+                            await cmdRoles.ExecuteNonQueryAsync();
+                        }
+
+                        await transaction.CommitAsync();
+                        return Ok(new { Message = "Rol eliminado correctamente." });
+                    }
+                    catch (Exception ex)
+                    {
+                        await transaction.RollbackAsync();
+                        return BadRequest(new { Message = "No se pudo eliminar el rol. " + ex.Message });
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { Message = "Error interno del servidor", Detail = ex.Message });
+            }
+        }
+
         [HttpGet("modules")]
         public async Task<IActionResult> GetModules()
         {

@@ -64,7 +64,7 @@ namespace Backend.Controllers
             {
                 using (var command = _dbContext.Database.GetDbConnection().CreateCommand())
                 {
-                    command.CommandText = "SELECT u.id, u.username, u.rol_id, r.name as role_name FROM cert_usuarios u JOIN cert_roles r ON u.rol_id = r.id";
+                    command.CommandText = "SELECT u.id, u.username, u.rol_id, r.nombre_rol as role_name FROM cert_usuarios u JOIN cert_roles r ON u.rol_id = r.id";
 
                     if (_dbContext.Database.GetDbConnection().State != System.Data.ConnectionState.Open)
                     {
