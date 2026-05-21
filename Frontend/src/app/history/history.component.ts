@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
+import * as XLSX from 'xlsx';
 
 @Component({
   selector: 'app-history',
@@ -11,13 +12,102 @@ import { FormsModule } from '@angular/forms';
   styleUrls: ['./history.component.css']
 })
 export class HistoryComponent implements OnInit {
-  searchTerm = '';
 
-  aplicarFiltros() {}
-  abrirFiltros() {}
-  exportarExcel() {}
+
+
+  searchTerm = '';
+  isFiltersModalOpen = false;
+  filtroAvanzado = {
+    cedula: '',
+    fechaInicio: '',
+    fechaFin: '',
+    certificacion: ''
+  };
 
   histories: any[] = [];
+  registrosFiltrados: any[] = [];
+
+  abrirFiltros() {
+    this.isFiltersModalOpen = true;
+  }
+
+  cerrarFiltros() {
+    this.isFiltersModalOpen = false;
+  }
+
+  aplicarFiltrosAvanzados() {
+    this.registrosFiltrados = this.histories.filter(record => {
+      let pass = true;
+
+      // Exact match by Cedula
+      if (this.filtroAvanzado.cedula && record.cedula !== this.filtroAvanzado.cedula) {
+         pass = false;
+      }
+
+      // Date Range (Fecha Inicio - Fecha Fin)
+      if (this.filtroAvanzado.fechaInicio && record.created_at) {
+         const recordDate = new Date(record.created_at).getTime();
+         const startDate = new Date(this.filtroAvanzado.fechaInicio).getTime();
+         if (recordDate < startDate) pass = false;
+      }
+      if (this.filtroAvanzado.fechaFin && record.created_at) {
+         const recordDate = new Date(record.created_at).getTime();
+         // Make endDate include the whole day
+         const endDate = new Date(this.filtroAvanzado.fechaFin).getTime() + 86400000;
+         if (recordDate >= endDate) pass = false;
+      }
+
+      // Certification match
+      if (this.filtroAvanzado.certificacion && record.certification_name) {
+         if (!record.certification_name.toLowerCase().includes(this.filtroAvanzado.certificacion.toLowerCase())) {
+            pass = false;
+         }
+      }
+
+      return pass;
+    });
+
+    this.cerrarFiltros();
+  }
+
+  aplicarFiltros() {
+    if (!this.searchTerm.trim()) {
+      this.registrosFiltrados = [...this.histories];
+      return;
+    }
+
+    const searchLower = this.searchTerm.toLowerCase();
+    this.registrosFiltrados = this.histories.filter(record =>
+      (record.cedula && record.cedula.toLowerCase().includes(searchLower)) ||
+      (record.email && record.email.toLowerCase().includes(searchLower)) ||
+      (record.first_name && record.first_name.toLowerCase().includes(searchLower)) ||
+      (record.last_name && record.last_name.toLowerCase().includes(searchLower))
+    );
+  }
+
+  exportarExcel() {
+    if (this.registrosFiltrados.length === 0) {
+      alert("No hay datos para exportar.");
+      return;
+    }
+    const ws: XLSX.WorkSheet = XLSX.utils.json_to_sheet(this.registrosFiltrados);
+    const wb: XLSX.WorkBook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Historial');
+    XLSX.writeFile(wb, 'Historial_Certificaciones.xlsx');
+  }
+
+  fetchHistory() {
+    this.http.get<any[]>('/api/certiprof/history')
+      .subscribe({
+        next: (data) => {
+          this.histories = data;
+          this.registrosFiltrados = [...data];
+        },
+        error: (err) => {
+          console.error('Error fetching history:', err);
+        }
+      });
+  }
 
   isEditing = false;
   editRecord: any = null;
@@ -30,17 +120,7 @@ export class HistoryComponent implements OnInit {
     this.fetchHistory();
   }
 
-  fetchHistory() {
-    this.http.get<any[]>('/api/certiprof/history')
-      .subscribe({
-        next: (data) => {
-          this.histories = data;
-        },
-        error: (err) => {
-          console.error('Error fetching history:', err);
-        }
-      });
-  }
+
 
   openEditModal(record: any) {
     // Clone the record so we don't modify the table row until save

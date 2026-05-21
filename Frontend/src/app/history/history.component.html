@@ -39,7 +39,7 @@
           </tr>
         </thead>
         <tbody class="divide-y divide-surface-container-highest bg-surface-container-lowest">
-          <tr *ngFor="let record of histories" class="hover:bg-surface-container/50 transition-colors group">
+          <tr *ngFor="let record of registrosFiltrados" class="hover:bg-surface-container/50 transition-colors group">
             <td class="py-sm px-md font-code text-code text-on-surface">
               <span *ngIf="record.cedula && record.cedula !== 'No está dentro del registro'">{{ record.cedula }}</span>
               <span *ngIf="!record.cedula || record.cedula === 'No está dentro del registro'" class="text-error font-semibold text-[11px] uppercase tracking-wide">No Registrado</span>
@@ -126,6 +126,52 @@
       </div>
   </div>
 
+</div>
+
+
+<!-- Filters Modal -->
+<div *ngIf="isFiltersModalOpen" class="relative z-50" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+  <div class="fixed inset-0 bg-on-background/40 backdrop-blur-sm transition-opacity"></div>
+  <div class="fixed inset-0 z-10 overflow-y-auto">
+    <div class="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
+      <div class="relative transform overflow-hidden rounded-2xl bg-surface-container-lowest text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg border border-outline-variant/20">
+
+        <div class="bg-surface-container-lowest px-6 pt-6 pb-4 border-b border-surface-container-highest flex justify-between items-center">
+          <h3 class="text-title-lg font-title-lg text-on-surface" id="modal-title">Filtros Avanzados</h3>
+          <button (click)="cerrarFiltros()" class="text-outline-variant hover:text-on-surface transition-colors">
+            <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">close</span>
+          </button>
+        </div>
+
+        <div class="px-6 py-6 bg-surface-bright space-y-5">
+          <div>
+            <label class="block font-label-md text-label-md text-on-surface-variant mb-1">Cédula</label>
+            <input type="text" [(ngModel)]="filtroAvanzado.cedula" class="block w-full rounded-lg bg-surface border border-outline-variant shadow-sm focus:border-primary focus:ring-1 focus:ring-primary sm:text-sm px-3 py-2 text-on-surface" placeholder="Ingrese cédula exacta">
+          </div>
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label class="block font-label-md text-label-md text-on-surface-variant mb-1">Fecha Inicio</label>
+              <input type="date" [(ngModel)]="filtroAvanzado.fechaInicio" class="block w-full rounded-lg bg-surface border border-outline-variant shadow-sm focus:border-primary focus:ring-1 focus:ring-primary sm:text-sm px-3 py-2 text-on-surface">
+            </div>
+            <div>
+              <label class="block font-label-md text-label-md text-on-surface-variant mb-1">Fecha Fin</label>
+              <input type="date" [(ngModel)]="filtroAvanzado.fechaFin" class="block w-full rounded-lg bg-surface border border-outline-variant shadow-sm focus:border-primary focus:ring-1 focus:ring-primary sm:text-sm px-3 py-2 text-on-surface">
+            </div>
+          </div>
+          <div>
+            <label class="block font-label-md text-label-md text-on-surface-variant mb-1">Nombre Certificación</label>
+            <input type="text" [(ngModel)]="filtroAvanzado.certificacion" class="block w-full rounded-lg bg-surface border border-outline-variant shadow-sm focus:border-primary focus:ring-1 focus:ring-primary sm:text-sm px-3 py-2 text-on-surface" placeholder="Buscar por certificación">
+          </div>
+        </div>
+
+        <div class="bg-surface-container px-6 py-4 flex items-center justify-end gap-3 rounded-b-2xl border-t border-surface-container-highest">
+          <button type="button" (click)="cerrarFiltros()" class="inline-flex justify-center rounded-lg border border-outline-variant bg-surface-container-lowest px-4 py-2 text-sm font-medium text-on-surface-variant shadow-sm hover:bg-surface-container-low transition-colors">Cancelar</button>
+          <button type="button" (click)="aplicarFiltrosAvanzados()" class="inline-flex justify-center rounded-lg border border-transparent bg-primary-container px-4 py-2 text-sm font-bold text-on-primary-container shadow-sm hover:bg-primary-container/90 transition-colors">Aplicar Filtros</button>
+        </div>
+
+      </div>
+    </div>
+  </div>
 </div>
 
 <!-- Refined Edit Modal -->
