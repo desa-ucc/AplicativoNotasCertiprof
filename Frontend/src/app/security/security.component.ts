@@ -230,9 +230,11 @@ export class SecurityComponent implements OnInit {
   savePermissions() {
     if (!this.selectedRole) return;
 
-    this.http.put(`/api/security/roles/${this.selectedRole.id}/permissions`, {
+    const payload = {
       moduleIds: Array.from(this.rolePermissions)
-    }).subscribe({
+    };
+
+    this.http.put(`/api/security/roles/${this.selectedRole.id}/permissions`, payload).subscribe({
       next: () => {
         alert('Permisos actualizados. Tenga en cuenta que los usuarios deben volver a iniciar sesión para ver los cambios en su menú principal.');
         this.closePermissionsModal();
