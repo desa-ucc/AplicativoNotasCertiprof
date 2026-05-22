@@ -168,8 +168,7 @@
               <label class="block font-label-md text-label-md text-on-surface-variant mb-1">Estado</label>
               <select [(ngModel)]="filtroAvanzado.estado" class="block w-full rounded-lg bg-surface border border-outline-variant shadow-sm focus:border-primary focus:ring-1 focus:ring-primary sm:text-sm px-3 py-2 text-on-surface">
                   <option value="">Todos</option>
-                  <option value="approved">Aprobados</option>
-                  <option value="reprobado">Reprobados</option>
+                  <option *ngFor="let est of estadosDisponibles" [value]="est">{{ est }}</option>
               </select>
           </div>
         </div>
@@ -229,11 +228,7 @@
               <div>
                 <label for="status" class="block font-label-md text-label-md text-on-surface-variant mb-1">Estado</label>
                 <select name="status" id="status" [(ngModel)]="editRecord.status" class="block w-full rounded-lg bg-surface border border-outline-variant shadow-sm focus:border-primary focus:ring-1 focus:ring-primary sm:text-sm px-3 py-2 transition-shadow text-on-surface">
-                    <option value="approved">approved</option>
-                    <option value="reproved">reproved</option>
-                    <option value="aprobado">aprobado</option>
-                    <option value="reprobado">reprobado</option>
-                    <option value="Procesado">Procesado</option>
+                    <option *ngFor="let est of estadosDisponibles" [value]="est">{{ est }}</option>
                 </select>
               </div>
             </div>

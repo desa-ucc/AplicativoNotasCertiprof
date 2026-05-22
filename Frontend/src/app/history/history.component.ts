@@ -140,12 +140,20 @@ export class HistoryComponent implements OnInit {
     this.tasaAprobacion = data.length > 0 ? ((aprobados / data.length) * 100).toFixed(1) : '0';
   }
 
+  estadosDisponibles: string[] = [];
+
   fetchHistory() {
     this.http.get<any[]>('/api/certiprof/history')
       .subscribe({
         next: (data) => {
           this.histories = data;
           this.registrosFiltrados = [...data];
+
+          const estadosExtraidos = data
+                .map(r => r.status)
+                .filter(status => status !== null && status !== undefined && status.toString().trim() !== '');
+          this.estadosDisponibles = [...new Set(estadosExtraidos)];
+
           this.calcularMetricas(this.registrosFiltrados);
         },
         error: (err) => {
