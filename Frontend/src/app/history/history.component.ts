@@ -137,8 +137,14 @@ export class HistoryComponent implements OnInit {
 
 
   openEditModal(record: any) {
-    // Clone the record so we don't modify the table row until save
-    this.editRecord = { ...record };
+    // Clone the record so we don't modify the table row until save and normalize status
+    const statusLower = record.status?.toLowerCase() || '';
+    const mappedStatus = (statusLower === 'approved' || statusLower === 'aprobado' || record.percentage >= 70) ? 'aprobado' : 'reprobado';
+
+    this.editRecord = {
+        ...record,
+        status: mappedStatus
+    };
     this.isEditing = true;
   }
 

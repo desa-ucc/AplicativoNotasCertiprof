@@ -210,14 +210,14 @@
             </div>
             <div class="grid grid-cols-2 gap-4">
               <div>
-                <label for="percentage" class="block font-label-md text-label-md text-on-surface-variant mb-1">Porcentaje</label>
+                <label for="percentage" class="block font-label-md text-label-md text-on-surface-variant mb-1">Nota</label>
                 <input type="number" step="0.01" name="percentage" id="percentage" [(ngModel)]="editRecord.percentage" class="block w-full rounded-lg bg-surface border border-outline-variant shadow-sm focus:border-primary focus:ring-1 focus:ring-primary sm:text-sm px-3 py-2 transition-shadow text-on-surface">
               </div>
               <div>
                 <label for="status" class="block font-label-md text-label-md text-on-surface-variant mb-1">Estado</label>
                 <select name="status" id="status" [(ngModel)]="editRecord.status" class="block w-full rounded-lg bg-surface border border-outline-variant shadow-sm focus:border-primary focus:ring-1 focus:ring-primary sm:text-sm px-3 py-2 transition-shadow text-on-surface">
-                    <option value="Aprobado">Aprobado</option>
-                    <option value="Reprobado">Reprobado</option>
+                    <option value="aprobado">Aprobado</option>
+                    <option value="reprobado">Reprobado</option>
                 </select>
               </div>
             </div>
