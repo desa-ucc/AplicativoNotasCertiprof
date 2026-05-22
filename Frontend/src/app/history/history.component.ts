@@ -55,30 +55,29 @@ export class HistoryComponent implements OnInit {
 
   aplicarFiltrosAvanzados() {
     this.registrosFiltrados = this.histories.filter(record => {
-      let coincideCedula = this.filtroAvanzado.cedula ? record.cedula === this.filtroAvanzado.cedula : true;
+      // 1. Filtro Cédula (Exacto)
+      let coincideCedula = true;
+      if (this.filtroAvanzado.cedula && this.filtroAvanzado.cedula.trim() !== '') {
+          coincideCedula = record.cedula === this.filtroAvanzado.cedula.trim();
+      }
 
+      // 2. Filtro Certificación (Coincidencia Parcial Segura)
       let coincideCert = true;
-      if (this.filtroAvanzado.certificacion) {
-          const certFiltro = this.filtroAvanzado.certificacion.toLowerCase();
+      if (this.filtroAvanzado.certificacion && this.filtroAvanzado.certificacion.trim() !== '') {
+          const certFiltro = this.filtroAvanzado.certificacion.toLowerCase().trim();
           const certRecord = (record.certification_name || record.certificacion || '').toLowerCase();
           coincideCert = certRecord.includes(certFiltro);
       }
 
+      // 3. Filtro Estado (Exacto pero case-insensitive)
       let coincideEstado = true;
-      if (this.filtroAvanzado.estado) {
-          const estadoRecord = (record.status || '').toLowerCase();
-
-          // Mapear los valores de base de datos a los del filtro para que 'approved' matchee con 'approved' y 'aprobado' si fuera necesario,
-          // O usar la misma lógica de los badges:
-          if (this.filtroAvanzado.estado === 'approved') {
-              coincideEstado = (estadoRecord === 'approved' || estadoRecord === 'aprobado' || record.percentage >= 70);
-          } else if (this.filtroAvanzado.estado === 'reprobado') {
-              coincideEstado = (estadoRecord === 'failed' || estadoRecord === 'reprobado' || record.percentage < 70);
-          } else {
-              coincideEstado = estadoRecord === this.filtroAvanzado.estado;
-          }
+      if (this.filtroAvanzado.estado && this.filtroAvanzado.estado !== '') {
+          const estadoRecord = (record.status || '').toLowerCase().trim();
+          const estadoFiltro = this.filtroAvanzado.estado.toLowerCase().trim();
+          coincideEstado = estadoRecord === estadoFiltro;
       }
 
+      // 4. Filtro Fechas
       let coincideFechas = true;
       if (this.filtroAvanzado.fechaInicio && record.created_at) {
          const recordDate = new Date(record.created_at).getTime();
