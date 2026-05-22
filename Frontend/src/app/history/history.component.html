@@ -54,8 +54,8 @@
     <span class="px-3 py-1 text-[11px] font-bold rounded-full border uppercase tracking-wide"
           [ngClass]="{
               'bg-[#76bc21]/10 text-[#76bc21] border-[#76bc21]/20': record.status?.toLowerCase() === 'approved' || record.status?.toLowerCase() === 'aprobado',
-              'bg-red-600/10 text-red-600 border-red-600/20': record.status?.toLowerCase() === 'failed' || record.status?.toLowerCase() === 'reprobado',
-              'bg-[#006971]/10 text-[#006971] border-[#006971]/20': record.status?.toLowerCase() !== 'approved' && record.status?.toLowerCase() !== 'aprobado' && record.status?.toLowerCase() !== 'failed' && record.status?.toLowerCase() !== 'reprobado'
+              'bg-red-600/10 text-red-600 border-red-600/20': record.status?.toLowerCase() === 'failed' || record.status?.toLowerCase() === 'reprobado' || record.status?.toLowerCase() === 'reproved',
+              'bg-[#006971]/10 text-[#006971] border-[#006971]/20': record.status?.toLowerCase() !== 'approved' && record.status?.toLowerCase() !== 'aprobado' && record.status?.toLowerCase() !== 'failed' && record.status?.toLowerCase() !== 'reprobado' && record.status?.toLowerCase() !== 'reproved'
           }">
         {{ record.status }}
     </span>
@@ -230,6 +230,8 @@
                 <label for="status" class="block font-label-md text-label-md text-on-surface-variant mb-1">Estado</label>
                 <select name="status" id="status" [(ngModel)]="editRecord.status" class="block w-full rounded-lg bg-surface border border-outline-variant shadow-sm focus:border-primary focus:ring-1 focus:ring-primary sm:text-sm px-3 py-2 transition-shadow text-on-surface">
                     <option value="approved">approved</option>
+                    <option value="reproved">reproved</option>
+                    <option value="aprobado">aprobado</option>
                     <option value="reprobado">reprobado</option>
                     <option value="Procesado">Procesado</option>
                 </select>
