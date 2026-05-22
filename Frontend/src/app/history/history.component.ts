@@ -96,12 +96,26 @@ export class HistoryComponent implements OnInit {
     XLSX.writeFile(wb, 'Historial_Certificaciones.xlsx');
   }
 
+
+  usuariosRegistradosCount: number = 0;
+  tasaAprobacion: string = '0';
+  totalCertificaciones: number = 0;
+
   fetchHistory() {
     this.http.get<any[]>('/api/certiprof/history')
       .subscribe({
         next: (data) => {
           this.histories = data;
           this.registrosFiltrados = [...data];
+
+          this.totalCertificaciones = data.length;
+
+          // 1. Calcular usuarios únicos según las cédulas o correos en la tabla
+          this.usuariosRegistradosCount = new Set(data.map(r => r.cedula || r.email)).size;
+
+          // 2. Calcular la tasa de aprobación real
+          const aprobados = data.filter(r => r.status?.toLowerCase() === 'approved' || r.status?.toLowerCase() === 'aprobado' || r.percentage >= 70).length;
+          this.tasaAprobacion = data.length > 0 ? ((aprobados / data.length) * 100).toFixed(1) : '0';
         },
         error: (err) => {
           console.error('Error fetching history:', err);
@@ -149,7 +163,8 @@ export class HistoryComponent implements OnInit {
       .subscribe({
         next: () => {
           this.closeEditModal();
-          this.fetchHistory(); // Refresh the table automatically
+          this.fetchHistory();
+          alert("Registro actualizado con éxito");
         },
         error: (err) => {
           console.error('Error al editar:', err);
