@@ -164,11 +164,22 @@
             <label class="block font-label-md text-label-md text-on-surface-variant mb-1">Nombre Certificación</label>
             <input type="text" [(ngModel)]="filtroAvanzado.certificacion" class="block w-full rounded-lg bg-surface border border-outline-variant shadow-sm focus:border-primary focus:ring-1 focus:ring-primary sm:text-sm px-3 py-2 text-on-surface" placeholder="Buscar por certificación">
           </div>
+          <div>
+              <label class="block font-label-md text-label-md text-on-surface-variant mb-1">Estado</label>
+              <select [(ngModel)]="filtroAvanzado.estado" class="block w-full rounded-lg bg-surface border border-outline-variant shadow-sm focus:border-primary focus:ring-1 focus:ring-primary sm:text-sm px-3 py-2 text-on-surface">
+                  <option value="">Todos</option>
+                  <option value="approved">Aprobados</option>
+                  <option value="reprobado">Reprobados</option>
+              </select>
+          </div>
         </div>
 
-        <div class="bg-surface-container px-6 py-4 flex items-center justify-end gap-3 rounded-b-2xl border-t border-surface-container-highest">
-          <button type="button" (click)="cerrarFiltros()" class="inline-flex justify-center rounded-lg border border-outline-variant bg-surface-container-lowest px-4 py-2 text-sm font-medium text-on-surface-variant shadow-sm hover:bg-surface-container-low transition-colors">Cancelar</button>
-          <button type="button" (click)="aplicarFiltrosAvanzados()" class="inline-flex justify-center rounded-lg border border-transparent bg-primary-container px-4 py-2 text-sm font-bold text-on-primary-container shadow-sm hover:bg-primary-container/90 transition-colors">Aplicar Filtros</button>
+        <div class="bg-surface-container px-6 py-4 flex justify-between items-center rounded-b-2xl border-t border-surface-container-highest">
+            <button (click)="limpiarFiltros()" class="px-4 py-2 text-[#006971] font-bold hover:bg-[#006971]/10 rounded-lg transition-all text-sm">Limpiar</button>
+            <div class="flex gap-2">
+                <button type="button" (click)="cerrarFiltros()" class="inline-flex justify-center rounded-lg border border-outline-variant bg-surface-container-lowest px-4 py-2 text-sm font-medium text-on-surface-variant shadow-sm hover:bg-surface-container-low transition-colors">Cancelar</button>
+                <button type="button" (click)="aplicarFiltrosAvanzados()" class="inline-flex justify-center rounded-lg border border-transparent bg-[#76bc21] text-white px-4 py-2 text-sm font-bold shadow-sm hover:brightness-105 transition-colors">Aplicar Filtros</button>
+            </div>
         </div>
 
       </div>

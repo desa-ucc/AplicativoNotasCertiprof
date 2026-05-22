@@ -17,12 +17,7 @@ export class HistoryComponent implements OnInit {
 
   searchTerm = '';
   isFiltersModalOpen = false;
-  filtroAvanzado = {
-    cedula: '',
-    fechaInicio: '',
-    fechaFin: '',
-    certificacion: ''
-  };
+
 
   histories: any[] = [];
   registrosFiltrados: any[] = [];
@@ -35,38 +30,71 @@ export class HistoryComponent implements OnInit {
     this.isFiltersModalOpen = false;
   }
 
+
+  filtroAvanzado = {
+    cedula: '',
+    fechaInicio: '',
+    fechaFin: '',
+    certificacion: '',
+    estado: ''
+  };
+
+  limpiarFiltros() {
+    this.filtroAvanzado = {
+      cedula: '',
+      fechaInicio: '',
+      fechaFin: '',
+      certificacion: '',
+      estado: ''
+    };
+    this.searchTerm = '';
+    this.registrosFiltrados = [...this.histories];
+    this.calcularMetricas(this.registrosFiltrados);
+    this.cerrarFiltros();
+  }
+
   aplicarFiltrosAvanzados() {
     this.registrosFiltrados = this.histories.filter(record => {
-      let pass = true;
+      let coincideCedula = this.filtroAvanzado.cedula ? record.cedula === this.filtroAvanzado.cedula : true;
 
-      // Exact match by Cedula
-      if (this.filtroAvanzado.cedula && record.cedula !== this.filtroAvanzado.cedula) {
-         pass = false;
+      let coincideCert = true;
+      if (this.filtroAvanzado.certificacion) {
+          const certFiltro = this.filtroAvanzado.certificacion.toLowerCase();
+          const certRecord = (record.certification_name || record.certificacion || '').toLowerCase();
+          coincideCert = certRecord.includes(certFiltro);
       }
 
-      // Date Range (Fecha Inicio - Fecha Fin)
+      let coincideEstado = true;
+      if (this.filtroAvanzado.estado) {
+          const estadoRecord = (record.status || '').toLowerCase();
+
+          // Mapear los valores de base de datos a los del filtro para que 'approved' matchee con 'approved' y 'aprobado' si fuera necesario,
+          // O usar la misma lógica de los badges:
+          if (this.filtroAvanzado.estado === 'approved') {
+              coincideEstado = (estadoRecord === 'approved' || estadoRecord === 'aprobado' || record.percentage >= 70);
+          } else if (this.filtroAvanzado.estado === 'reprobado') {
+              coincideEstado = (estadoRecord === 'failed' || estadoRecord === 'reprobado' || record.percentage < 70);
+          } else {
+              coincideEstado = estadoRecord === this.filtroAvanzado.estado;
+          }
+      }
+
+      let coincideFechas = true;
       if (this.filtroAvanzado.fechaInicio && record.created_at) {
          const recordDate = new Date(record.created_at).getTime();
          const startDate = new Date(this.filtroAvanzado.fechaInicio).getTime();
-         if (recordDate < startDate) pass = false;
+         if (recordDate < startDate) coincideFechas = false;
       }
       if (this.filtroAvanzado.fechaFin && record.created_at) {
          const recordDate = new Date(record.created_at).getTime();
-         // Make endDate include the whole day
          const endDate = new Date(this.filtroAvanzado.fechaFin).getTime() + 86400000;
-         if (recordDate >= endDate) pass = false;
+         if (recordDate >= endDate) coincideFechas = false;
       }
 
-      // Certification match
-      if (this.filtroAvanzado.certificacion && record.certification_name) {
-         if (!record.certification_name.toLowerCase().includes(this.filtroAvanzado.certificacion.toLowerCase())) {
-            pass = false;
-         }
-      }
-
-      return pass;
+      return coincideCedula && coincideCert && coincideEstado && coincideFechas;
     });
 
+    this.calcularMetricas(this.registrosFiltrados);
     this.cerrarFiltros();
   }
 
@@ -101,21 +129,25 @@ export class HistoryComponent implements OnInit {
   tasaAprobacion: string = '0';
   totalCertificaciones: number = 0;
 
+
+  calcularMetricas(data: any[]) {
+    this.totalCertificaciones = data.length;
+
+    // 1. Calcular usuarios únicos según las cédulas o correos en la tabla
+    this.usuariosRegistradosCount = new Set(data.map(r => r.cedula || r.email)).size;
+
+    // 2. Calcular la tasa de aprobación real
+    const aprobados = data.filter(r => r.status?.toLowerCase() === 'approved' || r.status?.toLowerCase() === 'aprobado' || r.percentage >= 70).length;
+    this.tasaAprobacion = data.length > 0 ? ((aprobados / data.length) * 100).toFixed(1) : '0';
+  }
+
   fetchHistory() {
     this.http.get<any[]>('/api/certiprof/history')
       .subscribe({
         next: (data) => {
           this.histories = data;
           this.registrosFiltrados = [...data];
-
-          this.totalCertificaciones = data.length;
-
-          // 1. Calcular usuarios únicos según las cédulas o correos en la tabla
-          this.usuariosRegistradosCount = new Set(data.map(r => r.cedula || r.email)).size;
-
-          // 2. Calcular la tasa de aprobación real
-          const aprobados = data.filter(r => r.status?.toLowerCase() === 'approved' || r.status?.toLowerCase() === 'aprobado' || r.percentage >= 70).length;
-          this.tasaAprobacion = data.length > 0 ? ((aprobados / data.length) * 100).toFixed(1) : '0';
+          this.calcularMetricas(this.registrosFiltrados);
         },
         error: (err) => {
           console.error('Error fetching history:', err);
