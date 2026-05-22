@@ -50,14 +50,16 @@
             <td class="py-sm px-md">
               <span class="font-bold text-on-surface">{{ record.percentage }}</span>
             </td>
-            <td class="py-sm px-md">
-              <span *ngIf="record.status?.toLowerCase() === 'aprobado' || record.percentage >= 70" class="inline-flex items-center px-2 py-1 rounded-full text-[11px] font-bold tracking-wide bg-[#76bc21]/20 text-[#3d6a00] uppercase border border-[#76bc21]/30">
-                APROBADO
-              </span>
-              <span *ngIf="record.status?.toLowerCase() !== 'aprobado' && record.percentage < 70" class="inline-flex items-center px-2 py-1 rounded-full text-[11px] font-bold tracking-wide bg-red-500/20 text-red-700 uppercase border border-red-500/30">
-                REPROBADO
-              </span>
-            </td>
+<td class="px-6 py-5 text-center">
+    <span class="px-3 py-1 text-[11px] font-bold rounded-full border uppercase tracking-wide"
+          [ngClass]="{
+              'bg-[#76bc21]/10 text-[#76bc21] border-[#76bc21]/20': record.status?.toLowerCase() === 'approved' || record.status?.toLowerCase() === 'aprobado',
+              'bg-red-600/10 text-red-600 border-red-600/20': record.status?.toLowerCase() === 'failed' || record.status?.toLowerCase() === 'reprobado',
+              'bg-[#006971]/10 text-[#006971] border-[#006971]/20': record.status?.toLowerCase() !== 'approved' && record.status?.toLowerCase() !== 'aprobado' && record.status?.toLowerCase() !== 'failed' && record.status?.toLowerCase() !== 'reprobado'
+          }">
+        {{ record.status }}
+    </span>
+</td>
             <td class="py-sm px-md font-body-md text-body-md text-on-surface-variant">{{ record.created_at | date:'dd MMM yyyy' }}</td>
             <td class="px-6 py-5 text-right">
               <div class="flex justify-end gap-2" *ngIf="userRole !== 'Consulta'">
@@ -216,8 +218,9 @@
               <div>
                 <label for="status" class="block font-label-md text-label-md text-on-surface-variant mb-1">Estado</label>
                 <select name="status" id="status" [(ngModel)]="editRecord.status" class="block w-full rounded-lg bg-surface border border-outline-variant shadow-sm focus:border-primary focus:ring-1 focus:ring-primary sm:text-sm px-3 py-2 transition-shadow text-on-surface">
-                    <option value="aprobado">Aprobado</option>
-                    <option value="reprobado">Reprobado</option>
+                    <option value="approved">approved</option>
+                    <option value="reprobado">reprobado</option>
+                    <option value="Procesado">Procesado</option>
                 </select>
               </div>
             </div>
