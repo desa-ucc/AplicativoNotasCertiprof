@@ -13,18 +13,27 @@ import * as XLSX from 'xlsx';
 })
 export class SecurityComponent implements OnInit {
 
+  activeTab: 'users' | 'roles' = 'users';
+
+  users: any[] = [];
+  roles: any[] = [];
+  modules: any[] = [];
+
+  // Users Tab Logic
+  mostrarFiltros = false;
+
   abrirFiltrosUsuarios() {
+    this.mostrarFiltros = !this.mostrarFiltros;
     alert("Funcionalidad de filtros en desarrollo.");
   }
 
   exportarUsuariosExcel() {
-    if (this.users.length === 0) {
-      alert("No hay usuarios para exportar.");
+    if (!this.users || this.users.length === 0) {
+      alert("No hay usuarios para exportar");
       return;
     }
     const dataExportar = this.users.map(u => ({
-        'ID': u.id,
-        'Usuario': u.username,
+        'Nombre de Usuario': u.username,
         'Rol Asignado': u.role_name
     }));
     const ws: XLSX.WorkSheet = XLSX.utils.json_to_sheet(dataExportar);
@@ -33,39 +42,11 @@ export class SecurityComponent implements OnInit {
     XLSX.writeFile(wb, 'Directorio_Usuarios.xlsx');
   }
 
-
-  abrirModalConfiguracion(rol: any) {
-    this.openPermissionsModal(rol);
-  }
-
-  editarNombreRol(rol: any) {
-    const nuevoNombre = window.prompt("Ingrese el nuevo nombre para el rol:", rol.nombre_rol);
-    if (nuevoNombre && nuevoNombre.trim() !== "" && nuevoNombre !== rol.nombre_rol) {
-        this.http.put(`/api/security/roles/${rol.id}`, { nombre: nuevoNombre }).subscribe({
-            next: () => {
-                this.fetchRoles();
-            },
-            error: (err) => alert("Error al actualizar el nombre del rol")
-        });
-    }
-  }
-
-  eliminarRol(rol: any) {
-    if (window.confirm(`¿Seguro que desea eliminar el rol ${rol.nombre_rol}?`)) {
-        this.http.delete(`/api/security/roles/${rol.id}`).subscribe({
-            next: () => {
-                this.fetchRoles();
-            },
-            error: (err) => alert("Error al eliminar el rol")
-        });
-    }
-  }
-
-
   // New Role Modal State
   isRoleModalOpen = false;
   newRoleName = '';
   selectedNewRoleModules: Set<number> = new Set();
+  modulosDisponibles: any[] = [];
 
   abrirModalNuevoRol() {
     this.isRoleModalOpen = true;
@@ -105,20 +86,12 @@ export class SecurityComponent implements OnInit {
         this.cerrarModalNuevoRol();
         this.fetchRoles();
       },
-      error: (err) => {
+      error: (err: any) => {
         console.error('Error al crear rol:', err);
         alert('Error al crear el rol.');
       }
     });
   }
-
-
-  activeTab: 'users' | 'roles' = 'users';
-
-  users: any[] = [];
-  roles: any[] = [];
-  modules: any[] = [];
-  modulosDisponibles: any[] = [];
 
   // User Modal State
   isEditing = false;
@@ -145,28 +118,28 @@ export class SecurityComponent implements OnInit {
   fetchRoles() {
     this.http.get<any[]>('/api/users/roles')
       .subscribe({
-        next: (data) => this.roles = data,
-        error: (err) => console.error('Error fetching roles:', err)
+        next: (data: any[]) => this.roles = data,
+        error: (err: any) => console.error('Error fetching roles:', err)
       });
   }
 
   fetchUsers() {
     this.http.get<any[]>('/api/users')
       .subscribe({
-        next: (data) => this.users = data,
-        error: (err) => console.error('Error fetching users:', err)
+        next: (data: any[]) => this.users = data,
+        error: (err: any) => console.error('Error fetching users:', err)
       });
   }
 
   fetchModules() {
     this.http.get<any[]>('/api/security/modules')
       .subscribe({
-        next: (res) => {
+        next: (res: any[]) => {
             this.modules = res;
             this.modulosDisponibles = res;
             console.log("Módulos cargados:", res);
         },
-        error: (err) => console.error('Error trayendo módulos', err)
+        error: (err: any) => console.error('Error trayendo módulos', err)
       });
   }
 
@@ -202,7 +175,7 @@ export class SecurityComponent implements OnInit {
             this.closeModal();
             this.fetchUsers();
           },
-          error: (err) => {
+          error: (err: any) => {
             console.error('Error creating user:', err);
             alert('Error al crear usuario.');
           }
@@ -218,7 +191,7 @@ export class SecurityComponent implements OnInit {
             this.closeModal();
             this.fetchUsers();
           },
-          error: (err) => {
+          error: (err: any) => {
             console.error('Error updating user:', err);
             alert('Error al actualizar usuario.');
           }
@@ -233,7 +206,7 @@ export class SecurityComponent implements OnInit {
           next: () => {
             this.fetchUsers();
           },
-          error: (err) => {
+          error: (err: any) => {
             console.error('Error al eliminar:', err);
             alert('Hubo un error al eliminar el usuario.');
           }
@@ -243,6 +216,33 @@ export class SecurityComponent implements OnInit {
 
   // --- Roles & Permissions Management ---
 
+  abrirModalConfiguracion(rol: any) {
+    this.openPermissionsModal(rol);
+  }
+
+  editarNombreRol(rol: any) {
+    const nuevoNombre = window.prompt("Ingrese el nuevo nombre para el rol:", rol.nombre_rol);
+    if (nuevoNombre && nuevoNombre.trim() !== "" && nuevoNombre !== rol.nombre_rol) {
+        this.http.put(`/api/security/roles/${rol.id}`, { nombre: nuevoNombre }).subscribe({
+            next: () => {
+                this.fetchRoles();
+            },
+            error: (err: any) => alert("Error al actualizar el nombre del rol")
+        });
+    }
+  }
+
+  eliminarRol(rol: any) {
+    if (window.confirm(`¿Seguro que desea eliminar el rol ${rol.nombre_rol}?`)) {
+        this.http.delete(`/api/security/roles/${rol.id}`).subscribe({
+            next: () => {
+                this.fetchRoles();
+            },
+            error: (err: any) => alert("Error al eliminar el rol")
+        });
+    }
+  }
+
   openPermissionsModal(role: any) {
     this.selectedRole = role;
     this.isEditingPermissions = true;
@@ -251,10 +251,10 @@ export class SecurityComponent implements OnInit {
     // Fetch existing permissions for this role
     this.http.get<any[]>(`/api/security/roles/${role.id}/modules`)
       .subscribe({
-        next: (data) => {
+        next: (data: any[]) => {
           data.forEach(m => this.rolePermissions.add(m.id));
         },
-        error: (err) => console.error('Error fetching role permissions:', err)
+        error: (err: any) => console.error('Error fetching role permissions:', err)
       });
   }
 
@@ -289,7 +289,7 @@ export class SecurityComponent implements OnInit {
         alert('Permisos actualizados. Tenga en cuenta que los usuarios deben volver a iniciar sesión para ver los cambios en su menú principal.');
         this.closePermissionsModal();
       },
-      error: (err) => {
+      error: (err: any) => {
         console.error('Error updating permissions:', err);
         alert('Error al actualizar permisos.');
       }

@@ -227,21 +227,19 @@ namespace Backend.Services
 
                     var paramFecha = command.CreateParameter();
                     paramFecha.ParameterName = "@CreatedAt";
-                    if (!string.IsNullOrWhiteSpace(rec.created_at))
+
+                    DateTime fechaExcel;
+                    string fechaString = rec.created_at ?? "";
+
+                    if (!DateTime.TryParseExact(fechaString, "dd/MM/yyyy HH:mm:ss", CultureInfo.InvariantCulture, DateTimeStyles.None, out fechaExcel))
                     {
-                        if (DateTime.TryParse(rec.created_at, System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.None, out DateTime dt))
+                        if (!DateTime.TryParseExact(fechaString, "dd/MM/yyyy HH:mm", CultureInfo.InvariantCulture, DateTimeStyles.None, out fechaExcel))
                         {
-                            paramFecha.Value = dt;
-                        }
-                        else
-                        {
-                            paramFecha.Value = DBNull.Value;
+                            fechaExcel = DateTime.Now;
                         }
                     }
-                    else
-                    {
-                        paramFecha.Value = DBNull.Value;
-                    }
+
+                    paramFecha.Value = fechaExcel;
                     command.Parameters.Add(paramFecha);
 
                     if (_dbContext.Database.GetDbConnection().State != System.Data.ConnectionState.Open)
