@@ -31,9 +31,9 @@ namespace Backend.Controllers
                 // Retrieve user from token
                 var uploadedBy = User.Identity?.Name ?? "Unknown_User";
 
-                var uploadId = await _fileProcessingService.ProcessReportAsync(file, uploadedBy, string.Empty, string.Empty);
+                var result = await _fileProcessingService.ProcessReportAsync(file, uploadedBy, string.Empty, string.Empty);
 
-                return Ok(new { UploadId = uploadId });
+                return Ok(result);
             }
             catch (Exception ex)
             {
