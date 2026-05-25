@@ -2,7 +2,8 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
-import * as XLSX from 'xlsx';
+import * as ExcelJS from 'exceljs';
+import * as saveAs from 'file-saver';
 
 @Component({
   selector: 'app-security',
@@ -20,26 +21,65 @@ export class SecurityComponent implements OnInit {
   modules: any[] = [];
 
   // Users Tab Logic
-  mostrarFiltros = false;
+  mostrarFiltrosUsuarios: boolean = false;
+  terminoBusquedaUsuario: string = '';
+  paginaActualUsuarios: number = 1;
+  itemsPorPaginaUsuarios: number = 5;
 
-  abrirFiltrosUsuarios() {
-    this.mostrarFiltros = !this.mostrarFiltros;
-    alert("Funcionalidad de filtros en desarrollo.");
+  get usuariosPaginados() {
+      let filtrados = this.users || [];
+      if (this.terminoBusquedaUsuario) {
+          filtrados = filtrados.filter(u =>
+              u.username?.toLowerCase().includes(this.terminoBusquedaUsuario.toLowerCase()) ||
+              u.role_name?.toLowerCase().includes(this.terminoBusquedaUsuario.toLowerCase())
+          );
+      }
+      const inicio = (this.paginaActualUsuarios - 1) * this.itemsPorPaginaUsuarios;
+      return filtrados.slice(inicio, inicio + this.itemsPorPaginaUsuarios);
   }
 
-  exportarUsuariosExcel() {
-    if (!this.users || this.users.length === 0) {
-      alert("No hay usuarios para exportar");
-      return;
-    }
-    const dataExportar = this.users.map(u => ({
-        'Nombre de Usuario': u.username,
-        'Rol Asignado': u.role_name
-    }));
-    const ws: XLSX.WorkSheet = XLSX.utils.json_to_sheet(dataExportar);
-    const wb: XLSX.WorkBook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, 'Usuarios');
-    XLSX.writeFile(wb, 'Directorio_Usuarios.xlsx');
+  get totalPaginasUsuarios() {
+      let filtrados = this.users || [];
+      if (this.terminoBusquedaUsuario) {
+          filtrados = filtrados.filter(u => u.username?.toLowerCase().includes(this.terminoBusquedaUsuario.toLowerCase()));
+      }
+      return Math.ceil(filtrados.length / this.itemsPorPaginaUsuarios) || 1;
+  }
+
+  cambiarPaginaUsuarios(delta: number) {
+      const nuevaPagina = this.paginaActualUsuarios + delta;
+      if (nuevaPagina >= 1 && nuevaPagina <= this.totalPaginasUsuarios) {
+          this.paginaActualUsuarios = nuevaPagina;
+      }
+  }
+
+  async exportarUsuariosExcel() {
+      if (!this.users || this.users.length === 0) return;
+
+      const workbook = new ExcelJS.Workbook();
+      const worksheet = workbook.addWorksheet('Usuarios');
+
+      worksheet.columns = [
+          { header: 'Usuario', key: 'usuario', width: 30 },
+          { header: 'Rol Asignado', key: 'rol', width: 25 }
+      ];
+
+      const headerRow = worksheet.getRow(1);
+      headerRow.eachCell((cell) => {
+          cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF006971' } };
+          cell.font = { color: { argb: 'FFFFFFFF' }, bold: true };
+      });
+
+      this.users.forEach(u => {
+          worksheet.addRow({ usuario: u.username, rol: u.role_name });
+      });
+
+      const buffer = await workbook.xlsx.writeBuffer();
+      saveAs.saveAs(new Blob([buffer]), 'Directorio_Usuarios.xlsx');
+  }
+
+  abrirFiltrosUsuarios() {
+    this.mostrarFiltrosUsuarios = !this.mostrarFiltrosUsuarios;
   }
 
   // New Role Modal State

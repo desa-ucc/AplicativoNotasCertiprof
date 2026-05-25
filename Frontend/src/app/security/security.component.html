@@ -95,7 +95,7 @@
 </tr>
 </thead>
 <tbody class="divide-y divide-surface-container-highest">
-    <tr *ngFor="let user of users" class="hover:bg-surface-container/50 transition-colors duration-150">
+    <tr *ngFor="let user of usuariosPaginados" class="hover:bg-surface-container/50 transition-colors duration-150">
         <td class="px-gutter py-4 whitespace-nowrap text-body-md font-medium text-on-surface">
             <div class="flex items-center">
             <div class="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold mr-3 uppercase">{{ user.username.charAt(0) }}</div>
@@ -118,6 +118,13 @@
     </tr>
 </tbody>
 </table>
+<div class="flex justify-between items-center p-4 border-t border-surface-container-highest">
+    <span class="text-sm text-on-surface-variant">Página {{ paginaActualUsuarios }} de {{ totalPaginasUsuarios }}</span>
+    <div class="flex gap-2">
+        <button (click)="cambiarPaginaUsuarios(-1)" [disabled]="paginaActualUsuarios === 1" class="px-3 py-1 border border-outline-variant rounded-lg disabled:opacity-50 hover:bg-surface-container cursor-pointer text-sm">Anterior</button>
+        <button (click)="cambiarPaginaUsuarios(1)" [disabled]="paginaActualUsuarios === totalPaginasUsuarios" class="px-3 py-1 border border-outline-variant rounded-lg disabled:opacity-50 hover:bg-surface-container cursor-pointer text-sm">Siguiente</button>
+    </div>
+</div>
 <!-- Premium Empty State -->
 <div class="flex-grow flex flex-col items-center justify-center p-xl text-center" *ngIf="users.length === 0">
 <div class="relative mb-6">
@@ -258,6 +265,13 @@
         </tr>
     </tbody>
     </table>
+<div class="flex justify-between items-center p-4 border-t border-surface-container-highest">
+    <span class="text-sm text-on-surface-variant">Página {{ paginaActualUsuarios }} de {{ totalPaginasUsuarios }}</span>
+    <div class="flex gap-2">
+        <button (click)="cambiarPaginaUsuarios(-1)" [disabled]="paginaActualUsuarios === 1" class="px-3 py-1 border border-outline-variant rounded-lg disabled:opacity-50 hover:bg-surface-container cursor-pointer text-sm">Anterior</button>
+        <button (click)="cambiarPaginaUsuarios(1)" [disabled]="paginaActualUsuarios === totalPaginasUsuarios" class="px-3 py-1 border border-outline-variant rounded-lg disabled:opacity-50 hover:bg-surface-container cursor-pointer text-sm">Siguiente</button>
+    </div>
+</div>
 
   <!-- Modal for Create New Role -->
   <div *ngIf="isRoleModalOpen" class="relative z-50" aria-labelledby="modal-title" role="dialog" aria-modal="true">
