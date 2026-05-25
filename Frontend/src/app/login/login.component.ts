@@ -30,6 +30,7 @@ export class LoginComponent {
           console.log("Login OK, token recibido");
           localStorage.setItem('token', res.token);
           localStorage.setItem('role', res.role);
+          localStorage.setItem('username', this.username);
 
           let targetPath = '/upload'; // Default fallback
           if (res.menu && res.menu.length > 0) {

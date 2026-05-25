@@ -9,12 +9,7 @@
   <input class="pl-10 pr-4 py-2 bg-surface-container-low border border-outline-variant rounded-full text-body-md font-body-md text-on-surface focus:outline-none focus:border-tertiary focus:ring-1 focus:ring-tertiary transition-all" placeholder="Search..." type="text">
   <span class="material-symbols-outlined absolute left-3 top-2.5 text-on-surface-variant">search</span>
   </div>
-  <button class="w-10 h-10 flex items-center justify-center rounded-full text-on-surface-variant hover:bg-surface-container-low transition-colors scale-95 duration-75">
-  <span class="material-symbols-outlined">notifications</span>
-  </button>
-  <button class="w-10 h-10 flex items-center justify-center rounded-full text-on-surface-variant hover:bg-surface-container-low transition-colors scale-95 duration-75">
-  <span class="material-symbols-outlined">settings</span>
-  </button>
+
   <button (click)="logout()" class="w-10 h-10 flex items-center justify-center rounded-full text-error hover:bg-error-container transition-colors scale-95 duration-75" title="Cerrar Sesión">
   <span class="material-symbols-outlined">logout</span>
   </button>
@@ -54,7 +49,7 @@
           <div class="absolute bottom-0 right-0 w-3 h-3 bg-[#76bc21] border-2 border-[#002a34] rounded-full"></div>
         </div>
         <div class="flex flex-col min-w-0">
-          <p class="text-[13px] font-bold text-white truncate">Admin User</p>
+          <p class="text-[13px] font-bold text-white truncate">{{ nombreUsuarioLogueado }}</p>
           <p class="text-[10px] text-white/40 font-medium uppercase tracking-wider truncate">{{userRole}}</p>
         </div>
         <button class="ml-auto text-white/30 group-hover:text-white/60 transition-colors">

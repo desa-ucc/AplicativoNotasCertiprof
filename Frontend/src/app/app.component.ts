@@ -16,6 +16,7 @@ export class AppComponent implements OnInit {
   menuItems: any[] = [];
   userRole: string | null = null;
   loggedIn: boolean = false;
+  nombreUsuarioLogueado: string = 'Usuario';
 
   constructor(private router: Router) {
     // Update state on navigation changes (like login redirect)
@@ -33,6 +34,7 @@ export class AppComponent implements OnInit {
   updateState() {
     this.loggedIn = !!localStorage.getItem('token');
     this.userRole = localStorage.getItem('role');
+    this.nombreUsuarioLogueado = localStorage.getItem('username') || 'Usuario';
 
     const menuStr = localStorage.getItem('menu');
     if (menuStr) {
@@ -50,6 +52,7 @@ export class AppComponent implements OnInit {
     localStorage.removeItem('token');
     localStorage.removeItem('role');
     localStorage.removeItem('menu');
+    localStorage.removeItem('username');
     this.updateState();
     this.router.navigate(['/login']);
   }
