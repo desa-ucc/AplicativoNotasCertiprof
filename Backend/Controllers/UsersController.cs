@@ -167,21 +167,14 @@ namespace Backend.Controllers
                     }
                     else
                     {
-                        query = "UPDATE cert_usuarios SET username = @Username, password_hash = @PasswordHash, rol_id = @RolId WHERE id = @Id";
+                        query = "UPDATE cert_usuarios SET username = @Username, password_hash = HASHBYTES('SHA2_256', CAST(@Password AS VARCHAR(100))), rol_id = @RolId WHERE id = @Id";
                         command.CommandText = query;
                         command.CommandType = System.Data.CommandType.Text;
 
-                        string hashString;
-                        using (var sha256 = System.Security.Cryptography.SHA256.Create())
-                        {
-                            var hashedBytes = sha256.ComputeHash(System.Text.Encoding.UTF8.GetBytes(request.Password));
-                            hashString = BitConverter.ToString(hashedBytes).Replace("-", "").ToLower();
-                        }
-
-                        var pHash = command.CreateParameter();
-                        pHash.ParameterName = "@PasswordHash";
-                        pHash.Value = hashString;
-                        command.Parameters.Add(pHash);
+                        var pPass = command.CreateParameter();
+                        pPass.ParameterName = "@Password";
+                        pPass.Value = request.Password;
+                        command.Parameters.Add(pPass);
                     }
 
                     var pId = command.CreateParameter();
