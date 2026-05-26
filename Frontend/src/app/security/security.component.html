@@ -453,7 +453,7 @@
               </div>
               <div>
                 <label for="password" class="block font-label-md text-label-md text-on-surface-variant mb-1">Contraseña <span class="text-xs font-normal text-outline" *ngIf="isEditing">(dejar en blanco para conservar)</span></label>
-                <input type="password" name="password" id="password" [(ngModel)]="userForm.password" class="block w-full rounded-lg bg-surface border border-outline-variant shadow-sm focus:border-primary focus:ring-1 focus:ring-primary sm:text-sm px-3 py-2 transition-shadow text-on-surface">
+                <input type="password" name="password" id="password" [(ngModel)]="userForm.password" autocomplete="new-password" class="block w-full rounded-lg bg-surface border border-outline-variant shadow-sm focus:border-primary focus:ring-1 focus:ring-primary sm:text-sm px-3 py-2 transition-shadow text-on-surface">
               </div>
               <div>
                 <label for="rolId" class="block font-label-md text-label-md text-on-surface-variant mb-1">Asignar Rol</label>

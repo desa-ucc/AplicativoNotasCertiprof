@@ -208,7 +208,10 @@ export class HistoryComponent implements OnInit {
           this.calcularMetricas(this.registrosFiltrados);
         },
         error: (err) => {
-          console.error('Error fetching history:', err);
+          console.error("Error al obtener historial:", err);
+          this.histories = [];
+          this.registrosFiltrados = [];
+          if(err.status === 403) alert("No tienes permisos en el backend para ver esta data.");
         }
       });
   }
