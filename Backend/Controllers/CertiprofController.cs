@@ -22,7 +22,7 @@ namespace Backend.Controllers
             _fileProcessingService = fileProcessingService;
         }
 
-        [Authorize(Policy = "AdminPolicy")]
+        [Authorize(Roles = "Administrador,Docente")]
         [HttpPost("process-report")]
         public async Task<IActionResult> ProcessReport(IFormFile file)
         {
@@ -41,6 +41,7 @@ namespace Backend.Controllers
             }
         }
 
+        [Authorize(Roles = "Administrador,Docente")]
         [HttpGet("history")]
         public async Task<IActionResult> GetHistory([FromServices] Backend.Data.AppDbContext dbContext)
         {
