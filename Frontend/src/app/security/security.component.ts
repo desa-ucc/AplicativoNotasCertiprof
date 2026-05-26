@@ -225,7 +225,7 @@ export class SecurityComponent implements OnInit {
         alert('Por favor ingrese el nombre de usuario');
         return;
       }
-      this.http.put('/api/users', { id: this.userForm.id, username: this.userForm.username, password: this.userForm.password, rolId: parseInt(this.userForm.rolId) })
+      this.http.put(`/api/users/${this.userForm.id}`, { id: this.userForm.id, username: this.userForm.username, password: this.userForm.password, rolId: parseInt(this.userForm.rolId) })
         .subscribe({
           next: () => {
             this.closeModal();
@@ -233,7 +233,7 @@ export class SecurityComponent implements OnInit {
           },
           error: (err: any) => {
             console.error('Error updating user:', err);
-            alert('Error al actualizar usuario.');
+            alert(err.error?.message || 'Error al actualizar usuario.');
           }
         });
     }

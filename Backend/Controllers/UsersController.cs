@@ -146,8 +146,8 @@ namespace Backend.Controllers
             public int RolId { get; set; }
         }
 
-        [HttpPut]
-        public async Task<IActionResult> UpdateUser([FromBody] UpdateUserRequest request)
+        [HttpPut("{id}")]
+        public async Task<IActionResult> UpdateUser(int id, [FromBody] UpdateUserRequest request)
         {
             try
             {
@@ -186,7 +186,7 @@ namespace Backend.Controllers
 
                     var pId = command.CreateParameter();
                     pId.ParameterName = "@Id";
-                    pId.Value = request.Id;
+                    pId.Value = id; // use path id
                     command.Parameters.Add(pId);
 
                     var pUser = command.CreateParameter();
@@ -202,11 +202,11 @@ namespace Backend.Controllers
                     await command.ExecuteNonQueryAsync();
                 }
 
-                return Ok(new { Message = "Usuario actualizado exitosamente." });
+                return Ok(new { Message = "Usuario actualizado correctamente" });
             }
             catch (Exception ex)
             {
-                return BadRequest(new { Message = ex.Message });
+                return BadRequest(new { message = $"Error en la base de datos: {ex.Message}" });
             }
         }
 

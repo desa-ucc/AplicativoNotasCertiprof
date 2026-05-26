@@ -2,7 +2,8 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
-import * as XLSX from 'xlsx';
+import * as ExcelJS from 'exceljs';
+import * as saveAs from 'file-saver';
 
 @Component({
   selector: 'app-history',
@@ -112,15 +113,65 @@ export class HistoryComponent implements OnInit {
     );
   }
 
-  exportarExcel() {
+  async exportarExcel() {
     if (this.registrosFiltrados.length === 0) {
       alert("No hay datos para exportar.");
       return;
     }
-    const ws: XLSX.WorkSheet = XLSX.utils.json_to_sheet(this.registrosFiltrados);
-    const wb: XLSX.WorkBook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, 'Historial');
-    XLSX.writeFile(wb, 'Historial_Certificaciones.xlsx');
+
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet('Historial de Cargas');
+
+    worksheet.columns = [
+        { header: 'CÉDULA', key: 'cedula', width: 15 },
+        { header: 'EMAIL', key: 'email', width: 35 },
+        { header: 'USUARIO', key: 'estudiante', width: 35 },
+        { header: 'CERTIFICACIÓN', key: 'certificacion', width: 45 },
+        { header: 'NOTA', key: 'nota', width: 10 },
+        { header: 'ESTADO', key: 'estado', width: 15 },
+        { header: 'FECHA', key: 'fecha', width: 15 }
+    ];
+
+    // Estilo del Encabezado: Verde Institucional (#76BC21)
+    const headerRow = worksheet.getRow(1);
+    headerRow.eachCell((cell) => {
+        cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF76BC21' } };
+        cell.font = { color: { argb: 'FFFFFFFF' }, bold: true, size: 11 };
+        cell.alignment = { vertical: 'middle', horizontal: 'center' };
+        cell.border = {
+            top: { style: 'thin' }, left: { style: 'thin' },
+            bottom: { style: 'thin' }, right: { style: 'thin' }
+        };
+    });
+    headerRow.height = 25;
+
+    // Inyectar Datos y dar formato de celda
+    this.registrosFiltrados.forEach(r => {
+        const row = worksheet.addRow({
+            cedula: r.cedula,
+            email: r.email,
+            estudiante: `${r.first_name} ${r.last_name}`,
+            certificacion: r.certification_name || r.certificacion,
+            nota: r.percentage || r.nota,
+            estado: r.status,
+            fecha: r.created_at ? new Date(r.created_at).toLocaleDateString() : ''
+        });
+
+        // Bordes para todas las celdas
+        row.eachCell((cell) => {
+            cell.border = {
+                top: { style: 'thin', color: { argb: 'FFDDDDDD'} },
+                left: { style: 'thin', color: { argb: 'FFDDDDDD'} },
+                bottom: { style: 'thin', color: { argb: 'FFDDDDDD'} },
+                right: { style: 'thin', color: { argb: 'FFDDDDDD'} }
+            };
+        });
+        row.getCell('nota').alignment = { horizontal: 'center' };
+        row.getCell('estado').alignment = { horizontal: 'center' };
+    });
+
+    const buffer = await workbook.xlsx.writeBuffer();
+    saveAs.saveAs(new Blob([buffer]), 'Reporte_Historial.xlsx');
   }
 
 
