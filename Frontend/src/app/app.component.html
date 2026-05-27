@@ -1,63 +1,61 @@
-<div *ngIf="loggedIn">
+<div *ngIf="loggedIn" class="bg-background text-on-background font-body-md min-h-screen">
   <!-- TopNavBar -->
-  <header class="fixed top-0 right-0 h-16 flex items-center justify-between px-md z-30 bg-surface/95 backdrop-blur-md border-b border-outline-variant/30 shadow-sm dark:shadow-none docked w-[calc(100%-280px)] hidden md:flex">
-  <div class="flex items-center">
-  <!-- Empty for alignment -->
-  </div>
-  <div class="flex items-center gap-md">
-  <div class="relative">
-  <input class="pl-10 pr-4 py-2 bg-surface-container-low border border-outline-variant rounded-full text-body-md font-body-md text-on-surface focus:outline-none focus:border-tertiary focus:ring-1 focus:ring-tertiary transition-all" placeholder="Search..." type="text">
-  <span class="material-symbols-outlined absolute left-3 top-2.5 text-on-surface-variant">search</span>
-  </div>
-
-  <button (click)="logout()" class="w-10 h-10 flex items-center justify-center rounded-full text-error hover:bg-error-container transition-colors scale-95 duration-75" title="Cerrar Sesión">
-  <span class="material-symbols-outlined">logout</span>
-  </button>
-  </div>
-  </header>
-
-  <!-- SideNavBar -->
-  <nav class="fixed left-0 top-0 h-full w-[280px] z-40 flex flex-col bg-gradient-to-b from-[#003D4C] to-[#002a34] text-white border-r border-white/10 shadow-2xl hidden md:flex">
-    <div class="px-6 pt-10 pb-4 mb-6">
-      <div class="flex items-center gap-2 mb-1">
-        <span class="w-8 h-8 rounded-lg bg-[#76bc21] flex items-center justify-center text-[#003D4C]">
-          <span class="material-symbols-outlined text-[20px] font-bold">school</span>
-        </span>
-        <h1 class="text-xl font-bold tracking-tight text-white">Aplicativo notas <span class="text-[#76bc21]">Certiprof</span></h1>
+  <nav class="fixed top-0 right-0 h-16 flex items-center justify-between px-md z-30 bg-surface/95 backdrop-blur-md docked w-[calc(100%-280px)] border-b border-outline-variant/30 shadow-sm dark:shadow-none hidden md:flex">
+    <!-- Search Bar -->
+    <div class="flex items-center flex-1">
+      <div class="relative w-64">
+        <span class="material-symbols-outlined absolute left-sm top-1/2 -translate-y-1/2 text-outline-variant" style="font-variation-settings: 'FILL' 0;">search</span>
+        <input class="w-full bg-surface-container-low border border-outline-variant/50 rounded-full py-2 pl-10 pr-4 text-body-md text-on-surface focus:outline-none focus:border-tertiary focus:ring-1 focus:ring-tertiary transition-colors" placeholder="Search..." type="text"/>
       </div>
-      <p class="text-[10px] uppercase tracking-[0.25em] font-medium text-white/40 ml-10">Sistema Universidad Castro Carazo</p>
     </div>
-
-    <ul class="flex-1 flex flex-col gap-1 px-4 m-0 list-none">
-      <li *ngFor="let item of menuItems">
-        <a [routerLink]="item.path"
-           routerLinkActive="bg-[rgba(118,188,33,0.1)] border-l-4 border-[#76bc21] text-white structural-active"
-           [routerLinkActiveOptions]="{exact: true}"
-           class="group flex items-center gap-3 px-4 py-3.5 rounded-xl text-white/60 hover:text-white hover:bg-white/5 transition-all duration-300">
-          <i [class]="item.icon + ' text-[22px] group-[.structural-active]:text-[#76bc21]'"></i>
-          <span class="font-medium text-[14px] group-[.structural-active]:font-semibold">{{ item.name }}</span>
-        </a>
-      </li>
-    </ul>
-
-    <div class="p-4 mt-auto mb-6">
-      <div class="flex items-center gap-3 p-3 rounded-2xl bg-white/5 border border-white/10 group cursor-pointer hover:bg-white/10 transition-all">
-        <div class="relative">
-          <div class="w-10 h-10 rounded-full bg-[rgba(118,188,33,0.2)] flex items-center justify-center text-[#76bc21] overflow-hidden border border-[rgba(118,188,33,0.2)]">
-            <span class="material-symbols-outlined text-[22px] font-medium">person</span>
-          </div>
-          <div class="absolute bottom-0 right-0 w-3 h-3 bg-[#76bc21] border-2 border-[#002a34] rounded-full"></div>
-        </div>
-        <div class="flex flex-col min-w-0">
-          <p class="text-[13px] font-bold text-white truncate">{{ nombreUsuarioLogueado }}</p>
-          <p class="text-[10px] text-white/40 font-medium uppercase tracking-wider truncate">{{userRole}}</p>
-        </div>
-        <button class="ml-auto text-white/30 group-hover:text-white/60 transition-colors">
-          <span class="material-symbols-outlined text-[18px]">more_vert</span>
-        </button>
+    <!-- Trailing Actions & Profile -->
+    <div class="flex items-center gap-md">
+      <button class="text-on-surface-variant hover:bg-surface-container-low transition-colors scale-95 duration-75 p-2 rounded-full flex items-center justify-center">
+        <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">notifications</span>
+      </button>
+      <button class="text-on-surface-variant hover:bg-surface-container-low transition-colors scale-95 duration-75 p-2 rounded-full flex items-center justify-center">
+        <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">settings</span>
+      </button>
+      <div class="h-8 w-8 rounded-full bg-primary-container overflow-hidden ml-sm border border-outline-variant/30 flex items-center justify-center">
+        <img alt="Administrator Profile" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDNqwFKXv87ukUTv01X4ZJHnKYFZ_q2xjb0e6A-9xs_pD-y1boGksDtpUENS1F3ZM3kOuyn2VZ2cAIERreBIwrBaMFroQfIhXW-THd4TyCEl4aJS1Dg-JB8ztu0qJBdR8hUX0oCnwXn6pIrUn-UOWUwKrYD_7NdqcuURw3GWGl98sBSIAQN04TkVUERbuvQMS_YViclwkyYk6zAGlemF2AZCKy1P6hcFUvskhojOad4Bt0l2pArW0HO_KDXD37ank7ErXUhic5e-NA"/>
       </div>
+      <button (click)="logout()" class="ml-2 text-on-surface-variant hover:bg-error-container hover:text-error transition-colors scale-95 duration-75 p-2 rounded-full flex items-center justify-center" title="Cerrar Sesión">
+        <span class="material-symbols-outlined">logout</span>
+      </button>
     </div>
   </nav>
+
+  <!-- SideNavBar -->
+  <aside class="fixed left-0 top-0 h-full flex flex-col z-40 bg-on-secondary-fixed-variant dark:bg-on-secondary-fixed docked w-sidebar-width hidden md:flex">
+    <!-- Header -->
+    <div class="p-lg flex flex-col items-start border-b border-surface/10 mb-md">
+      <div class="h-12 w-12 rounded-lg bg-surface-container-lowest flex items-center justify-center mb-md overflow-hidden">
+        <img alt="AVATAR Admin Logo" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDRRqf1lOBjM-LCdV-k_ZgCjssiU2L13lVsWoREGE7khT0m7ZzHy6N9IeoQv7XgD2FtqMpaFJmhFmIQ9tlRxLqMvJb9qSOzArrMWFvLyhWCP_3eaAP-Tulp_G2d5XvtyBT-7tCKLzx7kBN9K_BkUSvUNem7OmPr7zMQ-A5NNMrSeMW8unXiAUzyIE-e0x_6enWCB2PVSfKcso7h9_v5JTpuS4bZtwgZ4Gi8Yu4dXvdKT6BuWI2gOuN9bZanYrA0AFcxaVrl1jhaIaM"/>
+      </div>
+      <h1 class="text-headline-md font-headline-md font-bold text-surface-container-lowest">AVATAR Admin</h1>
+      <p class="font-body-md text-body-md text-surface-container-lowest/70 mt-xs">{{ nombreUsuarioLogueado || 'Management Suite' }}</p>
+      <p class="font-label-md text-label-md text-surface-container-lowest/50 mt-1 uppercase">{{ userRole }}</p>
+    </div>
+
+    <!-- Navigation Links -->
+    <nav class="flex-1 flex flex-col gap-xs px-sm">
+      <a *ngFor="let item of menuItems"
+         [routerLink]="item.path"
+         routerLinkActive="border-l-4 border-primary-container text-surface-container-lowest bg-on-secondary-fixed/50 font-bold ml-[-12px] rounded-r-lg"
+         [routerLinkActiveOptions]="{exact: true}"
+         #rla="routerLinkActive"
+         class="flex items-center gap-base px-md py-sm transition-all duration-200 ease-in-out hover:bg-on-secondary-fixed-variant/80 rounded-lg"
+         [ngClass]="{'text-outline-variant hover:text-surface-container-lowest': !rla.isActive}">
+
+        <span class="material-symbols-outlined"
+              [ngClass]="{'text-primary-container': rla.isActive}"
+              [style.font-variation-settings]="rla.isActive ? '\'FILL\' 1' : '\'FILL\' 0'">
+          {{ item.icon || 'folder' }}
+        </span>
+        <span class="font-label-md text-label-md">{{ item.name }}</span>
+      </a>
+    </nav>
+  </aside>
 </div>
 
 <!-- Main Content Area -->

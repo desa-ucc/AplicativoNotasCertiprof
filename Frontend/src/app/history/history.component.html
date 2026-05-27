@@ -1,136 +1,3 @@
-<div class="max-w-container-max-width mx-auto">
-  <!-- Page Header -->
-  <div class="mb-lg">
-    <h2 class="font-headline-lg text-headline-lg text-on-background mb-xs">Historial de Cargas</h2>
-    <p class="font-body-lg text-body-lg text-on-surface-variant">Un registro de todas las certificaciones procesadas en el sistema.</p>
-  </div>
-  <!-- Data Table Card -->
-  <div class="bg-surface-container-lowest rounded-xl shadow-[0px_4px_20px_rgba(0,61,76,0.08)] overflow-hidden border border-outline-variant/20">
-    <!-- Table Toolbar (Search & Filters) -->
-    <div class="p-md border-b border-surface-container-highest flex flex-col sm:flex-row justify-between items-center gap-md bg-surface-bright">
-      <div class="relative w-full sm:w-80">
-        <span class="material-symbols-outlined absolute left-sm top-1/2 -translate-y-1/2 text-outline-variant" style="font-variation-settings: 'FILL' 0;">search</span>
-        <input [(ngModel)]="searchTerm" (input)="aplicarFiltros()" class="w-full bg-surface border border-outline-variant rounded-lg py-2 pl-10 pr-4 font-body-md text-body-md text-on-surface focus:outline-none focus:border-secondary focus:ring-1 focus:ring-secondary transition-colors" placeholder="Buscar por Cédula o Email..." type="text"/>
-      </div>
-      <div class="flex gap-sm w-full sm:w-auto">
-        <button (click)="abrirFiltros()" class="flex items-center gap-xs px-4 py-2 border border-outline-variant rounded-lg text-on-surface-variant font-label-md text-label-md hover:bg-surface-container-low transition-colors">
-          <span class="material-symbols-outlined text-[18px]" style="font-variation-settings: 'FILL' 0;">filter_list</span>
-          Filtros
-        </button>
-        <button (click)="exportarExcel()" class="flex items-center gap-xs px-4 py-2 bg-[#76bc21] text-white rounded-lg font-label-md text-label-md hover:bg-[#65a31c] transition-colors font-bold">
-          <span class="material-symbols-outlined text-[18px]" style="font-variation-settings: 'FILL' 0;">download</span>
-          Exportar
-        </button>
-      </div>
-    </div>
-    <!-- Table -->
-    <div class="overflow-x-auto">
-      <table class="w-full text-left border-collapse">
-        <thead>
-          <tr class="bg-[#006971] text-white">
-            <th class="py-sm px-md font-label-md text-label-md text-white uppercase tracking-wider">Cédula</th>
-            <th class="py-sm px-md font-label-md text-label-md text-white uppercase tracking-wider">Email</th>
-            <th class="py-sm px-md font-label-md text-label-md text-white uppercase tracking-wider">Usuario</th>
-            <th class="py-sm px-md font-label-md text-label-md text-white uppercase tracking-wider">Certificación</th>
-            <th class="py-sm px-md font-label-md text-label-md text-white uppercase tracking-wider">Nota</th>
-            <th class="py-sm px-md font-label-md text-label-md text-white uppercase tracking-wider">Estado</th>
-            <th class="py-sm px-md font-label-md text-label-md text-white uppercase tracking-wider">Fecha</th>
-            <th class="py-sm px-md font-label-md text-label-md text-white uppercase tracking-wider text-right">Acciones</th>
-          </tr>
-        </thead>
-        <tbody class="divide-y divide-surface-container-highest bg-surface-container-lowest">
-          <tr *ngFor="let record of registrosFiltrados" class="hover:bg-surface-container/50 transition-colors group">
-            <td class="py-sm px-md font-code text-code text-on-surface">
-              <span *ngIf="record.cedula && record.cedula !== 'No está dentro del registro'">{{ record.cedula }}</span>
-              <span *ngIf="!record.cedula || record.cedula === 'No está dentro del registro'" class="text-error font-semibold text-[11px] uppercase tracking-wide">No Registrado</span>
-            </td>
-            <td class="py-sm px-md font-body-md text-body-md text-on-surface-variant">{{ record.email }}</td>
-            <td class="py-sm px-md font-body-md text-body-md text-on-surface font-semibold">{{ record.first_name }} {{ record.last_name }}</td>
-            <td class="py-sm px-md font-body-md text-body-md text-on-surface-variant max-w-[200px] truncate" [title]="record.certification_name">{{ record.certification_name }}</td>
-            <td class="py-sm px-md">
-              <span class="font-bold text-on-surface">{{ record.percentage }}</span>
-            </td>
-<td class="px-6 py-5 text-center">
-    <span class="px-3 py-1 text-[11px] font-bold rounded-full border uppercase tracking-wide"
-          [ngClass]="{
-              'bg-[#76bc21]/10 text-[#76bc21] border-[#76bc21]/20': record.status?.toLowerCase() === 'approved' || record.status?.toLowerCase() === 'aprobado',
-              'bg-red-600/10 text-red-600 border-red-600/20': record.status?.toLowerCase() === 'failed' || record.status?.toLowerCase() === 'reprobado' || record.status?.toLowerCase() === 'reproved',
-              'bg-[#006971]/10 text-[#006971] border-[#006971]/20': record.status?.toLowerCase() !== 'approved' && record.status?.toLowerCase() !== 'aprobado' && record.status?.toLowerCase() !== 'failed' && record.status?.toLowerCase() !== 'reprobado' && record.status?.toLowerCase() !== 'reproved'
-          }">
-        {{ record.status }}
-    </span>
-</td>
-            <td class="py-sm px-md font-body-md text-body-md text-on-surface-variant">{{ record.created_at | date:'dd MMM yyyy' }}</td>
-            <td class="px-6 py-5 text-right">
-              <div class="flex justify-end gap-2" *ngIf="userRole !== 'Consulta'">
-                <button (click)="openEditModal(record)" class="p-2 text-[#006971] hover:bg-[#006971]/10 rounded-lg transition-colors" title="Editar">
-                  <span class="material-symbols-outlined text-[20px]">edit</span>
-                </button>
-                <button (click)="deleteRecord(record.id)" class="p-2 text-red-600 hover:bg-red-600/10 rounded-lg transition-colors" title="Eliminar">
-                  <span class="material-symbols-outlined text-[20px]">delete</span>
-                </button>
-              </div>
-            </td>
-          </tr>
-          <tr *ngIf="histories.length === 0">
-            <td colspan="8" class="px-6 py-12 text-center">
-              <span class="material-symbols-outlined text-outline-variant text-[48px]" style="font-variation-settings: 'FILL' 0;">inbox</span>
-              <h3 class="mt-2 text-sm font-semibold text-on-surface">No hay registros</h3>
-              <p class="mt-1 text-sm text-on-surface-variant">No se encontraron certificaciones en el historial.</p>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-    <!-- Pagination -->
-    <div class="p-md border-t border-surface-container-highest bg-surface-bright flex items-center justify-between">
-      <span class="font-body-md text-body-md text-on-surface-variant">Mostrando {{ histories.length }} registros</span>
-      <div class="flex gap-xs">
-        <button class="p-1 rounded border border-outline-variant text-outline hover:bg-surface-container-low transition-colors disabled:opacity-50" disabled="">
-          <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">chevron_left</span>
-        </button>
-        <button class="px-3 py-1 rounded border border-primary-container bg-primary-container/10 text-primary font-label-md text-label-md font-bold">1</button>
-        <button class="p-1 rounded border border-outline-variant text-on-surface-variant hover:bg-surface-container-low transition-colors disabled:opacity-50" disabled>
-          <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">chevron_right</span>
-        </button>
-      </div>
-    </div>
-  </div>
-
-  <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
-      <div class="bg-white p-6 rounded-xl border border-[#c1cab2]/20 shadow-[0px_4px_20px_rgba(0,61,76,0.08)]">
-          <div class="flex justify-between items-start mb-4">
-              <div class="p-3 bg-[#008B96]/10 rounded-lg text-[#008B96]">
-                  <span class="material-symbols-outlined">verified</span>
-              </div>
-          </div>
-          <h4 class="text-[20px] font-semibold text-[#1b1c1c]">Certificaciones Activas</h4>
-          <p class="text-[48px] font-bold text-[#1b1c1c] mt-1">{{ totalCertificaciones }}</p>
-      </div>
-      <div class="bg-white p-6 rounded-xl border border-[#c1cab2]/20 shadow-[0px_4px_20px_rgba(0,61,76,0.08)]">
-          <div class="flex justify-between items-start mb-4">
-              <div class="p-3 bg-[#006971]/10 rounded-lg text-[#006971]">
-                  <span class="material-symbols-outlined">groups</span>
-              </div>
-          </div>
-          <h4 class="text-[20px] font-semibold text-[#1b1c1c]">Usuarios Registrados</h4>
-          <p class="text-[48px] font-bold text-[#1b1c1c] mt-1">{{ usuariosRegistradosCount }}</p>
-      </div>
-      <div class="bg-white p-6 rounded-xl border border-[#c1cab2]/20 shadow-[0px_4px_20px_rgba(0,61,76,0.08)] relative overflow-hidden">
-          <div class="absolute top-0 right-0 w-32 h-32 bg-[#76BC21]/5 rounded-full -mr-10 -mt-10"></div>
-          <div class="flex justify-between items-start mb-4">
-              <div class="p-3 bg-[#76BC21]/10 rounded-lg text-[#76BC21]">
-                  <span class="material-symbols-outlined">speed</span>
-              </div>
-          </div>
-          <h4 class="text-[20px] font-semibold text-[#1b1c1c]">Tasa de Aprobación</h4>
-          <p class="text-[48px] font-bold text-[#1b1c1c] mt-1">{{ tasaAprobacion }}</p>
-      </div>
-  </div>
-
-</div>
-
-
 <!-- Filters Modal -->
 <div *ngIf="isFiltersModalOpen" class="relative z-50" aria-labelledby="modal-title" role="dialog" aria-modal="true">
   <div class="fixed inset-0 bg-on-background/40 backdrop-blur-sm transition-opacity"></div>
@@ -138,47 +5,81 @@
     <div class="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
       <div class="relative transform overflow-hidden rounded-2xl bg-surface-container-lowest text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg border border-outline-variant/20">
 
-        <div class="bg-surface-container-lowest px-6 pt-6 pb-4 border-b border-surface-container-highest flex justify-between items-center">
-          <h3 class="text-title-lg font-title-lg text-on-surface" id="modal-title">Filtros Avanzados</h3>
-          <button (click)="cerrarFiltros()" class="text-outline-variant hover:text-on-surface transition-colors">
+        <!-- Header -->
+        <div class="bg-surface-container-low px-4 py-4 border-b border-surface-container-highest flex justify-between items-center">
+          <h3 class="font-title-lg text-title-lg text-on-surface flex items-center gap-2" id="modal-title">
+            <span class="material-symbols-outlined text-primary" style="font-variation-settings: 'FILL' 1;">filter_alt</span>
+            Filtros Avanzados
+          </h3>
+          <button (click)="cerrarFiltros()" class="text-on-surface-variant hover:bg-surface-container-highest p-1 rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-primary">
             <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">close</span>
           </button>
         </div>
 
-        <div class="px-6 py-6 bg-surface-bright space-y-5">
-          <div>
-            <label class="block font-label-md text-label-md text-on-surface-variant mb-1">Cédula</label>
-            <input type="text" [(ngModel)]="filtroAvanzado.cedula" class="block w-full rounded-lg bg-surface border border-outline-variant shadow-sm focus:border-primary focus:ring-1 focus:ring-primary sm:text-sm px-3 py-2 text-on-surface" placeholder="Ingrese cédula exacta">
-          </div>
-          <div class="grid grid-cols-2 gap-4">
+        <!-- Body -->
+        <div class="px-6 py-4 bg-surface-container-lowest">
+          <div class="space-y-4">
+
+            <!-- Cédula -->
             <div>
-              <label class="block font-label-md text-label-md text-on-surface-variant mb-1">Fecha Inicio</label>
-              <input type="date" [(ngModel)]="filtroAvanzado.fechaInicio" class="block w-full rounded-lg bg-surface border border-outline-variant shadow-sm focus:border-primary focus:ring-1 focus:ring-primary sm:text-sm px-3 py-2 text-on-surface">
+              <label class="block font-label-md text-label-md text-on-surface-variant mb-1" for="filter-cedula">Cédula</label>
+              <input type="text" id="filter-cedula" [(ngModel)]="filtroAvanzado.cedula"
+                class="w-full bg-surface border border-outline-variant rounded-lg py-2 px-3 font-body-md text-body-md text-on-surface focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors"
+                placeholder="Ej. 1712345678">
             </div>
+
+            <!-- Certificación -->
             <div>
-              <label class="block font-label-md text-label-md text-on-surface-variant mb-1">Fecha Fin</label>
-              <input type="date" [(ngModel)]="filtroAvanzado.fechaFin" class="block w-full rounded-lg bg-surface border border-outline-variant shadow-sm focus:border-primary focus:ring-1 focus:ring-primary sm:text-sm px-3 py-2 text-on-surface">
+              <label class="block font-label-md text-label-md text-on-surface-variant mb-1" for="filter-certificacion">Certificación</label>
+              <input type="text" id="filter-certificacion" [(ngModel)]="filtroAvanzado.certificacion"
+                class="w-full bg-surface border border-outline-variant rounded-lg py-2 px-3 font-body-md text-body-md text-on-surface focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors"
+                placeholder="Ej. ISO 9001">
             </div>
-          </div>
-          <div>
-            <label class="block font-label-md text-label-md text-on-surface-variant mb-1">Nombre Certificación</label>
-            <input type="text" [(ngModel)]="filtroAvanzado.certificacion" class="block w-full rounded-lg bg-surface border border-outline-variant shadow-sm focus:border-primary focus:ring-1 focus:ring-primary sm:text-sm px-3 py-2 text-on-surface" placeholder="Buscar por certificación">
-          </div>
-          <div>
-              <label class="block font-label-md text-label-md text-on-surface-variant mb-1">Estado</label>
-              <select [(ngModel)]="filtroAvanzado.estado" class="block w-full rounded-lg bg-surface border border-outline-variant shadow-sm focus:border-primary focus:ring-1 focus:ring-primary sm:text-sm px-3 py-2 text-on-surface">
-                  <option value="">Todos</option>
-                  <option *ngFor="let est of estadosDisponibles" [value]="est">{{ est }}</option>
+
+            <!-- Rango de Fechas -->
+            <div class="grid grid-cols-2 gap-4">
+              <div>
+                <label class="block font-label-md text-label-md text-on-surface-variant mb-1" for="filter-fecha-inicio">Desde</label>
+                <input type="date" id="filter-fecha-inicio" [(ngModel)]="filtroAvanzado.fechaInicio"
+                  class="w-full bg-surface border border-outline-variant rounded-lg py-2 px-3 font-body-md text-body-md text-on-surface focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors">
+              </div>
+              <div>
+                <label class="block font-label-md text-label-md text-on-surface-variant mb-1" for="filter-fecha-fin">Hasta</label>
+                <input type="date" id="filter-fecha-fin" [(ngModel)]="filtroAvanzado.fechaFin"
+                  class="w-full bg-surface border border-outline-variant rounded-lg py-2 px-3 font-body-md text-body-md text-on-surface focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors">
+              </div>
+            </div>
+
+            <!-- Estado -->
+            <div>
+              <label class="block font-label-md text-label-md text-on-surface-variant mb-1" for="filter-estado">Estado</label>
+              <select id="filter-estado" [(ngModel)]="filtroAvanzado.estado"
+                class="w-full bg-surface border border-outline-variant rounded-lg py-2 px-3 font-body-md text-body-md text-on-surface focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors appearance-none">
+                <option value="">Todos los estados</option>
+                <option *ngFor="let state of estadosDisponibles" [value]="state">{{state}}</option>
               </select>
+            </div>
+
           </div>
         </div>
 
-        <div class="bg-surface-container px-6 py-4 flex justify-between items-center rounded-b-2xl border-t border-surface-container-highest">
-            <button (click)="limpiarFiltros()" class="px-4 py-2 text-[#006971] font-bold hover:bg-[#006971]/10 rounded-lg transition-all text-sm">Limpiar</button>
-            <div class="flex gap-2">
-                <button type="button" (click)="cerrarFiltros()" class="inline-flex justify-center rounded-lg border border-outline-variant bg-surface-container-lowest px-4 py-2 text-sm font-medium text-on-surface-variant shadow-sm hover:bg-surface-container-low transition-colors">Cancelar</button>
-                <button type="button" (click)="aplicarFiltrosAvanzados()" class="inline-flex justify-center rounded-lg border border-transparent bg-[#76bc21] text-white px-4 py-2 text-sm font-bold shadow-sm hover:brightness-105 transition-colors">Aplicar Filtros</button>
-            </div>
+        <!-- Footer -->
+        <div class="bg-surface-container-low px-4 py-3 border-t border-surface-container-highest flex justify-between sm:px-6">
+          <button (click)="limpiarFiltros()" type="button"
+            class="inline-flex w-full justify-center rounded-lg bg-surface-container-highest px-4 py-2 font-label-md text-label-md text-on-surface-variant shadow-sm hover:bg-surface-dim transition-colors sm:w-auto">
+            Limpiar Filtros
+          </button>
+
+          <div class="flex gap-2">
+            <button (click)="cerrarFiltros()" type="button"
+              class="inline-flex w-full justify-center rounded-lg bg-surface px-4 py-2 font-label-md text-label-md text-on-surface shadow-sm ring-1 ring-inset ring-outline-variant hover:bg-surface-container-low transition-colors sm:w-auto">
+              Cancelar
+            </button>
+            <button (click)="aplicarFiltrosAvanzados()" type="button"
+              class="inline-flex w-full justify-center rounded-lg bg-primary-container px-4 py-2 font-label-md text-label-md font-bold text-on-primary-container shadow-sm hover:bg-primary-container/90 transition-colors sm:w-auto">
+              Aplicar
+            </button>
+          </div>
         </div>
 
       </div>
@@ -196,52 +97,237 @@
       <div class="relative transform overflow-hidden rounded-2xl bg-surface-container-lowest text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg border border-outline-variant/20">
 
         <!-- Header -->
-        <div class="bg-surface-container-lowest px-6 pt-6 pb-4 border-b border-surface-container-highest flex justify-between items-center">
-          <h3 class="text-title-lg font-title-lg text-on-surface" id="modal-title">Editar Registro</h3>
-          <button (click)="closeEditModal()" class="text-outline-variant hover:text-on-surface transition-colors">
+        <div class="bg-surface-container-low px-4 py-4 border-b border-surface-container-highest flex justify-between items-center">
+          <h3 class="font-title-lg text-title-lg text-on-surface flex items-center gap-2" id="modal-title">
+            <span class="material-symbols-outlined text-tertiary" style="font-variation-settings: 'FILL' 1;">edit_document</span>
+            Editar Certificación
+          </h3>
+          <button (click)="closeEditModal()" class="text-on-surface-variant hover:bg-surface-container-highest p-1 rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-tertiary">
             <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">close</span>
           </button>
         </div>
 
         <!-- Body -->
-        <div class="px-6 py-6 bg-surface-bright">
-          <form class="space-y-5">
+        <div class="px-6 py-4 bg-surface-container-lowest">
+          <!-- Read-only context info -->
+          <div class="mb-4 p-3 bg-surface-container rounded-lg border border-outline-variant/30 flex items-start gap-3">
+             <span class="material-symbols-outlined text-outline-variant mt-0.5" style="font-variation-settings: 'FILL' 0;">info</span>
+             <div>
+               <p class="font-label-md text-label-md text-on-surface-variant uppercase tracking-wider mb-1">Información de Origen</p>
+               <p class="font-body-md text-body-md text-on-surface"><span class="font-semibold">Cédula:</span> {{ editRecord.cedula || 'No registrada' }}</p>
+               <p class="font-body-md text-body-md text-on-surface"><span class="font-semibold">Email:</span> {{ editRecord.email || 'No registrado' }}</p>
+             </div>
+          </div>
+
+          <div class="space-y-4">
+            <!-- Nombres -->
             <div class="grid grid-cols-2 gap-4">
               <div>
-                <label for="first_name" class="block font-label-md text-label-md text-on-surface-variant mb-1">Nombres</label>
-                <input type="text" name="first_name" id="first_name" [(ngModel)]="editRecord.first_name" class="block w-full rounded-lg bg-surface border border-outline-variant shadow-sm focus:border-primary focus:ring-1 focus:ring-primary sm:text-sm px-3 py-2 transition-shadow text-on-surface">
+                <label class="block font-label-md text-label-md text-on-surface-variant mb-1" for="edit-firstname">Nombres</label>
+                <input type="text" id="edit-firstname" [(ngModel)]="editRecord.first_name"
+                  class="w-full bg-surface border border-outline-variant rounded-lg py-2 px-3 font-body-md text-body-md text-on-surface focus:outline-none focus:border-tertiary focus:ring-1 focus:ring-tertiary transition-colors"
+                  placeholder="Ej. Juan">
               </div>
               <div>
-                <label for="last_name" class="block font-label-md text-label-md text-on-surface-variant mb-1">Apellidos</label>
-                <input type="text" name="last_name" id="last_name" [(ngModel)]="editRecord.last_name" class="block w-full rounded-lg bg-surface border border-outline-variant shadow-sm focus:border-primary focus:ring-1 focus:ring-primary sm:text-sm px-3 py-2 transition-shadow text-on-surface">
+                <label class="block font-label-md text-label-md text-on-surface-variant mb-1" for="edit-lastname">Apellidos</label>
+                <input type="text" id="edit-lastname" [(ngModel)]="editRecord.last_name"
+                  class="w-full bg-surface border border-outline-variant rounded-lg py-2 px-3 font-body-md text-body-md text-on-surface focus:outline-none focus:border-tertiary focus:ring-1 focus:ring-tertiary transition-colors"
+                  placeholder="Ej. Pérez">
               </div>
             </div>
+
+            <!-- Certificación -->
             <div>
-              <label for="certification_name" class="block font-label-md text-label-md text-on-surface-variant mb-1">Certificación</label>
-              <input type="text" name="certification_name" id="certification_name" [(ngModel)]="editRecord.certification_name" class="block w-full rounded-lg bg-surface border border-outline-variant shadow-sm focus:border-primary focus:ring-1 focus:ring-primary sm:text-sm px-3 py-2 transition-shadow text-on-surface">
+              <label class="block font-label-md text-label-md text-on-surface-variant mb-1" for="edit-certification">Nombre de Certificación</label>
+              <input type="text" id="edit-certification" [(ngModel)]="editRecord.certification_name"
+                class="w-full bg-surface border border-outline-variant rounded-lg py-2 px-3 font-body-md text-body-md text-on-surface focus:outline-none focus:border-tertiary focus:ring-1 focus:ring-tertiary transition-colors"
+                placeholder="Ej. ISO 9001:2015">
             </div>
+
+            <!-- Resultado -->
             <div class="grid grid-cols-2 gap-4">
               <div>
-                <label for="percentage" class="block font-label-md text-label-md text-on-surface-variant mb-1">Nota</label>
-                <input type="number" step="0.01" name="percentage" id="percentage" [(ngModel)]="editRecord.percentage" class="block w-full rounded-lg bg-surface border border-outline-variant shadow-sm focus:border-primary focus:ring-1 focus:ring-primary sm:text-sm px-3 py-2 transition-shadow text-on-surface">
+                <label class="block font-label-md text-label-md text-on-surface-variant mb-1" for="edit-percentage">Porcentaje</label>
+                <div class="relative">
+                  <input type="number" id="edit-percentage" [(ngModel)]="editRecord.percentage" min="0" max="100" step="0.01"
+                    class="w-full bg-surface border border-outline-variant rounded-lg py-2 pl-3 pr-8 font-body-md text-body-md text-on-surface focus:outline-none focus:border-tertiary focus:ring-1 focus:ring-tertiary transition-colors">
+                  <span class="absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant font-code text-code">%</span>
+                </div>
               </div>
               <div>
-                <label for="status" class="block font-label-md text-label-md text-on-surface-variant mb-1">Estado</label>
-                <select name="status" id="status" [(ngModel)]="editRecord.status" class="block w-full rounded-lg bg-surface border border-outline-variant shadow-sm focus:border-primary focus:ring-1 focus:ring-primary sm:text-sm px-3 py-2 transition-shadow text-on-surface">
-                    <option *ngFor="let est of estadosDisponibles" [value]="est">{{ est }}</option>
+                <label class="block font-label-md text-label-md text-on-surface-variant mb-1" for="edit-status">Estado</label>
+                <select id="edit-status" [(ngModel)]="editRecord.status"
+                  class="w-full bg-surface border border-outline-variant rounded-lg py-2 px-3 font-body-md text-body-md text-on-surface focus:outline-none focus:border-tertiary focus:ring-1 focus:ring-tertiary transition-colors appearance-none">
+                  <option value="Approved">Approved</option>
+                  <option value="Failed">Failed</option>
+                  <option value="Processing">Processing</option>
                 </select>
               </div>
             </div>
-          </form>
+          </div>
         </div>
 
         <!-- Footer -->
-        <div class="bg-surface-container px-6 py-4 flex items-center justify-end gap-3 rounded-b-2xl border-t border-surface-container-highest">
-          <button type="button" (click)="closeEditModal()" class="inline-flex justify-center rounded-lg border border-outline-variant bg-surface-container-lowest px-4 py-2 text-sm font-medium text-on-surface-variant shadow-sm hover:bg-surface-container-low transition-colors">Cancelar</button>
-          <button type="button" (click)="saveRecord()" class="inline-flex justify-center rounded-lg border border-transparent bg-primary-container px-4 py-2 text-sm font-bold text-on-primary-container shadow-sm hover:bg-primary-container/90 transition-colors">Guardar Cambios</button>
+        <div class="bg-surface-container-low px-4 py-3 border-t border-surface-container-highest flex justify-end gap-2 sm:px-6">
+          <button (click)="closeEditModal()" type="button"
+            class="inline-flex w-full justify-center rounded-lg bg-surface px-4 py-2 font-label-md text-label-md text-on-surface shadow-sm ring-1 ring-inset ring-outline-variant hover:bg-surface-container-low transition-colors sm:w-auto">
+            Cancelar
+          </button>
+          <button (click)="saveRecord()" type="button"
+            class="inline-flex w-full justify-center rounded-lg bg-tertiary px-4 py-2 font-label-md text-label-md font-bold text-on-tertiary shadow-sm hover:bg-tertiary/90 transition-colors sm:w-auto">
+            Guardar Cambios
+          </button>
         </div>
 
       </div>
     </div>
   </div>
 </div>
+
+<main class="md:ml-sidebar-width pt-20 px-lg pb-xl min-h-screen">
+  <div class="max-w-container-max-width mx-auto">
+
+    <!-- Page Header & KPIs -->
+    <div class="mb-lg flex flex-col xl:flex-row justify-between gap-6 items-start xl:items-center">
+      <div>
+        <h2 class="font-headline-lg text-headline-lg text-on-background mb-xs">Historial de Cargas</h2>
+        <p class="font-body-lg text-body-lg text-on-surface-variant">Un registro de todas las certificaciones procesadas en el sistema.</p>
+      </div>
+
+      <!-- KPI Cards -->
+      <div class="flex flex-wrap gap-4 w-full xl:w-auto">
+        <!-- Total Certificaciones -->
+        <div class="bg-surface-container-lowest border border-outline-variant/30 rounded-xl p-4 flex-1 min-w-[160px] shadow-sm">
+          <div class="flex items-center gap-2 mb-2">
+             <span class="material-symbols-outlined text-primary-container" style="font-variation-settings: 'FILL' 1;">folder_open</span>
+             <span class="font-label-md text-label-md text-on-surface-variant">Total Registros</span>
+          </div>
+          <p class="font-display-lg text-3xl font-bold text-on-surface">{{ totalCertificaciones }}</p>
+        </div>
+
+        <!-- Tasa de Aprobación -->
+        <div class="bg-surface-container-lowest border border-outline-variant/30 rounded-xl p-4 flex-1 min-w-[160px] shadow-sm">
+          <div class="flex items-center gap-2 mb-2">
+             <span class="material-symbols-outlined text-tertiary-container" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+             <span class="font-label-md text-label-md text-on-surface-variant">Tasa Aprobación</span>
+          </div>
+          <p class="font-display-lg text-3xl font-bold text-on-surface">{{ tasaAprobacion }}%</p>
+        </div>
+
+        <!-- Usuarios Únicos -->
+        <div class="bg-surface-container-lowest border border-outline-variant/30 rounded-xl p-4 flex-1 min-w-[160px] shadow-sm">
+          <div class="flex items-center gap-2 mb-2">
+             <span class="material-symbols-outlined text-secondary" style="font-variation-settings: 'FILL' 1;">group</span>
+             <span class="font-label-md text-label-md text-on-surface-variant">Usuarios Únicos</span>
+          </div>
+          <p class="font-display-lg text-3xl font-bold text-on-surface">{{ usuariosRegistradosCount }}</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Data Table Card -->
+    <div class="bg-surface-container-lowest rounded-xl shadow-[0px_4px_20px_rgba(0,61,76,0.08)] overflow-hidden border border-outline-variant/20">
+
+      <!-- Table Toolbar (Search & Filters) -->
+      <div class="p-md border-b border-surface-container-highest flex flex-col sm:flex-row justify-between items-center gap-md bg-surface-bright">
+        <div class="relative w-full sm:w-96">
+          <span class="material-symbols-outlined absolute left-sm top-1/2 -translate-y-1/2 text-outline-variant" style="font-variation-settings: 'FILL' 0;">search</span>
+          <input [(ngModel)]="searchTerm" (input)="aplicarFiltros()"
+            class="w-full bg-surface border border-outline-variant rounded-lg py-2 pl-10 pr-4 font-body-md text-body-md text-on-surface focus:outline-none focus:border-secondary focus:ring-1 focus:ring-secondary transition-colors"
+            placeholder="Búsqueda rápida (Cédula, Email, Nombre)..." type="text"/>
+        </div>
+        <div class="flex gap-sm w-full sm:w-auto">
+          <button (click)="abrirFiltros()" class="flex items-center gap-xs px-4 py-2 border border-outline-variant rounded-lg text-on-surface-variant font-label-md text-label-md hover:bg-surface-container-low transition-colors">
+            <span class="material-symbols-outlined text-[18px]" style="font-variation-settings: 'FILL' 0;">filter_list</span>
+            Filtros Avanzados
+          </button>
+          <button (click)="exportarExcel()" class="flex items-center gap-xs px-4 py-2 bg-primary-container text-on-primary-container rounded-lg font-label-md text-label-md hover:bg-primary-container/90 transition-colors font-bold shadow-sm">
+            <span class="material-symbols-outlined text-[18px]" style="font-variation-settings: 'FILL' 0;">download</span>
+            Exportar Excel
+          </button>
+        </div>
+      </div>
+
+      <!-- Table -->
+      <div class="overflow-x-auto min-h-[400px]">
+        <table class="w-full text-left border-collapse">
+          <thead>
+            <tr class="bg-surface-container-low border-b border-surface-container-highest">
+              <th class="py-sm px-md font-label-md text-label-md text-on-secondary-fixed-variant uppercase tracking-wider">Cédula</th>
+              <th class="py-sm px-md font-label-md text-label-md text-on-secondary-fixed-variant uppercase tracking-wider">Email</th>
+              <th class="py-sm px-md font-label-md text-label-md text-on-secondary-fixed-variant uppercase tracking-wider">Usuario</th>
+              <th class="py-sm px-md font-label-md text-label-md text-on-secondary-fixed-variant uppercase tracking-wider">Certificación</th>
+              <th class="py-sm px-md font-label-md text-label-md text-on-secondary-fixed-variant uppercase tracking-wider">Porcentaje</th>
+              <th class="py-sm px-md font-label-md text-label-md text-on-secondary-fixed-variant uppercase tracking-wider">Estado</th>
+              <th class="py-sm px-md font-label-md text-label-md text-on-secondary-fixed-variant uppercase tracking-wider">Fecha</th>
+              <th class="py-sm px-md font-label-md text-label-md text-on-secondary-fixed-variant uppercase tracking-wider text-right" *ngIf="userRole !== 'Consulta'">Acciones</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-surface-container-highest bg-surface-container-lowest">
+            <tr *ngFor="let record of registrosFiltrados" class="hover:bg-surface-container/50 transition-colors group">
+              <td class="py-sm px-md font-code text-code text-on-surface">
+                <span *ngIf="record.cedula && record.cedula !== 'No está dentro del registro'">{{ record.cedula }}</span>
+                <span *ngIf="!record.cedula || record.cedula === 'No está dentro del registro'" class="text-error font-semibold text-[11px] uppercase tracking-wide bg-error/10 px-2 py-0.5 rounded">No Registrado</span>
+              </td>
+              <td class="py-sm px-md font-body-md text-body-md text-on-surface-variant">{{ record.email }}</td>
+              <td class="py-sm px-md font-body-md text-body-md text-on-surface font-semibold">{{ record.first_name }} {{ record.last_name }}</td>
+              <td class="py-sm px-md font-body-md text-body-md text-on-surface-variant max-w-[200px] truncate" [title]="record.certification_name">{{ record.certification_name }}</td>
+              <td class="py-sm px-md">
+                <div class="flex items-center gap-xs">
+                  <div class="w-full bg-surface-container-highest rounded-full h-1.5 min-w-[60px]">
+                    <div [ngClass]="{
+                          'bg-primary-container': record.percentage >= 80,
+                          'bg-tertiary-container': record.percentage >= 50 && record.percentage < 80,
+                          'bg-error': record.percentage < 50
+                         }"
+                         class="h-1.5 rounded-full" [style.width.%]="record.percentage || 0"></div>
+                  </div>
+                  <span class="font-code text-code text-on-surface">{{ record.percentage || 0 }}%</span>
+                </div>
+              </td>
+              <td class="py-sm px-md">
+                <span class="inline-flex items-center px-2 py-1 rounded-full text-[11px] font-bold tracking-wide uppercase border"
+                      [ngClass]="{
+                        'bg-primary-container/20 text-primary border-primary-container/30': record.status === 'Approved' || record.status === 'Aprobado',
+                        'bg-error-container text-on-error-container border-error/30': record.status === 'Failed' || record.status === 'Reprobado',
+                        'bg-tertiary-container/20 text-on-tertiary-container border-tertiary-container/30': record.status !== 'Approved' && record.status !== 'Aprobado' && record.status !== 'Failed' && record.status !== 'Reprobado'
+                      }">
+                    {{ record.status }}
+                </span>
+              </td>
+              <td class="py-sm px-md font-body-md text-body-md text-on-surface-variant">{{ record.created_at | date:'dd MMM yyyy' }}</td>
+              <td class="px-6 py-5 text-right" *ngIf="userRole !== 'Consulta'">
+                <div class="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <button (click)="openEditModal(record)" class="text-outline-variant hover:text-tertiary transition-colors p-1" title="Editar">
+                    <span class="material-symbols-outlined text-[20px]" style="font-variation-settings: 'FILL' 0;">edit</span>
+                  </button>
+                  <button (click)="deleteRecord(record.id)" class="text-outline-variant hover:text-error transition-colors p-1" title="Eliminar">
+                    <span class="material-symbols-outlined text-[20px]" style="font-variation-settings: 'FILL' 0;">delete</span>
+                  </button>
+                </div>
+              </td>
+            </tr>
+            <tr *ngIf="registrosFiltrados.length === 0">
+              <td [attr.colspan]="userRole !== 'Consulta' ? 8 : 7" class="px-6 py-16 text-center">
+                <div class="flex flex-col items-center justify-center">
+                  <div class="h-16 w-16 bg-surface-container-highest rounded-full flex items-center justify-center mb-3">
+                    <span class="material-symbols-outlined text-outline-variant text-[32px]" style="font-variation-settings: 'FILL' 0;">inbox</span>
+                  </div>
+                  <h3 class="text-title-lg font-title-lg font-semibold text-on-surface">No hay registros</h3>
+                  <p class="mt-1 text-body-md font-body-md text-on-surface-variant max-w-sm">No se encontraron certificaciones en el historial o que coincidan con la búsqueda actual.</p>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Pagination Footer -->
+      <div class="p-md border-t border-surface-container-highest bg-surface-bright flex items-center justify-between">
+        <span class="font-body-md text-body-md text-on-surface-variant">
+          Mostrando {{ registrosFiltrados.length }} registro(s)
+        </span>
+      </div>
+    </div>
+  </div>
+</main>
