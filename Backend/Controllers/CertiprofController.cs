@@ -22,7 +22,7 @@ namespace Backend.Controllers
             _fileProcessingService = fileProcessingService;
         }
 
-        [Authorize(Roles = "Administrador,Docente")]
+        [Backend.Attributes.PermissionAuthorize("/upload")]
         [HttpPost("process-report")]
         public async Task<IActionResult> ProcessReport(IFormFile file)
         {
@@ -41,7 +41,7 @@ namespace Backend.Controllers
             }
         }
 
-        [Authorize(Roles = "Administrador,Docente")]
+        [Backend.Attributes.PermissionAuthorize("/history")]
         [HttpGet("history")]
         public async Task<IActionResult> GetHistory([FromServices] Backend.Data.AppDbContext dbContext)
         {
@@ -110,7 +110,7 @@ namespace Backend.Controllers
             public string? CertificationName { get; set; }
         }
 
-        [Authorize(Policy = "AdminPolicy")]
+        [Backend.Attributes.PermissionAuthorize("/upload")]
         [HttpPost("edit")]
         public async Task<IActionResult> EditRecord([FromBody] EditRecordRequest request, [FromServices] Backend.Data.AppDbContext dbContext)
         {
@@ -145,7 +145,7 @@ namespace Backend.Controllers
         }
 
 
-        [Authorize(Policy = "AdminPolicy")]
+        [Backend.Attributes.PermissionAuthorize("/upload")]
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteRecord(int id, [FromServices] Backend.Data.AppDbContext dbContext)
         {

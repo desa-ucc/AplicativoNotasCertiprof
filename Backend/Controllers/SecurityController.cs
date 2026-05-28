@@ -9,6 +9,7 @@ namespace Backend.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
+    [Backend.Attributes.PermissionAuthorize("/security")]
     public class SecurityController : ControllerBase
     {
         private readonly Data.AppDbContext _dbContext;
