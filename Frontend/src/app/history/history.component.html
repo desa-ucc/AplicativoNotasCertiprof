@@ -25,7 +25,8 @@
     </div>
     <!-- Table -->
     <div class="overflow-x-auto">
-      <table class="w-full text-left border-collapse">
+      <div class="w-full overflow-x-auto bg-surface rounded-xl shadow-sm border">
+      <table class="w-full min-w-[800px] text-left border-collapse">
         <thead>
           <tr class="bg-[#006971] text-white">
             <th class="py-sm px-md font-label-md text-label-md text-white uppercase tracking-wider">Cédula</th>
@@ -81,9 +82,10 @@
           </tr>
         </tbody>
       </table>
+      </div>
     </div>
     <!-- Pagination -->
-    <div class="p-md border-t border-surface-container-highest bg-surface-bright flex items-center justify-between">
+    <div class="p-md border-t border-surface-container-highest bg-surface-bright flex flex-wrap gap-2 items-center justify-between">
       <span class="font-body-md text-body-md text-on-surface-variant">Mostrando {{ histories.length }} registros</span>
       <div class="flex gap-xs">
         <button class="p-1 rounded border border-outline-variant text-outline hover:bg-surface-container-low transition-colors disabled:opacity-50" disabled="">

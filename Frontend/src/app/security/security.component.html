@@ -80,7 +80,8 @@
 </div>
 <!-- Table/Empty State -->
 <div class="min-h-[400px] flex flex-col">
-<table class="w-full text-left border-collapse" *ngIf="users.length > 0">
+<div class="w-full overflow-x-auto bg-surface rounded-xl shadow-sm border" *ngIf="users.length > 0">
+<table class="w-full min-w-[800px] text-left border-collapse">
 <thead>
 <tr class="bg-surface-container-lowest text-secondary uppercase font-label-md text-label-md tracking-wider">
 <th class="px-gutter py-4 border-b border-outline-variant">Usuario</th>
@@ -112,7 +113,8 @@
     </tr>
 </tbody>
 </table>
-<div class="flex justify-between items-center p-4 border-t border-surface-container-highest">
+</div>
+<div class="flex flex-wrap gap-2 justify-between items-center p-4 border-t border-surface-container-highest">
     <span class="text-sm text-on-surface-variant">Página {{ paginaActualUsuarios }} de {{ totalPaginasUsuarios }}</span>
     <div class="flex gap-2">
         <button (click)="cambiarPaginaUsuarios(-1)" [disabled]="paginaActualUsuarios === 1" class="px-3 py-1 border border-outline-variant rounded-lg disabled:opacity-50 hover:bg-surface-container cursor-pointer text-sm">Anterior</button>
@@ -243,7 +245,8 @@
 </div>
 
 <div class="overflow-x-auto min-h-[400px]">
-    <table class="w-full text-left border-collapse">
+    <div class="w-full overflow-x-auto bg-surface rounded-xl shadow-sm border">
+    <table class="w-full min-w-[800px] text-left border-collapse">
     <thead>
         <tr class="bg-surface-container-lowest text-secondary uppercase font-label-md text-label-md tracking-wider">
         <th class="px-gutter py-4 border-b border-outline-variant">Nombre del Rol</th>
@@ -259,7 +262,8 @@
         </tr>
     </tbody>
     </table>
-<div class="flex justify-between items-center p-4 border-t border-surface-container-highest">
+    </div>
+<div class="flex flex-wrap gap-2 justify-between items-center p-4 border-t border-surface-container-highest">
     <span class="text-sm text-on-surface-variant">Página {{ paginaActualUsuarios }} de {{ totalPaginasUsuarios }}</span>
     <div class="flex gap-2">
         <button (click)="cambiarPaginaUsuarios(-1)" [disabled]="paginaActualUsuarios === 1" class="px-3 py-1 border border-outline-variant rounded-lg disabled:opacity-50 hover:bg-surface-container cursor-pointer text-sm">Anterior</button>
