@@ -92,6 +92,16 @@ namespace Backend.Services
 
                 for (int i = 1; i <= lastCol; i++) headers.Add(headerRow.Cell(i).Value.ToString().ToLower().Trim());
 
+                // Validación 1: Columnas
+                string[] columnasRequeridas = { "email", "first_name", "last_name", "certification_name", "status" };
+                foreach (var col in columnasRequeridas)
+                {
+                    if (!headers.Contains(col))
+                    {
+                        throw new ArgumentException($"El formato del Excel es inválido. No se encontró la columna requerida: '{col}'.");
+                    }
+                }
+
                 foreach (var row in rows.Skip(1))
                 {
                     var dict = new Dictionary<string, object>();
@@ -100,6 +110,13 @@ namespace Backend.Services
                         var header = headers[i - 1];
                         dict[header] = row.Cell(i).Value.ToString();
                     }
+
+                    // Validación 2: Email vacio
+                    if (dict.ContainsKey("email") && string.IsNullOrWhiteSpace(dict["email"]?.ToString()))
+                    {
+                        throw new ArgumentException("El archivo fue rechazado porque contiene uno o más registros con la columna 'email' en blanco. Corrija el documento y vuelva a intentarlo.");
+                    }
+
                     records.Add(MapRecord(dict));
                 }
             }

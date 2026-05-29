@@ -71,16 +71,16 @@
 </div>
 <div *ngIf="mostrarModalResultados" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm transition-opacity">
     <div class="bg-surface w-full max-w-md rounded-2xl shadow-2xl overflow-hidden animate-fade-in-up border border-outline-variant/50">
-        <div class="p-6 text-center" [ngClass]="resultadosCarga.fallidos > 0 ? 'bg-error-container text-on-error-container' : 'bg-[#006971]/10 text-[#006971]'">
+        <div class="p-6 text-center" [ngClass]="esErrorFatal || resultadosCarga.fallidos > 0 ? 'bg-error-container text-on-error-container' : 'bg-[#006971]/10 text-[#006971]'">
             <span class="material-symbols-outlined text-[48px] mb-2">
-                {{ resultadosCarga.fallidos > 0 ? 'warning' : 'check_circle' }}
+                {{ esErrorFatal ? 'cancel' : (resultadosCarga.fallidos > 0 ? 'warning' : 'check_circle') }}
             </span>
             <h3 class="text-title-lg font-bold">
-                {{ resultadosCarga.fallidos > 0 ? 'Carga Incompleta' : '¡Carga Exitosa!' }}
+                {{ esErrorFatal ? 'Archivo Rechazado' : (resultadosCarga.fallidos > 0 ? 'Carga Incompleta' : '¡Carga Exitosa!') }}
             </h3>
         </div>
 
-        <div class="p-6">
+        <div *ngIf="!esErrorFatal" class="p-6">
             <p class="text-on-surface-variant text-center mb-6">
                 Se ha procesado el reporte de Certiprof. Aquí tienes el resumen de la operación:
             </p>
@@ -101,6 +101,18 @@
                     </span>
                     <span class="font-bold text-title-md text-error">{{ resultadosCarga.fallidos }}</span>
                 </div>
+            </div>
+        </div>
+
+        <div *ngIf="esErrorFatal" class="p-6">
+            <p class="text-on-surface-variant text-center mb-6">
+                El sistema ha bloqueado el procesamiento del archivo por protección de datos.
+            </p>
+            <div class="p-4 bg-error/10 text-error rounded-lg border-l-4 border-error">
+                <span class="font-bold flex items-center gap-2 mb-2">
+                    <span class="material-symbols-outlined text-sm">rule</span> Fallo de Validación
+                </span>
+                <p class="text-sm">{{ mensajeErrorFatal }}</p>
             </div>
         </div>
 

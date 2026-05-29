@@ -19,6 +19,8 @@ export class CertiprofComponent {
   isDragging = false;
   isProcessing = false;
   mostrarModalResultados: boolean = false;
+  esErrorFatal: boolean = false;
+  mensajeErrorFatal: string = '';
   resultadosCarga = { exitosos: 0, fallidos: 0, total: 0 };
 
   constructor(private http: HttpClient, private router: Router) {}
@@ -73,14 +75,16 @@ export class CertiprofComponent {
               fallidos: res.fallidos || res.errorCount || 0,
               total: (res.exitosos || res.successCount || 0) + (res.fallidos || res.errorCount || 0)
           };
+          this.esErrorFatal = false;
           this.mostrarModalResultados = true;
           this.selectedFile = null;
         },
         error: (err: any) => {
           this.isProcessing = false;
-          console.error('Error en la carga', err);
-          const mensaje = err.error?.message || err.error?.Message || 'Error desconocido al procesar el archivo.';
-          alert(mensaje);
+          this.esErrorFatal = true;
+          this.mensajeErrorFatal = err.error?.mensaje || err.error?.message || err.error?.Message || 'Error de conexión o formato no soportado.';
+          this.mostrarModalResultados = true;
+          this.selectedFile = null;
         }
       });
   }
