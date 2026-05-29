@@ -91,6 +91,8 @@ export class CertiprofComponent {
 
   cerrarModalResultados() {
     this.mostrarModalResultados = false;
-    this.router.navigate(['/history']);
+    if (!this.esErrorFatal) {
+      this.router.navigate(['/history']);
+    }
   }
 }
