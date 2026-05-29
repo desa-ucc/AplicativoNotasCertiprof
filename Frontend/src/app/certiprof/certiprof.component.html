@@ -69,3 +69,45 @@
 </div>
 </div>
 </div>
+<div *ngIf="mostrarModalResultados" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm transition-opacity">
+    <div class="bg-surface w-full max-w-md rounded-2xl shadow-2xl overflow-hidden animate-fade-in-up border border-outline-variant/50">
+        <div class="p-6 text-center" [ngClass]="resultadosCarga.fallidos > 0 ? 'bg-error-container text-on-error-container' : 'bg-[#006971]/10 text-[#006971]'">
+            <span class="material-symbols-outlined text-[48px] mb-2">
+                {{ resultadosCarga.fallidos > 0 ? 'warning' : 'check_circle' }}
+            </span>
+            <h3 class="text-title-lg font-bold">
+                {{ resultadosCarga.fallidos > 0 ? 'Carga Incompleta' : '¡Carga Exitosa!' }}
+            </h3>
+        </div>
+
+        <div class="p-6">
+            <p class="text-on-surface-variant text-center mb-6">
+                Se ha procesado el reporte de Certiprof. Aquí tienes el resumen de la operación:
+            </p>
+
+            <div class="space-y-3">
+                <div class="flex justify-between items-center p-3 bg-surface-container rounded-lg border-l-4 border-[#76bc21]">
+                    <span class="text-on-surface flex items-center gap-2">
+                        <span class="material-symbols-outlined text-[#76bc21] text-sm">done_all</span>
+                        Registros Subidos
+                    </span>
+                    <span class="font-bold text-title-md">{{ resultadosCarga.exitosos }}</span>
+                </div>
+
+                <div *ngIf="resultadosCarga.fallidos > 0" class="flex justify-between items-center p-3 bg-error/10 rounded-lg border-l-4 border-error">
+                    <span class="text-error flex items-center gap-2">
+                        <span class="material-symbols-outlined text-sm">person_off</span>
+                        Cédulas no encontradas
+                    </span>
+                    <span class="font-bold text-title-md text-error">{{ resultadosCarga.fallidos }}</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="p-4 border-t border-outline-variant/30 bg-surface-container-lowest text-right">
+            <button (click)="cerrarModalResultados()" class="w-full md:w-auto px-6 py-2 bg-[#76bc21] text-white font-bold rounded-lg shadow-sm hover:brightness-105 transition-all">
+                Entendido
+            </button>
+        </div>
+    </div>
+</div>

@@ -18,6 +18,8 @@ export class CertiprofComponent {
   previewData: any[] = [];
   isDragging = false;
   isProcessing = false;
+  mostrarModalResultados: boolean = false;
+  resultadosCarga = { exitosos: 0, fallidos: 0, total: 0 };
 
   constructor(private http: HttpClient, private router: Router) {}
 
@@ -64,22 +66,27 @@ export class CertiprofComponent {
     // Call backend API directly to process and save
     this.http.post<any>('/api/certiprof/process-report', formData)
       .subscribe({
-        next: (response) => {
+        next: (res: any) => {
           this.isProcessing = false;
+          this.resultadosCarga = {
+              exitosos: res.exitosos || res.successCount || 0,
+              fallidos: res.fallidos || res.errorCount || 0,
+              total: (res.exitosos || res.successCount || 0) + (res.fallidos || res.errorCount || 0)
+          };
+          this.mostrarModalResultados = true;
           this.selectedFile = null;
-          this.successMessage = 'Carga exitosa';
-
-          // Wait briefly to show the success message, then navigate to history
-          setTimeout(() => {
-            this.router.navigate(['/history']);
-          }, 1500);
         },
-        error: (err) => {
+        error: (err: any) => {
           this.isProcessing = false;
-          console.error('Error processing file:', err);
+          console.error('Error en la carga', err);
           const mensaje = err.error?.message || err.error?.Message || 'Error desconocido al procesar el archivo.';
           alert(mensaje);
         }
       });
+  }
+
+  cerrarModalResultados() {
+    this.mostrarModalResultados = false;
+    this.router.navigate(['/history']);
   }
 }
