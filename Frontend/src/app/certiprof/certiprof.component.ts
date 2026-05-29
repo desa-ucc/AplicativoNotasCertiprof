@@ -18,6 +18,10 @@ export class CertiprofComponent {
   previewData: any[] = [];
   isDragging = false;
   isProcessing = false;
+  mostrarModalResultados: boolean = false;
+  esErrorFatal: boolean = false;
+  mensajeErrorFatal: string = '';
+  resultadosCarga = { exitosos: 0, fallidos: 0, total: 0 };
 
   constructor(private http: HttpClient, private router: Router) {}
 
@@ -64,22 +68,31 @@ export class CertiprofComponent {
     // Call backend API directly to process and save
     this.http.post<any>('/api/certiprof/process-report', formData)
       .subscribe({
-        next: (response) => {
+        next: (res: any) => {
           this.isProcessing = false;
+          this.resultadosCarga = {
+              exitosos: res.exitosos || res.successCount || 0,
+              fallidos: res.fallidos || res.errorCount || 0,
+              total: (res.exitosos || res.successCount || 0) + (res.fallidos || res.errorCount || 0)
+          };
+          this.esErrorFatal = false;
+          this.mostrarModalResultados = true;
           this.selectedFile = null;
-          this.successMessage = 'Carga exitosa';
-
-          // Wait briefly to show the success message, then navigate to history
-          setTimeout(() => {
-            this.router.navigate(['/history']);
-          }, 1500);
         },
-        error: (err) => {
+        error: (err: any) => {
           this.isProcessing = false;
-          console.error('Error processing file:', err);
-          const mensaje = err.error?.message || err.error?.Message || 'Error desconocido al procesar el archivo.';
-          alert(mensaje);
+          this.esErrorFatal = true;
+          this.mensajeErrorFatal = err.error?.mensaje || err.error?.message || err.error?.Message || 'Error de conexión o formato no soportado.';
+          this.mostrarModalResultados = true;
+          this.selectedFile = null;
         }
       });
+  }
+
+  cerrarModalResultados() {
+    this.mostrarModalResultados = false;
+    if (!this.esErrorFatal) {
+      this.router.navigate(['/history']);
+    }
   }
 }

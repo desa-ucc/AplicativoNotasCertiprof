@@ -17,6 +17,15 @@ export class AppComponent implements OnInit {
   userRole: string | null = null;
   loggedIn: boolean = false;
   nombreUsuarioLogueado: string = 'Usuario';
+  isSidebarOpen: boolean = false;
+
+  toggleSidebar() {
+    this.isSidebarOpen = !this.isSidebarOpen;
+  }
+
+  closeSidebar() {
+    this.isSidebarOpen = false;
+  }
 
   constructor(private router: Router) {
     // Update state on navigation changes (like login redirect)
@@ -24,6 +33,7 @@ export class AppComponent implements OnInit {
       filter(event => event instanceof NavigationEnd)
     ).subscribe(() => {
       this.updateState();
+      this.closeSidebar();
     });
   }
 

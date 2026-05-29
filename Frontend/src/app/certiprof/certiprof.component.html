@@ -69,3 +69,62 @@
 </div>
 </div>
 </div>
+<div *ngIf="mostrarModalResultados" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm transition-opacity">
+    <div class="bg-surface w-full max-w-md rounded-2xl shadow-2xl overflow-hidden border border-outline-variant/30 flex flex-col transform transition-all">
+        <div class="pt-8 pb-2 flex flex-col items-center justify-center px-6">
+            <div [ngClass]="esErrorFatal ? 'bg-error/10 text-error' : (resultadosCarga.fallidos > 0 ? 'bg-[#ff9800]/10 text-[#ff9800]' : 'bg-[#76bc21]/10 text-[#76bc21]')"
+                 class="w-20 h-20 rounded-full flex items-center justify-center mb-5 shadow-inner">
+                <span class="material-symbols-outlined text-[40px]">
+                    {{ esErrorFatal ? 'cancel' : (resultadosCarga.fallidos > 0 ? 'warning' : 'check_circle') }}
+                </span>
+            </div>
+
+            <h3 class="text-title-xl font-extrabold text-on-surface text-center">
+                {{ esErrorFatal ? 'Archivo Rechazado' : (resultadosCarga.fallidos > 0 ? 'Carga Incompleta' : '¡Carga Exitosa!') }}
+            </h3>
+        </div>
+
+        <div *ngIf="esErrorFatal" class="px-8 pb-8 pt-2">
+            <p class="text-on-surface-variant text-center mb-6 text-sm">
+                El sistema ha bloqueado el procesamiento del archivo para proteger la integridad de los datos.
+            </p>
+            <div class="bg-error/5 border border-error/20 rounded-xl p-4">
+                <div class="flex items-center gap-2 mb-1 text-error font-bold">
+                    <span class="material-symbols-outlined text-sm">rule</span>
+                    <span class="text-sm">Motivo del rechazo:</span>
+                </div>
+                <p class="text-on-surface-variant text-sm">{{ mensajeErrorFatal }}</p>
+            </div>
+        </div>
+
+        <div *ngIf="!esErrorFatal" class="px-8 pb-8 pt-2">
+            <p class="text-on-surface-variant text-center mb-6 text-sm">
+                Se ha procesado el reporte de Certiprof. Aquí tienes el resumen:
+            </p>
+            <div class="space-y-3">
+                <div class="flex justify-between items-center p-3 bg-surface-container-lowest rounded-xl border border-outline-variant/50">
+                    <span class="text-on-surface flex items-center gap-2 text-sm font-medium">
+                        <span class="material-symbols-outlined text-[#76bc21] text-base">done_all</span>
+                        Registros Subidos
+                    </span>
+                    <span class="font-black text-title-md text-[#76bc21]">{{ resultadosCarga.exitosos }}</span>
+                </div>
+                <div *ngIf="resultadosCarga.fallidos > 0" class="flex justify-between items-center p-3 bg-error/5 rounded-xl border border-error/20">
+                    <span class="text-error flex items-center gap-2 text-sm font-medium">
+                        <span class="material-symbols-outlined text-base">person_off</span>
+                        Cédulas no encontradas
+                    </span>
+                    <span class="font-black text-title-md text-error">{{ resultadosCarga.fallidos }}</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="px-8 py-5 bg-surface-container-lowest border-t border-outline-variant/30 flex justify-center">
+            <button (click)="cerrarModalResultados()"
+                    [ngClass]="esErrorFatal ? 'bg-error hover:bg-error/90' : 'bg-[#006971] hover:brightness-105'"
+                    class="w-full py-3 text-white font-bold rounded-xl shadow-sm transition-all flex justify-center items-center gap-2">
+                {{ esErrorFatal ? 'Cerrar ventana' : 'Entendido' }}
+            </button>
+        </div>
+    </div>
+</div>

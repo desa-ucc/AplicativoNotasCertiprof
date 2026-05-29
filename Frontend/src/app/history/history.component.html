@@ -7,7 +7,7 @@
   <!-- Data Table Card -->
   <div class="bg-surface-container-lowest rounded-xl shadow-[0px_4px_20px_rgba(0,61,76,0.08)] overflow-hidden border border-outline-variant/20">
     <!-- Table Toolbar (Search & Filters) -->
-    <div class="p-md border-b border-surface-container-highest flex flex-col sm:flex-row justify-between items-center gap-md bg-surface-bright">
+    <div class="p-md border-b border-surface-container-highest flex flex-col sm:flex-row justify-between items-start sm:items-center gap-md bg-surface-bright">
       <div class="relative w-full sm:w-80">
         <span class="material-symbols-outlined absolute left-sm top-1/2 -translate-y-1/2 text-outline-variant" style="font-variation-settings: 'FILL' 0;">search</span>
         <input [(ngModel)]="searchTerm" (input)="aplicarFiltros()" class="w-full bg-surface border border-outline-variant rounded-lg py-2 pl-10 pr-4 font-body-md text-body-md text-on-surface focus:outline-none focus:border-secondary focus:ring-1 focus:ring-secondary transition-colors" placeholder="Buscar por Cédula o Email..." type="text"/>
@@ -25,7 +25,8 @@
     </div>
     <!-- Table -->
     <div class="overflow-x-auto">
-      <table class="w-full text-left border-collapse">
+      <div class="w-full overflow-x-auto bg-surface rounded-xl shadow-sm border">
+      <table class="w-full min-w-[800px] lg:min-w-full text-left border-collapse">
         <thead>
           <tr class="bg-[#006971] text-white">
             <th class="py-sm px-md font-label-md text-label-md text-white uppercase tracking-wider">Cédula</th>
@@ -81,9 +82,10 @@
           </tr>
         </tbody>
       </table>
+      </div>
     </div>
     <!-- Pagination -->
-    <div class="p-md border-t border-surface-container-highest bg-surface-bright flex items-center justify-between">
+    <div class="p-md border-t border-surface-container-highest bg-surface-bright flex flex-wrap gap-2 items-center justify-between">
       <span class="font-body-md text-body-md text-on-surface-variant">Mostrando {{ histories.length }} registros</span>
       <div class="flex gap-xs">
         <button class="p-1 rounded border border-outline-variant text-outline hover:bg-surface-container-low transition-colors disabled:opacity-50" disabled="">

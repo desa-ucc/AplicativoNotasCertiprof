@@ -1,14 +1,13 @@
 <div *ngIf="loggedIn">
   <!-- TopNavBar -->
-  <header class="fixed top-0 right-0 h-16 flex items-center justify-between px-md z-30 bg-surface/95 backdrop-blur-md border-b border-outline-variant/30 shadow-sm dark:shadow-none docked w-[calc(100%-280px)] hidden md:flex">
+  <header class="fixed top-0 right-0 left-0 md:left-[280px] h-16 flex items-center justify-between px-md z-30 bg-surface/95 backdrop-blur-md border-b border-outline-variant/30 shadow-sm dark:shadow-none docked w-full md:w-[calc(100%-280px)]">
   <div class="flex items-center">
-  <!-- Empty for alignment -->
+  <button (click)="toggleSidebar()" class="md:hidden w-10 h-10 flex items-center justify-center rounded-full text-on-surface-variant hover:bg-surface-container transition-colors">
+    <span class="material-symbols-outlined">menu</span>
+  </button>
   </div>
   <div class="flex items-center gap-md">
-  <div class="relative">
-  <input class="pl-10 pr-4 py-2 bg-surface-container-low border border-outline-variant rounded-full text-body-md font-body-md text-on-surface focus:outline-none focus:border-tertiary focus:ring-1 focus:ring-tertiary transition-all" placeholder="Search..." type="text">
-  <span class="material-symbols-outlined absolute left-3 top-2.5 text-on-surface-variant">search</span>
-  </div>
+
 
   <button (click)="logout()" class="w-10 h-10 flex items-center justify-center rounded-full text-error hover:bg-error-container transition-colors scale-95 duration-75" title="Cerrar Sesión">
   <span class="material-symbols-outlined">logout</span>
@@ -17,7 +16,10 @@
   </header>
 
   <!-- SideNavBar -->
-  <nav class="fixed left-0 top-0 h-full w-[280px] z-40 flex flex-col bg-gradient-to-b from-[#003D4C] to-[#002a34] text-white border-r border-white/10 shadow-2xl hidden md:flex">
+  <!-- Mobile Backdrop -->
+  <div *ngIf="isSidebarOpen" (click)="closeSidebar()" class="fixed inset-0 bg-black/50 z-40 md:hidden transition-opacity"></div>
+
+  <nav class="fixed left-0 top-0 h-full w-[280px] z-50 flex flex-col bg-gradient-to-b from-[#003D4C] to-[#002a34] text-white border-r border-white/10 shadow-2xl transition-transform duration-300 md:translate-x-0" [ngClass]="{'-translate-x-full': !isSidebarOpen, 'translate-x-0': isSidebarOpen}">
     <div class="px-6 pt-10 pb-4 mb-6">
       <div class="flex items-center gap-2 mb-1">
         <span class="w-8 h-8 rounded-lg bg-[#76bc21] flex items-center justify-center text-[#003D4C]">
@@ -61,6 +63,6 @@
 </div>
 
 <!-- Main Content Area -->
-<div [ngClass]="{'md:ml-sidebar-width pt-20 px-lg pb-xl': loggedIn}">
+<div [ngClass]="{'md:ml-[280px] w-full md:w-[calc(100%-280px)] pt-20 px-4 md:px-lg pb-xl': loggedIn}">
   <router-outlet></router-outlet>
 </div>
