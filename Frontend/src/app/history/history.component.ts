@@ -22,6 +22,8 @@ export class HistoryComponent implements OnInit {
 
   histories: any[] = [];
   registrosFiltrados: any[] = [];
+  fechaInicio: string = '';
+  fechaFin: string = '';
 
   abrirFiltros() {
     this.isFiltersModalOpen = true;
@@ -49,8 +51,9 @@ export class HistoryComponent implements OnInit {
       estado: ''
     };
     this.searchTerm = '';
-    this.registrosFiltrados = [...this.histories];
-    this.calcularMetricas(this.registrosFiltrados);
+    this.fechaInicio = '';
+    this.fechaFin = '';
+    this.aplicarFiltros();
     this.cerrarFiltros();
   }
 
@@ -99,18 +102,41 @@ export class HistoryComponent implements OnInit {
   }
 
   aplicarFiltros() {
-    if (!this.searchTerm.trim()) {
-      this.registrosFiltrados = [...this.histories];
-      return;
-    }
+    let inicio = this.fechaInicio ? new Date(this.fechaInicio + 'T00:00:00') : null;
+    let fin = this.fechaFin ? new Date(this.fechaFin + 'T23:59:59.999') : null;
 
-    const searchLower = this.searchTerm.toLowerCase();
-    this.registrosFiltrados = this.histories.filter(record =>
-      (record.cedula && record.cedula.toLowerCase().includes(searchLower)) ||
-      (record.email && record.email.toLowerCase().includes(searchLower)) ||
-      (record.first_name && record.first_name.toLowerCase().includes(searchLower)) ||
-      (record.last_name && record.last_name.toLowerCase().includes(searchLower))
-    );
+    this.registrosFiltrados = this.histories.filter(r => {
+        // CRÍTICO: Intentar leer ambas propiedades posibles
+        const rawDate = r.created_at || r.fecha;
+
+        if (!rawDate) return false; // Si el registro no tiene fecha, lo ignoramos
+
+        // CRÍTICO: Reemplazar el espacio por la 'T' del estándar ISO para evitar 'Invalid Date'
+        const fechaString = rawDate.toString().replace(' ', 'T');
+        const fechaRegistro = new Date(fechaString);
+
+        let cumpleFechas = true;
+        if (inicio && fin) {
+            cumpleFechas = fechaRegistro >= inicio && fechaRegistro <= fin;
+        } else if (inicio) {
+            cumpleFechas = fechaRegistro >= inicio;
+        } else if (fin) {
+            cumpleFechas = fechaRegistro <= fin;
+        }
+
+        let cumpleTexto = true;
+        if (this.searchTerm) {
+            const term = this.searchTerm.toLowerCase();
+            cumpleTexto = (r.email && r.email.toLowerCase().includes(term)) ||
+                          (r.cedula && r.cedula.toLowerCase().includes(term)) ||
+                          (r.first_name && r.first_name.toLowerCase().includes(term)) ||
+                          (r.last_name && r.last_name.toLowerCase().includes(term));
+        }
+
+        return cumpleFechas && cumpleTexto;
+    });
+
+    this.calcularMetricas(this.registrosFiltrados);
   }
 
   async exportarExcel() {
@@ -198,7 +224,7 @@ export class HistoryComponent implements OnInit {
       .subscribe({
         next: (data) => {
           this.histories = data;
-          this.registrosFiltrados = [...data];
+          this.aplicarFiltros();
 
           const estadosExtraidos = data
                 .map(r => r.status)
