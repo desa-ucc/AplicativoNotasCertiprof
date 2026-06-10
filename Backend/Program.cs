@@ -31,8 +31,7 @@ builder.Services.AddAuthentication("Bearer")
             ValidateIssuer = false,
             ValidateAudience = false,
             ValidateIssuerSigningKey = true,
-            IssuerSigningKey = new Microsoft.IdentityModel.Tokens.SymmetricSecurityKey(System.Text.Encoding.UTF8.GetBytes(jwtKey)),
-            RoleClaimType = System.Security.Claims.ClaimTypes.Role
+            IssuerSigningKey = new Microsoft.IdentityModel.Tokens.SymmetricSecurityKey(System.Text.Encoding.UTF8.GetBytes(jwtKey))
         };
     });
 

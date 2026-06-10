@@ -22,7 +22,7 @@ namespace Backend.Controllers
             _fileProcessingService = fileProcessingService;
         }
 
-        [Backend.Attributes.PermissionAuthorize("/upload")]
+        [Authorize(Policy = "AdminPolicy")]
         [HttpPost("process-report")]
         public async Task<IActionResult> ProcessReport(IFormFile file)
         {
@@ -31,9 +31,9 @@ namespace Backend.Controllers
                 // Retrieve user from token
                 var uploadedBy = User.Identity?.Name ?? "Unknown_User";
 
-                var result = await _fileProcessingService.ProcessReportAsync(file, uploadedBy, string.Empty, string.Empty);
+                var uploadId = await _fileProcessingService.ProcessReportAsync(file, uploadedBy, string.Empty, string.Empty);
 
-                return Ok(result);
+                return Ok(new { UploadId = uploadId });
             }
             catch (Exception ex)
             {
@@ -41,7 +41,6 @@ namespace Backend.Controllers
             }
         }
 
-        [Backend.Attributes.PermissionAuthorize("/history")]
         [HttpGet("history")]
         public async Task<IActionResult> GetHistory([FromServices] Backend.Data.AppDbContext dbContext)
         {
@@ -110,7 +109,7 @@ namespace Backend.Controllers
             public string? CertificationName { get; set; }
         }
 
-        [Backend.Attributes.PermissionAuthorize("/upload")]
+        [Authorize(Policy = "AdminPolicy")]
         [HttpPost("edit")]
         public async Task<IActionResult> EditRecord([FromBody] EditRecordRequest request, [FromServices] Backend.Data.AppDbContext dbContext)
         {
@@ -145,7 +144,7 @@ namespace Backend.Controllers
         }
 
 
-        [Backend.Attributes.PermissionAuthorize("/upload")]
+        [Authorize(Policy = "AdminPolicy")]
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteRecord(int id, [FromServices] Backend.Data.AppDbContext dbContext)
         {

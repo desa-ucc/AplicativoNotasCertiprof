@@ -1,14 +1,14 @@
-<div class="min-h-screen flex items-center justify-center bg-[#003D4C] py-12 px-4 sm:px-6 lg:px-8">
+<div class="min-h-screen flex items-center justify-center bg-avatar-petroleum-dark py-12 px-4 sm:px-6 lg:px-8">
   <div class="max-w-md w-full bg-white rounded-3xl p-10 shadow-2xl space-y-8">
     <div class="flex flex-col items-center">
-      <div class="bg-[#0f3747] p-3 rounded-2xl mb-6 shadow-lg">
-        <svg class="h-10 w-10 text-[#76BC21]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <div class="bg-avatar-petroleum p-3 rounded-2xl mb-6 shadow-lg">
+        <svg class="h-10 w-10 text-avatar-lime" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h12a2 2 0 012 2v12a2 2 0 01-2 2H6a2 2 0 01-2-2V6z" />
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 12h16" />
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16" />
         </svg>
       </div>
-      <h2 class="text-center text-3xl font-bold text-[#0f3747] tracking-tight">
+      <h2 class="text-center text-3xl font-bold text-avatar-petroleum tracking-tight">
         AVATAR Admin
       </h2>
       <p class="mt-2 text-center text-xs font-semibold text-gray-400 uppercase tracking-widest">
@@ -17,7 +17,7 @@
     </div>
 
     <div>
-      <h3 class="text-center text-xl font-bold text-[#0f3747]">
+      <h3 class="text-center text-xl font-bold text-avatar-petroleum">
         Iniciar Sesión
       </h3>
     </div>
@@ -29,7 +29,7 @@
     <form class="mt-8 space-y-6" (ngSubmit)="login()">
       <div class="space-y-4">
         <div>
-          <label for="username" class="block text-xs font-semibold text-[#0f3747] uppercase tracking-wider mb-2">Usuario</label>
+          <label for="username" class="block text-xs font-semibold text-avatar-petroleum uppercase tracking-wider mb-2">Usuario</label>
           <div class="relative">
             <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
               <svg class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -40,7 +40,7 @@
           </div>
         </div>
         <div>
-          <label for="passwordPlain" class="block text-xs font-semibold text-[#0f3747] uppercase tracking-wider mb-2">Contraseña</label>
+          <label for="passwordPlain" class="block text-xs font-semibold text-avatar-petroleum uppercase tracking-wider mb-2">Contraseña</label>
           <div class="relative">
             <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
               <svg class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -54,21 +54,21 @@
 
       <div class="flex items-center justify-between mt-4">
         <div class="flex items-center">
-          <input id="remember-me" name="remember-me" type="checkbox" class="h-4 w-4 text-[#76BC21] focus:ring-avatar-lime border-gray-300 rounded">
-          <label for="remember-me" class="ml-2 block text-sm text-[#0f3747]">
+          <input id="remember-me" name="remember-me" type="checkbox" class="h-4 w-4 text-avatar-lime focus:ring-avatar-lime border-gray-300 rounded">
+          <label for="remember-me" class="ml-2 block text-sm text-avatar-petroleum">
             Recordarme
           </label>
         </div>
 
         <div class="text-sm">
-          <a href="#" class="font-bold text-[#0f3747] hover:text-[#76BC21] transition duration-200">
+          <a href="#" class="font-bold text-avatar-petroleum hover:text-avatar-lime transition duration-200">
             ¿Olvidó su contraseña?
           </a>
         </div>
       </div>
 
       <div>
-        <button type="submit" (click)="login()" class="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-bold rounded-xl text-white bg-[#76BC21] text-white hover:bg-[#76BC21] text-white-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-avatar-lime transition duration-200 shadow-md">
+        <button type="submit" class="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-bold rounded-xl text-white bg-avatar-lime hover:bg-avatar-lime-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-avatar-lime transition duration-200 shadow-md">
           Entrar
           <svg class="ml-2 h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
