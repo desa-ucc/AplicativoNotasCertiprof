@@ -106,20 +106,12 @@ export class HistoryComponent implements OnInit {
         const rawDate = r.created_at || r.fecha;
         if (!rawDate) return false;
 
-        // 1. Evitar Invalid Date por espacios de SQL
-        const fechaString = rawDate.toString().replace(' ', 'T');
-        const dateObj = new Date(fechaString);
-        if (isNaN(dateObj.getTime())) return false;
+        // 1. EXTRACCIÓN PURA DE STRING (Bypass total de zonas horarias)
+        // Si el backend manda "2026-03-06T18:01:05.000Z" o "2026-03-06 18:01:05"
+        // Esto lo corta y nos deja estrictamente con "2026-03-06"
+        const fechaNormalizada = rawDate.toString().replace('T', ' ').split(' ')[0];
 
-        // 2. Extraer EXACTAMENTE el año, mes y día para anular las horas y el timezone
-        const yyyy = dateObj.getFullYear();
-        const mm = String(dateObj.getMonth() + 1).padStart(2, '0');
-        const dd = String(dateObj.getDate()).padStart(2, '0');
-
-        // El formato quedará idéntico al de los inputs de HTML (Ej: "2026-03-06")
-        const fechaNormalizada = `${yyyy}-${mm}-${dd}`;
-
-        // 3. Comparación Alfanumérica Directa (Bulletproof)
+        // 2. Comparación Alfanumérica Directa (Bulletproof)
         let cumpleFechas = true;
         if (this.fechaInicio && this.fechaFin) {
             cumpleFechas = fechaNormalizada >= this.fechaInicio && fechaNormalizada <= this.fechaFin;
@@ -129,7 +121,7 @@ export class HistoryComponent implements OnInit {
             cumpleFechas = fechaNormalizada <= this.fechaFin;
         }
 
-        // 4. Búsqueda por texto (Opcional si la estás usando)
+        // 3. Búsqueda por texto
         let cumpleTexto = true;
         if (this.searchTerm) {
             const term = this.searchTerm.toLowerCase();
