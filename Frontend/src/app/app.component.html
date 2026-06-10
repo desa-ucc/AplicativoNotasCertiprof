@@ -1,68 +1,49 @@
-<div *ngIf="loggedIn">
-  <!-- TopNavBar -->
-  <header class="fixed top-0 right-0 left-0 md:left-[280px] h-16 flex items-center justify-between px-md z-30 bg-surface/95 backdrop-blur-md border-b border-outline-variant/30 shadow-sm dark:shadow-none docked w-full md:w-[calc(100%-280px)]">
-  <div class="flex items-center">
-  <button (click)="toggleSidebar()" class="md:hidden w-10 h-10 flex items-center justify-center rounded-full text-on-surface-variant hover:bg-surface-container transition-colors">
-    <span class="material-symbols-outlined">menu</span>
-  </button>
-  </div>
-  <div class="flex items-center gap-md">
-
-
-  <button (click)="logout()" class="w-10 h-10 flex items-center justify-center rounded-full text-error hover:bg-error-container transition-colors scale-95 duration-75" title="Cerrar Sesión">
-  <span class="material-symbols-outlined">logout</span>
-  </button>
-  </div>
-  </header>
-
-  <!-- SideNavBar -->
-  <!-- Mobile Backdrop -->
-  <div *ngIf="isSidebarOpen" (click)="closeSidebar()" class="fixed inset-0 bg-black/50 z-40 md:hidden transition-opacity"></div>
-
-  <nav class="fixed left-0 top-0 h-full w-[280px] z-50 flex flex-col bg-gradient-to-b from-[#003D4C] to-[#002a34] text-white border-r border-white/10 shadow-2xl transition-transform duration-300 md:translate-x-0" [ngClass]="{'-translate-x-full': !isSidebarOpen, 'translate-x-0': isSidebarOpen}">
-    <div class="px-6 pt-10 pb-4 mb-6">
-      <div class="flex items-center gap-2 mb-1">
-        <span class="w-8 h-8 rounded-lg bg-[#76bc21] flex items-center justify-center text-[#003D4C]">
-          <span class="material-symbols-outlined text-[20px] font-bold">school</span>
-        </span>
-        <h1 class="text-xl font-bold tracking-tight text-white">Aplicativo notas <span class="text-[#76bc21]">Certiprof</span></h1>
-      </div>
-      <p class="text-[10px] uppercase tracking-[0.25em] font-medium text-white/40 ml-10">Sistema Universidad Castro Carazo</p>
-    </div>
-
-    <ul class="flex-1 flex flex-col gap-1 px-4 m-0 list-none">
-      <li *ngFor="let item of menuItems">
-        <a [routerLink]="item.path"
-           routerLinkActive="bg-[rgba(118,188,33,0.1)] border-l-4 border-[#76bc21] text-white structural-active"
-           [routerLinkActiveOptions]="{exact: true}"
-           class="group flex items-center gap-3 px-4 py-3.5 rounded-xl text-white/60 hover:text-white hover:bg-white/5 transition-all duration-300">
-          <i [class]="item.icon + ' text-[22px] group-[.structural-active]:text-[#76bc21]'"></i>
-          <span class="font-medium text-[14px] group-[.structural-active]:font-semibold">{{ item.name }}</span>
-        </a>
-      </li>
-    </ul>
-
-    <div class="p-4 mt-auto mb-6">
-      <div class="flex items-center gap-3 p-3 rounded-2xl bg-white/5 border border-white/10 group cursor-pointer hover:bg-white/10 transition-all">
-        <div class="relative">
-          <div class="w-10 h-10 rounded-full bg-[rgba(118,188,33,0.2)] flex items-center justify-center text-[#76bc21] overflow-hidden border border-[rgba(118,188,33,0.2)]">
-            <span class="material-symbols-outlined text-[22px] font-medium">person</span>
+<div class="min-h-screen bg-gray-50 text-gray-900 font-sans antialiased">
+  <!-- Navigation Header -->
+  <div *ngIf="isLoggedIn()">
+    <nav class="bg-white border-b border-gray-200 sticky top-0 z-50 shadow-sm">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex justify-between h-16">
+          <div class="flex">
+            <div class="flex-shrink-0 flex items-center gap-2">
+              <!-- Modern Logo Icon -->
+              <svg class="h-8 w-8 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 002-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+              </svg>
+              <span class="font-bold text-xl text-gray-900 tracking-tight">AVATAR Admin</span>
+            </div>
+            <div class="hidden sm:-my-px sm:ml-8 sm:flex sm:space-x-8">
+              <a *ngFor="let item of userMenu"
+                 [routerLink]="item.path"
+                 routerLinkActive="border-indigo-500 text-indigo-600"
+                 [routerLinkActiveOptions]="{exact: true}"
+                 class="border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium transition-colors duration-200">
+                {{ item.name }}
+              </a>
+            </div>
           </div>
-          <div class="absolute bottom-0 right-0 w-3 h-3 bg-[#76bc21] border-2 border-[#002a34] rounded-full"></div>
+          <div class="hidden sm:ml-6 sm:flex sm:items-center gap-4">
+            <div class="flex items-center gap-2 bg-gray-100 px-3 py-1.5 rounded-full border border-gray-200">
+              <span class="h-2 w-2 rounded-full bg-green-500"></span>
+              <span class="text-xs font-semibold text-gray-600 uppercase tracking-wider">{{ userRole }}</span>
+            </div>
+            <button (click)="logout()" class="inline-flex items-center justify-center p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-full transition-colors duration-200 focus:outline-none" title="Cerrar Sesión">
+              <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+              </svg>
+            </button>
+          </div>
         </div>
-        <div class="flex flex-col min-w-0">
-          <p class="text-[13px] font-bold text-white truncate">{{ nombreUsuarioLogueado }}</p>
-          <p class="text-[10px] text-white/40 font-medium uppercase tracking-wider truncate">{{userRole}}</p>
-        </div>
-        <button class="ml-auto text-white/30 group-hover:text-white/60 transition-colors">
-          <span class="material-symbols-outlined text-[18px]">more_vert</span>
-        </button>
       </div>
-    </div>
-  </nav>
-</div>
+    </nav>
+  </div>
 
-<!-- Main Content Area -->
-<div [ngClass]="{'md:ml-[280px] w-full md:w-[calc(100%-280px)] pt-20 px-4 md:px-lg pb-xl': loggedIn}">
-  <router-outlet></router-outlet>
+  <!-- Main Content Area -->
+  <div class="py-10">
+    <main>
+      <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
+        <router-outlet></router-outlet>
+      </div>
+    </main>
+  </div>
 </div>
