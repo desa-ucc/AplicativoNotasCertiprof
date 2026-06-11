@@ -25,6 +25,11 @@ export class HistoryComponent implements OnInit {
   fechaInicio: string = '';
   fechaFin: string = '';
 
+  listaCertificaciones: string[] = [];
+  listaEstados: string[] = [];
+  certSeleccionada: string = '';
+  estadoSeleccionado: string = '';
+
   abrirFiltros() {
     this.isFiltersModalOpen = true;
   }
@@ -55,6 +60,16 @@ export class HistoryComponent implements OnInit {
     this.fechaFin = '';
     this.aplicarFiltros();
     this.cerrarFiltros();
+  }
+
+  cargarOpcionesFiltro() {
+    // Certificaciones únicas
+    const certs = this.histories.map(r => r.certification_name || r.certificacion);
+    this.listaCertificaciones = [...new Set(certs)].filter(c => c).sort();
+
+    // Estados únicos
+    const estados = this.histories.map(r => r.status);
+    this.listaEstados = [...new Set(estados)].filter(e => e).sort();
   }
 
   aplicarFiltrosAvanzados() {
@@ -103,8 +118,11 @@ export class HistoryComponent implements OnInit {
 
   aplicarFiltros() {
     this.registrosFiltrados = this.histories.filter(r => {
+        const cumpleCert = this.certSeleccionada ? (r.certification_name || r.certificacion) === this.certSeleccionada : true;
+        const cumpleEstado = this.estadoSeleccionado ? r.status === this.estadoSeleccionado : true;
+
         const rawDate = r.created_at || r.fecha;
-        if (!rawDate) return false;
+        if (!rawDate && (this.fechaInicio || this.fechaFin)) return false;
 
         // 1. EXTRACCIÓN PURA DE STRING (Bypass total de zonas horarias)
         // Si el backend manda "2026-03-06T18:01:05.000Z" o "2026-03-06 18:01:05"
@@ -131,7 +149,7 @@ export class HistoryComponent implements OnInit {
                           (r.last_name && r.last_name.toLowerCase().includes(term));
         }
 
-        return cumpleFechas && cumpleTexto;
+        return cumpleCert && cumpleEstado && cumpleFechas && cumpleTexto;
     });
 
     this.calcularMetricas(this.registrosFiltrados);
@@ -222,12 +240,8 @@ export class HistoryComponent implements OnInit {
       .subscribe({
         next: (data) => {
           this.histories = data;
+          this.cargarOpcionesFiltro();
           this.aplicarFiltros();
-
-          const estadosExtraidos = data
-                .map(r => r.status)
-                .filter(status => status !== null && status !== undefined && status.toString().trim() !== '');
-          this.estadosDisponibles = [...new Set(estadosExtraidos)];
 
           this.calcularMetricas(this.registrosFiltrados);
         },
