@@ -72,7 +72,12 @@ export class HistoryComponent implements OnInit {
     this.listaEstados = [...new Set(estados)].filter(e => e).sort();
   }
 
-  aplicarFiltrosAvanzados() {
+  aplicarFiltrosAvanzados(event?: Event) {
+    if (event instanceof Event) {
+        event.preventDefault();
+        event.stopPropagation();
+    }
+
     this.registrosFiltrados = this.histories.filter(record => {
       // 1. Filtro Cédula (Exacto)
       let coincideCedula = true;
