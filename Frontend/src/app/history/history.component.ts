@@ -116,7 +116,12 @@ export class HistoryComponent implements OnInit {
     this.cerrarFiltros();
   }
 
-  aplicarFiltros() {
+  aplicarFiltros(event?: Event) {
+    if (event instanceof Event) {
+        event.preventDefault();
+        event.stopPropagation();
+    }
+
     this.registrosFiltrados = this.histories.filter(r => {
         const cumpleCert = this.certSeleccionada ? (r.certification_name || r.certificacion) === this.certSeleccionada : true;
         const cumpleEstado = this.estadoSeleccionado ? r.status === this.estadoSeleccionado : true;
