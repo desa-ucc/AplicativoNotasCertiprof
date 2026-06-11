@@ -163,7 +163,6 @@ export class HistoryComponent implements OnInit {
     });
 
     this.calcularMetricas(this.registrosFiltrados);
-    console.log('Filtro Cert:', this.certSeleccionada, 'Filtrados:', this.registrosFiltrados.length);
   }
 
   async exportarExcel() {

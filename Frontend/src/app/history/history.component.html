@@ -164,14 +164,14 @@
           </div>
           <div>
             <label class="block font-label-md text-label-md text-on-surface-variant mb-1">Certificación</label>
-            <select [(ngModel)]="certSeleccionada" (ngModelChange)="aplicarFiltros($event)" class="block w-full rounded-lg bg-surface border border-outline-variant shadow-sm focus:border-primary focus:ring-1 focus:ring-primary sm:text-sm px-3 py-2 text-on-surface">
+            <select [ngModel]="certSeleccionada" (ngModelChange)="certSeleccionada = $event; aplicarFiltros()" class="block w-full rounded-lg bg-surface border border-outline-variant shadow-sm focus:border-primary focus:ring-1 focus:ring-primary sm:text-sm px-3 py-2 text-on-surface">
                 <option value="">Todas</option>
                 <option *ngFor="let cert of listaCertificaciones" [value]="cert">{{ cert }}</option>
             </select>
           </div>
           <div>
               <label class="block font-label-md text-label-md text-on-surface-variant mb-1">Estado</label>
-              <select [(ngModel)]="estadoSeleccionado" (ngModelChange)="aplicarFiltros($event)" class="block w-full rounded-lg bg-surface border border-outline-variant shadow-sm focus:border-primary focus:ring-1 focus:ring-primary sm:text-sm px-3 py-2 text-on-surface">
+              <select [ngModel]="estadoSeleccionado" (ngModelChange)="estadoSeleccionado = $event; aplicarFiltros()" class="block w-full rounded-lg bg-surface border border-outline-variant shadow-sm focus:border-primary focus:ring-1 focus:ring-primary sm:text-sm px-3 py-2 text-on-surface">
                   <option value="">Todos</option>
                   <option *ngFor="let estado of listaEstados" [value]="estado">{{ estado }}</option>
               </select>
