@@ -148,12 +148,12 @@ export class HistoryComponent implements OnInit {
 
     worksheet.columns = [
         { header: 'CÉDULA', key: 'cedula', width: 15 },
+        { header: 'EMAIL', key: 'email', width: 35 },
         { header: 'USUARIO', key: 'estudiante', width: 35 },
         { header: 'CERTIFICACIÓN', key: 'certificacion', width: 45 },
         { header: 'NOTA', key: 'nota', width: 10 },
         { header: 'ESTADO', key: 'estado', width: 15 },
-        { header: 'FECHA', key: 'fecha', width: 15 },
-        { header: 'EMAIL', key: 'email', width: 35 }
+        { header: 'FECHA', key: 'fecha', width: 15 }
     ];
 
     // Estilo del Encabezado: Verde Institucional (#76BC21)
@@ -173,12 +173,12 @@ export class HistoryComponent implements OnInit {
     this.registrosFiltrados.forEach(r => {
         const row = worksheet.addRow({
             cedula: r.cedula,
+            email: r.email,
             estudiante: `${r.first_name} ${r.last_name}`,
             certificacion: r.certification_name || r.certificacion,
             nota: r.percentage || r.nota,
             estado: r.status,
-            fecha: r.created_at ? new Date(r.created_at).toLocaleDateString() : '',
-            email: r.email
+            fecha: r.created_at ? new Date(r.created_at).toLocaleDateString() : ''
         });
 
         // Bordes para todas las celdas
