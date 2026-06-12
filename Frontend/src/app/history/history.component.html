@@ -84,70 +84,47 @@
       </table>
       </div>
     </div>
-    <div class="flex items-center justify-between p-4 border-t border-gray-200 bg-white rounded-b-xl">
-    <div class="flex items-center gap-4 text-sm text-gray-500">
+    <div class="flex flex-col md:flex-row items-center justify-between gap-4 p-4 border-t border-gray-200 bg-white rounded-b-xl w-full">
+
+    <div class="flex flex-col sm:flex-row items-center gap-3 text-sm text-gray-500 w-full md:w-auto text-center sm:text-left">
         <div class="flex items-center gap-2">
-            <span>Mostrar</span>
+            <span class="font-medium">Mostrar</span>
             <select [(ngModel)]="itemsPorPagina" (ngModelChange)="cambiarItemsPorPagina()"
-                    class="border border-gray-300 rounded px-2 py-1 focus:ring-2 focus:ring-[#006971] outline-none cursor-pointer">
-                <option *ngFor="let opcion of opcionesPorPagina" [value]="opcion">
-                    {{ opcion }}
-                </option>
+                    class="border border-gray-300 rounded-lg px-2 py-1 focus:ring-2 focus:ring-[#006971] outline-none cursor-pointer bg-white">
+                <option *ngFor="let opcion of opcionesPorPagina" [value]="opcion">{{ opcion }}</option>
             </select>
-            <span>registros</span>
+            <span class="font-medium">registros</span>
         </div>
+        <span class="hidden sm:inline-block text-gray-300">|</span>
         <span>
             Mostrando {{ registrosFiltrados.length > 0 ? ((paginaActual - 1) * itemsPorPagina) + 1 : 0 }}
             al {{ (paginaActual * itemsPorPagina) > registrosFiltrados.length ? registrosFiltrados.length : (paginaActual * itemsPorPagina) }}
-            de {{ registrosFiltrados.length }} totales
+            de <span class="font-bold">{{ registrosFiltrados.length }}</span> totales
         </span>
     </div>
 
-    <div class="flex items-center gap-2">
-        <button class="w-10 h-10 flex items-center justify-center rounded-lg border border-outline-variant text-on-surface-variant hover:bg-surface-container-low transition-colors disabled:opacity-50 disabled:cursor-not-allowed" [disabled]="paginaActual === 1" (click)="paginaActual = paginaActual - 1">
-          <span class="material-symbols-outlined text-[20px]" style="font-variation-settings: 'FILL' 0;">chevron_left</span>
+    <div class="flex items-center gap-1 w-full md:w-auto justify-center md:justify-end">
+
+        <button (click)="paginaActual = paginaActual - 1" [disabled]="paginaActual === 1"
+                class="p-2 rounded-lg border border-gray-200 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
         </button>
-        <button class="w-10 h-10 flex items-center justify-center rounded-lg border border-transparent bg-primary-container text-on-primary-container font-label-md text-label-md font-semibold">{{paginaActual}}</button>
-        <button class="w-10 h-10 flex items-center justify-center rounded-lg border border-outline-variant text-on-surface-variant hover:bg-surface-container-low transition-colors disabled:opacity-50 disabled:cursor-not-allowed" [disabled]="(paginaActual * itemsPorPagina) >= registrosFiltrados.length" (click)="paginaActual = paginaActual + 1">
-          <span class="material-symbols-outlined text-[20px]" style="font-variation-settings: 'FILL' 0;">chevron_right</span>
+
+        <button *ngFor="let p of obtenerPaginas()" (click)="paginaActual = p"
+                [class.bg-[#006971]]="paginaActual === p"
+                [class.text-white]="paginaActual === p"
+                [class.border-[#006971]]="paginaActual === p"
+                class="px-3 py-1 rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors font-medium min-w-[32px]">
+            {{ p }}
         </button>
+
+        <button (click)="paginaActual = paginaActual + 1" [disabled]="(paginaActual * itemsPorPagina) >= registrosFiltrados.length"
+                class="p-2 rounded-lg border border-gray-200 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+        </button>
+
     </div>
 </div>
-  </div>
-
-  <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
-      <div class="bg-white p-6 rounded-xl border border-[#c1cab2]/20 shadow-[0px_4px_20px_rgba(0,61,76,0.08)]">
-          <div class="flex justify-between items-start mb-4">
-              <div class="p-3 bg-[#008B96]/10 rounded-lg text-[#008B96]">
-                  <span class="material-symbols-outlined">verified</span>
-              </div>
-          </div>
-          <h4 class="text-[20px] font-semibold text-[#1b1c1c]">Certificaciones Activas</h4>
-          <p class="text-[48px] font-bold text-[#1b1c1c] mt-1">{{ totalCertificaciones }}</p>
-      </div>
-      <div class="bg-white p-6 rounded-xl border border-[#c1cab2]/20 shadow-[0px_4px_20px_rgba(0,61,76,0.08)]">
-          <div class="flex justify-between items-start mb-4">
-              <div class="p-3 bg-[#006971]/10 rounded-lg text-[#006971]">
-                  <span class="material-symbols-outlined">groups</span>
-              </div>
-          </div>
-          <h4 class="text-[20px] font-semibold text-[#1b1c1c]">Usuarios Registrados</h4>
-          <p class="text-[48px] font-bold text-[#1b1c1c] mt-1">{{ usuariosRegistradosCount }}</p>
-      </div>
-      <div class="bg-white p-6 rounded-xl border border-[#c1cab2]/20 shadow-[0px_4px_20px_rgba(0,61,76,0.08)] relative overflow-hidden">
-          <div class="absolute top-0 right-0 w-32 h-32 bg-[#76BC21]/5 rounded-full -mr-10 -mt-10"></div>
-          <div class="flex justify-between items-start mb-4">
-              <div class="p-3 bg-[#76BC21]/10 rounded-lg text-[#76BC21]">
-                  <span class="material-symbols-outlined">speed</span>
-              </div>
-          </div>
-          <h4 class="text-[20px] font-semibold text-[#1b1c1c]">Tasa de Aprobación</h4>
-          <p class="text-[48px] font-bold text-[#1b1c1c] mt-1">{{ tasaAprobacion }}</p>
-      </div>
-  </div>
-
-</div>
-
 
 <!-- Filters Modal -->
 <div *ngIf="isFiltersModalOpen" class="relative z-50" aria-labelledby="modal-title" role="dialog" aria-modal="true">

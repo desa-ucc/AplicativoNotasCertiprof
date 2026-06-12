@@ -51,6 +51,12 @@ export class HistoryComponent implements OnInit {
       this.paginaActual = 1;
   }
 
+  obtenerPaginas(): number[] {
+    const totalPages = Math.ceil(this.registrosFiltrados.length / this.itemsPorPagina) || 1;
+    // Limit to displaying a reasonable number of pages, or just all of them for now as implicitly requested
+    return Array.from({length: totalPages}, (_, i) => i + 1);
+  }
+
 
   filtroAvanzado = {
     cedula: '',
