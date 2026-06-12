@@ -40,7 +40,7 @@
           </tr>
         </thead>
         <tbody class="divide-y divide-surface-container-highest bg-surface-container-lowest">
-          <tr *ngFor="let record of registrosFiltrados" class="hover:bg-surface-container/50 transition-colors group">
+          <tr *ngFor="let record of registrosPaginados" class="hover:bg-surface-container/50 transition-colors group">
             <td class="py-sm px-md font-code text-code text-on-surface">
               <span *ngIf="record.cedula && record.cedula !== 'No está dentro del registro'">{{ record.cedula }}</span>
               <span *ngIf="!record.cedula || record.cedula === 'No está dentro del registro'" class="text-error font-semibold text-[11px] uppercase tracking-wide">No Registrado</span>
@@ -84,19 +84,35 @@
       </table>
       </div>
     </div>
-    <!-- Pagination -->
-    <div class="p-md border-t border-surface-container-highest bg-surface-bright flex flex-wrap gap-2 items-center justify-between">
-      <span class="font-body-md text-body-md text-on-surface-variant">Mostrando {{ histories.length }} registros</span>
-      <div class="flex gap-xs">
-        <button class="p-1 rounded border border-outline-variant text-outline hover:bg-surface-container-low transition-colors disabled:opacity-50" disabled="">
-          <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">chevron_left</span>
-        </button>
-        <button class="px-3 py-1 rounded border border-primary-container bg-primary-container/10 text-primary font-label-md text-label-md font-bold">1</button>
-        <button class="p-1 rounded border border-outline-variant text-on-surface-variant hover:bg-surface-container-low transition-colors disabled:opacity-50" disabled>
-          <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">chevron_right</span>
-        </button>
-      </div>
+    <div class="flex items-center justify-between p-4 border-t border-gray-200 bg-white rounded-b-xl">
+    <div class="flex items-center gap-4 text-sm text-gray-500">
+        <div class="flex items-center gap-2">
+            <span>Mostrar</span>
+            <select [(ngModel)]="itemsPorPagina" (ngModelChange)="cambiarItemsPorPagina()"
+                    class="border border-gray-300 rounded px-2 py-1 focus:ring-2 focus:ring-[#006971] outline-none cursor-pointer">
+                <option *ngFor="let opcion of opcionesPorPagina" [value]="opcion">
+                    {{ opcion }}
+                </option>
+            </select>
+            <span>registros</span>
+        </div>
+        <span>
+            Mostrando {{ registrosFiltrados.length > 0 ? ((paginaActual - 1) * itemsPorPagina) + 1 : 0 }}
+            al {{ (paginaActual * itemsPorPagina) > registrosFiltrados.length ? registrosFiltrados.length : (paginaActual * itemsPorPagina) }}
+            de {{ registrosFiltrados.length }} totales
+        </span>
     </div>
+
+    <div class="flex items-center gap-2">
+        <button class="w-10 h-10 flex items-center justify-center rounded-lg border border-outline-variant text-on-surface-variant hover:bg-surface-container-low transition-colors disabled:opacity-50 disabled:cursor-not-allowed" [disabled]="paginaActual === 1" (click)="paginaActual = paginaActual - 1">
+          <span class="material-symbols-outlined text-[20px]" style="font-variation-settings: 'FILL' 0;">chevron_left</span>
+        </button>
+        <button class="w-10 h-10 flex items-center justify-center rounded-lg border border-transparent bg-primary-container text-on-primary-container font-label-md text-label-md font-semibold">{{paginaActual}}</button>
+        <button class="w-10 h-10 flex items-center justify-center rounded-lg border border-outline-variant text-on-surface-variant hover:bg-surface-container-low transition-colors disabled:opacity-50 disabled:cursor-not-allowed" [disabled]="(paginaActual * itemsPorPagina) >= registrosFiltrados.length" (click)="paginaActual = paginaActual + 1">
+          <span class="material-symbols-outlined text-[20px]" style="font-variation-settings: 'FILL' 0;">chevron_right</span>
+        </button>
+    </div>
+</div>
   </div>
 
   <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">

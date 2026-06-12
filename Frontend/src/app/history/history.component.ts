@@ -22,8 +22,18 @@ export class HistoryComponent implements OnInit {
 
   histories: any[] = [];
   registrosFiltrados: any[] = [];
-  fechaInicio: string = '';
-  fechaFin: string = '';
+
+  // Variables de estado para paginación
+  paginaActual: number = 1;
+  itemsPorPagina: number = 5; // Valor por defecto
+  opcionesPorPagina: number[] = [5, 10, 25, 50, 100];
+
+  // Getter para obtener solo los registros de la página actual
+  get registrosPaginados() {
+      const inicio = (this.paginaActual - 1) * this.itemsPorPagina;
+      const fin = inicio + this.itemsPorPagina;
+      return this.registrosFiltrados.slice(inicio, fin);
+  }
 
   listaCertificaciones: string[] = [];
   listaEstados: string[] = [];
@@ -34,6 +44,11 @@ export class HistoryComponent implements OnInit {
 
   cerrarFiltros() {
     this.isFiltersModalOpen = false;
+  }
+
+  // Método CRÍTICO: Resetear a la página 1 cuando el usuario cambia la cantidad de registros
+  cambiarItemsPorPagina() {
+      this.paginaActual = 1;
   }
 
 
@@ -55,6 +70,7 @@ export class HistoryComponent implements OnInit {
       estado: ''
     };
     this.aplicarFiltrosAvanzados();
+    this.paginaActual = 1;
   }
 
   cargarOpcionesFiltro() {
@@ -119,6 +135,7 @@ export class HistoryComponent implements OnInit {
     });
 
     this.calcularMetricas(this.registrosFiltrados);
+    this.paginaActual = 1;
     this.cerrarFiltros();
   }
 
