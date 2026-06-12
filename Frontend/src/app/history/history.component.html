@@ -10,7 +10,7 @@
     <div class="p-md border-b border-surface-container-highest flex flex-col sm:flex-row justify-between items-start sm:items-center gap-md bg-surface-bright">
       <div class="relative w-full sm:w-80">
         <span class="material-symbols-outlined absolute left-sm top-1/2 -translate-y-1/2 text-outline-variant" style="font-variation-settings: 'FILL' 0;">search</span>
-        <input [(ngModel)]="searchTerm" (input)="aplicarFiltros()" class="w-full bg-surface border border-outline-variant rounded-lg py-2 pl-10 pr-4 font-body-md text-body-md text-on-surface focus:outline-none focus:border-secondary focus:ring-1 focus:ring-secondary transition-colors" placeholder="Buscar por Cédula o Email..." type="text"/>
+        <input [(ngModel)]="searchTerm" (keyup.enter)="aplicarFiltros()" class="w-full bg-surface border border-outline-variant rounded-lg py-2 pl-10 pr-4 font-body-md text-body-md text-on-surface focus:outline-none focus:border-secondary focus:ring-1 focus:ring-secondary transition-colors" placeholder="Buscar por Cédula o Email..." type="text"/>
       </div>
       <div class="flex gap-sm w-full sm:w-auto">
         <button (click)="abrirFiltros()" class="flex items-center gap-xs px-4 py-2 border border-outline-variant rounded-lg text-on-surface-variant font-label-md text-label-md hover:bg-surface-container-low transition-colors">
@@ -164,14 +164,14 @@
           </div>
           <div>
             <label class="block font-label-md text-label-md text-on-surface-variant mb-1">Certificación</label>
-            <select [ngModel]="certSeleccionada" (ngModelChange)="certSeleccionada = $event; aplicarFiltros()" class="block w-full rounded-lg bg-surface border border-outline-variant shadow-sm focus:border-primary focus:ring-1 focus:ring-primary sm:text-sm px-3 py-2 text-on-surface">
+            <select [(ngModel)]="filtroAvanzado.certificacion" class="block w-full rounded-lg bg-surface border border-outline-variant shadow-sm focus:border-primary focus:ring-1 focus:ring-primary sm:text-sm px-3 py-2 text-on-surface">
                 <option value="">Todas</option>
                 <option *ngFor="let cert of listaCertificaciones" [value]="cert">{{ cert }}</option>
             </select>
           </div>
           <div>
               <label class="block font-label-md text-label-md text-on-surface-variant mb-1">Estado</label>
-              <select [ngModel]="estadoSeleccionado" (ngModelChange)="estadoSeleccionado = $event; aplicarFiltros()" class="block w-full rounded-lg bg-surface border border-outline-variant shadow-sm focus:border-primary focus:ring-1 focus:ring-primary sm:text-sm px-3 py-2 text-on-surface">
+              <select [(ngModel)]="filtroAvanzado.estado" class="block w-full rounded-lg bg-surface border border-outline-variant shadow-sm focus:border-primary focus:ring-1 focus:ring-primary sm:text-sm px-3 py-2 text-on-surface">
                   <option value="">Todos</option>
                   <option *ngFor="let estado of listaEstados" [value]="estado">{{ estado }}</option>
               </select>
@@ -179,9 +179,10 @@
         </div>
 
         <div class="bg-surface-container px-6 py-4 flex justify-between items-center rounded-b-2xl border-t border-surface-container-highest">
-            <button (click)="limpiarFiltros()" class="px-4 py-2 text-[#006971] font-bold hover:bg-[#006971]/10 rounded-lg transition-all text-sm">Limpiar</button>
+            <button type="button" (click)="limpiarFiltros($event)" class="px-4 py-2 text-[#006971] font-bold hover:bg-[#006971]/10 rounded-lg transition-all text-sm">Limpiar</button>
             <div class="flex gap-2">
                 <button type="button" (click)="cerrarFiltros()" class="inline-flex justify-center rounded-lg border border-outline-variant bg-surface-container-lowest px-4 py-2 text-sm font-medium text-on-surface-variant shadow-sm hover:bg-surface-container-low transition-colors">Cancelar</button>
+                <button type="button" (click)="aplicarFiltrosAvanzados($event)" class="inline-flex justify-center rounded-lg border border-transparent bg-[#76bc21] px-4 py-2 text-sm font-bold text-white shadow-sm hover:bg-[#65a31c] transition-colors">Aplicar Filtros</button>
             </div>
         </div>
 
