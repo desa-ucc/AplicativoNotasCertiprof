@@ -164,11 +164,20 @@ namespace Backend.Services
                     var paramFecha = command.CreateParameter(); paramFecha.ParameterName = "@CreatedAt";
                     DateTime fechaExcel;
                     string fechaString = rec.created_at ?? "";
-                    if (!DateTime.TryParseExact(fechaString, "dd/MM/yyyy HH:mm:ss", CultureInfo.InvariantCulture, DateTimeStyles.None, out fechaExcel))
+
+                    if (double.TryParse(fechaString, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out double fechaNumerica))
                     {
-                        if (!DateTime.TryParseExact(fechaString, "dd/MM/yyyy HH:mm", CultureInfo.InvariantCulture, DateTimeStyles.None, out fechaExcel)) fechaExcel = DateTime.Now;
+                        paramFecha.Value = DateTime.FromOADate(fechaNumerica);
                     }
-                    paramFecha.Value = fechaExcel; command.Parameters.Add(paramFecha);
+                    else if (DateTime.TryParse(fechaString, System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.None, out fechaExcel))
+                    {
+                        paramFecha.Value = fechaExcel;
+                    }
+                    else
+                    {
+                        paramFecha.Value = DBNull.Value; // Dejar que SQL o el sistema decida (o nulo)
+                    }
+                    command.Parameters.Add(paramFecha);
 
                     var result = await command.ExecuteScalarAsync();
                     if (result != null && result.ToString() == "SIN_CEDULA") fallidos++;
