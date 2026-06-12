@@ -72,12 +72,7 @@ export class HistoryComponent implements OnInit {
     this.listaEstados = [...new Set(estados)].filter(e => e).sort();
   }
 
-  aplicarFiltrosAvanzados(event?: Event) {
-    if (event instanceof Event) {
-        event.preventDefault();
-        event.stopPropagation();
-    }
-
+  aplicarFiltrosAvanzados() {
     this.registrosFiltrados = this.histories.filter(record => {
       // 1. Filtro Cédula (Exacto)
       let coincideCedula = true;
@@ -121,20 +116,16 @@ export class HistoryComponent implements OnInit {
     this.cerrarFiltros();
   }
 
-  aplicarFiltros(event?: Event) {
-    if (event instanceof Event) {
-        event.preventDefault();
-        event.stopPropagation();
-    }
-
+  aplicarFiltros() {
+    console.log('Filtrando con:', this.certSeleccionada, this.estadoSeleccionado);
     this.registrosFiltrados = this.histories.filter(r => {
         const certRegistro = (r.certification_name || r.certificacion || '').toString().trim().toLowerCase();
         const certFiltro = (this.certSeleccionada || '').toString().trim().toLowerCase();
-        const cumpleCert = this.certSeleccionada ? certRegistro === certFiltro : true;
+        const cumpleCert = !this.certSeleccionada || certRegistro === certFiltro;
 
         const estadoRegistro = (r.status || '').toString().trim().toLowerCase();
         const estadoFiltro = (this.estadoSeleccionado || '').toString().trim().toLowerCase();
-        const cumpleEstado = this.estadoSeleccionado ? estadoRegistro === estadoFiltro : true;
+        const cumpleEstado = !this.estadoSeleccionado || estadoRegistro === estadoFiltro;
 
         const rawDate = r.created_at || r.fecha;
         if (!rawDate && (this.fechaInicio || this.fechaFin)) return false;
@@ -142,7 +133,7 @@ export class HistoryComponent implements OnInit {
         // 1. EXTRACCIÓN PURA DE STRING (Bypass total de zonas horarias)
         // Si el backend manda "2026-03-06T18:01:05.000Z" o "2026-03-06 18:01:05"
         // Esto lo corta y nos deja estrictamente con "2026-03-06"
-        const fechaNormalizada = rawDate.toString().replace('T', ' ').split(' ')[0];
+        const fechaNormalizada = rawDate ? rawDate.toString().replace('T', ' ').split(' ')[0] : '';
 
         // 2. Comparación Alfanumérica Directa (Bulletproof)
         let cumpleFechas = true;
@@ -158,17 +149,13 @@ export class HistoryComponent implements OnInit {
         let cumpleTexto = true;
         if (this.searchTerm) {
             const term = this.searchTerm.toLowerCase();
-            cumpleTexto = (r.email && r.email.toLowerCase().includes(term)) ||
-                          (r.cedula && r.cedula.includes(term)) ||
-                          (r.first_name && r.first_name.toLowerCase().includes(term)) ||
-                          (r.last_name && r.last_name.toLowerCase().includes(term));
+            cumpleTexto = (r.email?.toLowerCase().includes(term)) || (r.cedula?.includes(term));
         }
 
         return cumpleCert && cumpleEstado && cumpleFechas && cumpleTexto;
     });
 
     this.calcularMetricas(this.registrosFiltrados);
-    console.log('Filtro Cert:', this.certSeleccionada, 'Filtrados:', this.registrosFiltrados.length);
   }
 
   async exportarExcel() {
@@ -258,6 +245,11 @@ export class HistoryComponent implements OnInit {
           this.histories = data;
           this.cargarOpcionesFiltro();
           this.aplicarFiltros();
+
+          const estadosExtraidos = data
+                .map(r => r.status)
+                .filter(status => status !== null && status !== undefined && status.toString().trim() !== '');
+          this.estadosDisponibles = [...new Set(estadosExtraidos)];
 
           this.calcularMetricas(this.registrosFiltrados);
         },
