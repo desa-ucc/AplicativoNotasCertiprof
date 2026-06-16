@@ -22,7 +22,7 @@ namespace Backend.Controllers
             _fileProcessingService = fileProcessingService;
         }
 
-        [Authorize(Policy = "AdminPolicy")]
+        [Authorize(Roles = "Administrador,Docente")]
         [HttpPost("process-report")]
         public async Task<IActionResult> ProcessReport(IFormFile file)
         {
@@ -31,9 +31,9 @@ namespace Backend.Controllers
                 // Retrieve user from token
                 var uploadedBy = User.Identity?.Name ?? "Unknown_User";
 
-                var uploadId = await _fileProcessingService.ProcessReportAsync(file, uploadedBy, string.Empty, string.Empty);
+                var result = await _fileProcessingService.ProcessReportAsync(file, uploadedBy, string.Empty, string.Empty);
 
-                return Ok(new { UploadId = uploadId });
+                return Ok(result);
             }
             catch (Exception ex)
             {
@@ -41,6 +41,7 @@ namespace Backend.Controllers
             }
         }
 
+        [Authorize(Roles = "Administrador,Docente")]
         [HttpGet("history")]
         public async Task<IActionResult> GetHistory([FromServices] Backend.Data.AppDbContext dbContext)
         {

@@ -77,12 +77,8 @@ export class CertiprofComponent {
         error: (err) => {
           this.isProcessing = false;
           console.error('Error processing file:', err);
-
-          let errorMsg = 'Error al procesar el archivo.';
-          if (err.error && err.error.message) {
-            errorMsg = `Error: ${err.error.message}`;
-          }
-          alert(errorMsg);
+          const mensaje = err.error?.message || err.error?.Message || 'Error desconocido al procesar el archivo.';
+          alert(mensaje);
         }
       });
   }
