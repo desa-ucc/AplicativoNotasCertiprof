@@ -17,6 +17,7 @@ namespace Backend.Models
 
         public int ProcessedRecordsCount { get; set; }
 
+        [System.ComponentModel.DataAnnotations.Schema.NotMapped]
         public ICollection<CertiprofRecord> Records { get; set; } = new List<CertiprofRecord>();
     }
 }

@@ -13,6 +13,7 @@ namespace Backend.Services
 
     public interface IFileProcessingService
     {
+        Task<IEnumerable<object>> ParseFileForPreviewAsync(IFormFile file);
         Task<int> ProcessReportAsync(IFormFile file, string uploadedBy, string courseCode, string certificationName);
         Task<ProcessResult> GenerateAvatarActAsync(int uploadId);
     }

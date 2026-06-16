@@ -1,3 +1,4 @@
+import { SecurityComponent } from './security/security.component';
 import { Routes } from '@angular/router';
 import { LoginComponent } from './login/login.component';
 import { CertiprofComponent } from './certiprof/certiprof.component';
@@ -8,5 +9,6 @@ export const routes: Routes = [
   { path: 'login', component: LoginComponent },
   { path: 'upload', component: CertiprofComponent, canActivate: [authGuard] },
   { path: 'history', component: HistoryComponent, canActivate: [authGuard] },
+  { path: 'security', component: SecurityComponent, canActivate: [authGuard] },
   { path: '', redirectTo: '/login', pathMatch: 'full' }
 ];

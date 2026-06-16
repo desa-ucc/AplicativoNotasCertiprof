@@ -4,6 +4,7 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
 import * as Papa from 'papaparse';
 import { NgxChartsModule, Color, ScaleType, LegendPosition } from '@swimlane/ngx-charts';
 import { FormsModule } from '@angular/forms';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-certiprof',
@@ -18,26 +19,7 @@ export class CertiprofComponent {
   isDragging = false;
   isProcessing = false;
 
-  courseCode: string = '';
-  certificationName: string = '';
-  uploadId: number | null = null;
-
-  // Charts config
-  chartData: any[] = [];
-  view: [number, number] = [700, 400];
-  gradient: boolean = true;
-  showLegend: boolean = true;
-  legendPosition: LegendPosition = LegendPosition.Below;
-  showLabels: boolean = true;
-  isDoughnut: boolean = false;
-  colorScheme: Color = {
-    name: 'custom',
-    selectable: true,
-    group: ScaleType.Ordinal,
-    domain: ['#10B981', '#EF4444'] // Green for pass, Red for fail
-  };
-
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient, private router: Router) {}
 
   onDragOver(event: DragEvent) {
     event.preventDefault();
@@ -64,96 +46,43 @@ export class CertiprofComponent {
     }
   }
 
+  successMessage: string = '';
+
   handleFile(file: File) {
     this.selectedFile = file;
-
-    // Parse for preview
-    Papa.parse(file, {
-      header: true,
-      skipEmptyLines: true,
-      complete: (results) => {
-        this.previewData = results.data;
-        this.generateChartData(this.previewData);
-      }
-    });
-  }
-
-  generateChartData(data: any[]) {
-    let passCount = 0;
-    let failCount = 0;
-
-    data.forEach(row => {
-      // Assuming a grade logic, adjust as per real Certiprof data structure
-      const gradeStr = row.notas || row.Notas || row.Grade || '0';
-      const grade = parseFloat(gradeStr);
-      if (!isNaN(grade) && grade >= 60) {
-        passCount++;
-      } else {
-        failCount++;
-      }
-    });
-
-    this.chartData = [
-      { name: 'Aprobados', value: passCount },
-      { name: 'Reprobados', value: failCount }
-    ];
-  }
-
-  parseGrade(rawGrade: any): string {
-    const gradeStr = String(rawGrade || '0').trim();
-    const grade = parseFloat(gradeStr);
-    return isNaN(grade) ? '0' : grade.toString();
+    this.successMessage = '';
   }
 
   processFile() {
-    if (!this.selectedFile || !this.courseCode || !this.certificationName) return;
+    if (!this.selectedFile) return;
 
     this.isProcessing = true;
+    this.successMessage = '';
     const formData = new FormData();
     formData.append('file', this.selectedFile);
-    formData.append('courseCode', this.courseCode);
-    formData.append('certificationName', this.certificationName);
 
-    // Call backend API
-    this.http.post<any>('http://localhost:5000/api/certiprof/process-report', formData)
+    // Call backend API directly to process and save
+    this.http.post<any>('/api/certiprof/process-report', formData)
       .subscribe({
         next: (response) => {
           this.isProcessing = false;
-          this.uploadId = response.uploadId;
-          alert('Archivo procesado con éxito. Ahora puede generar el acta.');
+          this.selectedFile = null;
+          this.successMessage = 'Carga exitosa';
+
+          // Wait briefly to show the success message, then navigate to history
+          setTimeout(() => {
+            this.router.navigate(['/history']);
+          }, 1500);
         },
         error: (err) => {
           this.isProcessing = false;
           console.error('Error processing file:', err);
-          alert('Error processing file. See console for details.');
-        }
-      });
-  }
 
-  generateAvatarAct() {
-    if (!this.uploadId) return;
-
-    this.http.get(`http://localhost:5000/api/certiprof/export-avatar/${this.uploadId}`, { responseType: 'blob' })
-      .subscribe({
-        next: (response: Blob) => {
-          // Trigger download
-          const url = window.URL.createObjectURL(response);
-          const a = document.createElement('a');
-          a.href = url;
-          a.download = `Acta_Auxiliar_${this.courseCode}.xlsx`;
-          a.click();
-          window.URL.revokeObjectURL(url);
-
-          // Reset state after successful flow
-          this.selectedFile = null;
-          this.previewData = [];
-          this.uploadId = null;
-          this.courseCode = '';
-          this.certificationName = '';
-        },
-        error: (err) => {
-          console.error('Error generating act:', err);
-          alert('Error al generar el acta.');
+          let errorMsg = 'Error al procesar el archivo.';
+          if (err.error && err.error.message) {
+            errorMsg = `Error: ${err.error.message}`;
+          }
+          alert(errorMsg);
         }
       });
   }

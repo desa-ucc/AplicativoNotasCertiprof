@@ -17,7 +17,10 @@ namespace Backend.Data
         {
             base.OnModelCreating(modelBuilder);
 
-            // Any specific model configuration can go here
+            // Mapping entities to tables with the `cert_` prefix
+            modelBuilder.Entity<CertiprofRecord>().ToTable("cert_registros");
+            modelBuilder.Entity<UploadHistory>().ToTable("cert_UploadHistories");
+            modelBuilder.Entity<User>().ToTable("cert_users");
         }
     }
 }

@@ -17,5 +17,8 @@ namespace Backend.Models
         [Required]
         [MaxLength(50)]
         public string Role { get; set; } = string.Empty; // e.g. "Admin", "Docente"
+
+        public string? Email { get; set; }
+        public string? Cedula { get; set; }
     }
 }
