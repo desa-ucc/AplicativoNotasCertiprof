@@ -22,13 +22,21 @@ export class HistoryComponent implements OnInit {
 
   histories: any[] = [];
   registrosFiltrados: any[] = [];
-  fechaInicio: string = '';
-  fechaFin: string = '';
+
+  // Variables de estado para paginación
+  paginaActual: number = 1;
+  itemsPorPagina: number = 5; // Valor por defecto
+  opcionesPorPagina: number[] = [5, 10, 25, 50, 100];
+
+  // Getter para obtener solo los registros de la página actual
+  get registrosPaginados() {
+      const inicio = (this.paginaActual - 1) * this.itemsPorPagina;
+      const fin = inicio + this.itemsPorPagina;
+      return this.registrosFiltrados.slice(inicio, fin);
+  }
 
   listaCertificaciones: string[] = [];
   listaEstados: string[] = [];
-  certSeleccionada: string = '';
-  estadoSeleccionado: string = '';
 
   abrirFiltros() {
     this.isFiltersModalOpen = true;
@@ -36,6 +44,17 @@ export class HistoryComponent implements OnInit {
 
   cerrarFiltros() {
     this.isFiltersModalOpen = false;
+  }
+
+  // Método CRÍTICO: Resetear a la página 1 cuando el usuario cambia la cantidad de registros
+  cambiarItemsPorPagina() {
+      this.paginaActual = 1;
+  }
+
+  obtenerPaginas(): number[] {
+    const totalPages = Math.ceil(this.registrosFiltrados.length / this.itemsPorPagina) || 1;
+    // Limit to displaying a reasonable number of pages, or just all of them for now as implicitly requested
+    return Array.from({length: totalPages}, (_, i) => i + 1);
   }
 
 
@@ -47,7 +66,8 @@ export class HistoryComponent implements OnInit {
     estado: ''
   };
 
-  limpiarFiltros() {
+  limpiarFiltros(event?: Event) {
+    if (event) event.preventDefault();
     this.filtroAvanzado = {
       cedula: '',
       fechaInicio: '',
@@ -55,11 +75,8 @@ export class HistoryComponent implements OnInit {
       certificacion: '',
       estado: ''
     };
-    this.searchTerm = '';
-    this.fechaInicio = '';
-    this.fechaFin = '';
-    this.aplicarFiltros();
-    this.cerrarFiltros();
+    this.aplicarFiltrosAvanzados();
+    this.paginaActual = 1;
   }
 
   cargarOpcionesFiltro() {
@@ -72,7 +89,8 @@ export class HistoryComponent implements OnInit {
     this.listaEstados = [...new Set(estados)].filter(e => e).sort();
   }
 
-  aplicarFiltrosAvanzados() {
+  aplicarFiltrosAvanzados(event?: Event) {
+    if (event) event.preventDefault();
     this.registrosFiltrados = this.histories.filter(record => {
       // 1. Filtro Cédula (Exacto)
       let coincideCedula = true;
@@ -98,64 +116,37 @@ export class HistoryComponent implements OnInit {
 
       // 4. Filtro Fechas
       let coincideFechas = true;
-      if (this.filtroAvanzado.fechaInicio && record.created_at) {
-         const recordDate = new Date(record.created_at).getTime();
-         const startDate = new Date(this.filtroAvanzado.fechaInicio).getTime();
-         if (recordDate < startDate) coincideFechas = false;
-      }
-      if (this.filtroAvanzado.fechaFin && record.created_at) {
-         const recordDate = new Date(record.created_at).getTime();
-         const endDate = new Date(this.filtroAvanzado.fechaFin).getTime() + 86400000;
-         if (recordDate >= endDate) coincideFechas = false;
+      const rawDate = record.created_at || record.fecha;
+      if (!rawDate && (this.filtroAvanzado.fechaInicio || this.filtroAvanzado.fechaFin)) {
+        coincideFechas = false;
+      } else if (rawDate) {
+        const fechaNormalizada = rawDate.toString().replace('T', ' ').split(' ')[0];
+        if (this.filtroAvanzado.fechaInicio && this.filtroAvanzado.fechaFin) {
+          coincideFechas = fechaNormalizada >= this.filtroAvanzado.fechaInicio && fechaNormalizada <= this.filtroAvanzado.fechaFin;
+        } else if (this.filtroAvanzado.fechaInicio) {
+          coincideFechas = fechaNormalizada >= this.filtroAvanzado.fechaInicio;
+        } else if (this.filtroAvanzado.fechaFin) {
+          coincideFechas = fechaNormalizada <= this.filtroAvanzado.fechaFin;
+        }
       }
 
-      return coincideCedula && coincideCert && coincideEstado && coincideFechas;
+      // 5. Búsqueda por texto general
+      let coincideTexto = true;
+      if (this.searchTerm) {
+          const term = this.searchTerm.toLowerCase();
+          coincideTexto = (record.email?.toLowerCase().includes(term)) || (record.cedula?.includes(term));
+      }
+
+      return coincideCedula && coincideCert && coincideEstado && coincideFechas && coincideTexto;
     });
 
     this.calcularMetricas(this.registrosFiltrados);
+    this.paginaActual = 1;
     this.cerrarFiltros();
   }
 
   aplicarFiltros() {
-    console.log('Filtrando con:', this.certSeleccionada, this.estadoSeleccionado);
-    this.registrosFiltrados = this.histories.filter(r => {
-        const certRegistro = (r.certification_name || r.certificacion || '').toString().trim().toLowerCase();
-        const certFiltro = (this.certSeleccionada || '').toString().trim().toLowerCase();
-        const cumpleCert = !this.certSeleccionada || certRegistro === certFiltro;
-
-        const estadoRegistro = (r.status || '').toString().trim().toLowerCase();
-        const estadoFiltro = (this.estadoSeleccionado || '').toString().trim().toLowerCase();
-        const cumpleEstado = !this.estadoSeleccionado || estadoRegistro === estadoFiltro;
-
-        const rawDate = r.created_at || r.fecha;
-        if (!rawDate && (this.fechaInicio || this.fechaFin)) return false;
-
-        // 1. EXTRACCIÓN PURA DE STRING (Bypass total de zonas horarias)
-        // Si el backend manda "2026-03-06T18:01:05.000Z" o "2026-03-06 18:01:05"
-        // Esto lo corta y nos deja estrictamente con "2026-03-06"
-        const fechaNormalizada = rawDate ? rawDate.toString().replace('T', ' ').split(' ')[0] : '';
-
-        // 2. Comparación Alfanumérica Directa (Bulletproof)
-        let cumpleFechas = true;
-        if (this.fechaInicio && this.fechaFin) {
-            cumpleFechas = fechaNormalizada >= this.fechaInicio && fechaNormalizada <= this.fechaFin;
-        } else if (this.fechaInicio) {
-            cumpleFechas = fechaNormalizada >= this.fechaInicio;
-        } else if (this.fechaFin) {
-            cumpleFechas = fechaNormalizada <= this.fechaFin;
-        }
-
-        // 3. Búsqueda por texto
-        let cumpleTexto = true;
-        if (this.searchTerm) {
-            const term = this.searchTerm.toLowerCase();
-            cumpleTexto = (r.email?.toLowerCase().includes(term)) || (r.cedula?.includes(term));
-        }
-
-        return cumpleCert && cumpleEstado && cumpleFechas && cumpleTexto;
-    });
-
-    this.calcularMetricas(this.registrosFiltrados);
+    this.aplicarFiltrosAvanzados();
   }
 
   async exportarExcel() {
