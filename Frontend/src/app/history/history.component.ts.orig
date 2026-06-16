@@ -58,8 +58,6 @@ export class HistoryComponent implements OnInit {
     this.searchTerm = '';
     this.fechaInicio = '';
     this.fechaFin = '';
-    this.certSeleccionada = '';
-    this.estadoSeleccionado = '';
     this.aplicarFiltros();
     this.cerrarFiltros();
   }
