@@ -22,6 +22,8 @@ export class HistoryComponent implements OnInit {
 
   histories: any[] = [];
   registrosFiltrados: any[] = [];
+  fechaInicio: string = '';
+  fechaFin: string = '';
 
   abrirFiltros() {
     this.isFiltersModalOpen = true;
@@ -49,8 +51,9 @@ export class HistoryComponent implements OnInit {
       estado: ''
     };
     this.searchTerm = '';
-    this.registrosFiltrados = [...this.histories];
-    this.calcularMetricas(this.registrosFiltrados);
+    this.fechaInicio = '';
+    this.fechaFin = '';
+    this.aplicarFiltros();
     this.cerrarFiltros();
   }
 
@@ -99,18 +102,39 @@ export class HistoryComponent implements OnInit {
   }
 
   aplicarFiltros() {
-    if (!this.searchTerm.trim()) {
-      this.registrosFiltrados = [...this.histories];
-      return;
-    }
+    this.registrosFiltrados = this.histories.filter(r => {
+        const rawDate = r.created_at || r.fecha;
+        if (!rawDate) return false;
 
-    const searchLower = this.searchTerm.toLowerCase();
-    this.registrosFiltrados = this.histories.filter(record =>
-      (record.cedula && record.cedula.toLowerCase().includes(searchLower)) ||
-      (record.email && record.email.toLowerCase().includes(searchLower)) ||
-      (record.first_name && record.first_name.toLowerCase().includes(searchLower)) ||
-      (record.last_name && record.last_name.toLowerCase().includes(searchLower))
-    );
+        // 1. EXTRACCIÓN PURA DE STRING (Bypass total de zonas horarias)
+        // Si el backend manda "2026-03-06T18:01:05.000Z" o "2026-03-06 18:01:05"
+        // Esto lo corta y nos deja estrictamente con "2026-03-06"
+        const fechaNormalizada = rawDate.toString().replace('T', ' ').split(' ')[0];
+
+        // 2. Comparación Alfanumérica Directa (Bulletproof)
+        let cumpleFechas = true;
+        if (this.fechaInicio && this.fechaFin) {
+            cumpleFechas = fechaNormalizada >= this.fechaInicio && fechaNormalizada <= this.fechaFin;
+        } else if (this.fechaInicio) {
+            cumpleFechas = fechaNormalizada >= this.fechaInicio;
+        } else if (this.fechaFin) {
+            cumpleFechas = fechaNormalizada <= this.fechaFin;
+        }
+
+        // 3. Búsqueda por texto
+        let cumpleTexto = true;
+        if (this.searchTerm) {
+            const term = this.searchTerm.toLowerCase();
+            cumpleTexto = (r.email && r.email.toLowerCase().includes(term)) ||
+                          (r.cedula && r.cedula.includes(term)) ||
+                          (r.first_name && r.first_name.toLowerCase().includes(term)) ||
+                          (r.last_name && r.last_name.toLowerCase().includes(term));
+        }
+
+        return cumpleFechas && cumpleTexto;
+    });
+
+    this.calcularMetricas(this.registrosFiltrados);
   }
 
   async exportarExcel() {
@@ -198,7 +222,7 @@ export class HistoryComponent implements OnInit {
       .subscribe({
         next: (data) => {
           this.histories = data;
-          this.registrosFiltrados = [...data];
+          this.aplicarFiltros();
 
           const estadosExtraidos = data
                 .map(r => r.status)
