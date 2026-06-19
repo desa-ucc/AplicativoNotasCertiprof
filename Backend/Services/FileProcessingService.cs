@@ -108,7 +108,17 @@ namespace Backend.Services
                     for (int i = 1; i <= lastCol; i++)
                     {
                         var header = headers[i - 1];
-                        dict[header] = row.Cell(i).Value.ToString();
+                        var cell = row.Cell(i);
+                        
+                        // Validamos si Excel sabe que es una fecha pura
+                        if (cell.DataType == ClosedXML.Excel.XLDataType.DateTime)
+                        {
+                            dict[header] = cell.GetDateTime().ToString("dd/MM/yyyy", CultureInfo.InvariantCulture);
+                        }
+                        else
+                        {
+                            dict[header] = cell.Value.ToString();
+                        }
                     }
 
                     // Validación 2: Email vacio
@@ -169,13 +179,14 @@ namespace Backend.Services
                     {
                         paramFecha.Value = DateTime.FromOADate(fechaNumerica);
                     }
-                    else if (DateTime.TryParse(fechaString, System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.None, out fechaExcel))
+                    else if (DateTime.TryParseExact(fechaString, new[] { "dd/MM/yyyy", "d/M/yyyy", "dd-MM-yyyy", "dd/MM/yyyy H:mm", "dd/MM/yyyy HH:mm:ss" }, System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.None, out fechaExcel))
                     {
+                        // Solo usamos nuestra validación estricta LATAM
                         paramFecha.Value = fechaExcel;
                     }
                     else
                     {
-                        paramFecha.Value = DBNull.Value; // Dejar que SQL o el sistema decida (o nulo)
+                        paramFecha.Value = DBNull.Value; 
                     }
                     command.Parameters.Add(paramFecha);
 
