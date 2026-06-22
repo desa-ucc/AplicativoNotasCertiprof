@@ -11,13 +11,7 @@ export const authGuard: CanActivateFn = (route: ActivatedRouteSnapshot, state: R
     return false;
   }
 
-  let targetPath = '/';
-  if (route.url.length > 0) {
-      targetPath = '/' + route.url.map(segment => segment.path).join('/');
-  } else if (state.url) {
-      targetPath = state.url.split('?')[0]; // fallback to state url if route url is empty
-  }
-
+  const targetPath = '/' + route.url.join('/');
   if (targetPath === '/login' || targetPath === '/') {
       return true;
   }
