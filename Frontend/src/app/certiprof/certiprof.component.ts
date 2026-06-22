@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import * as Papa from 'papaparse';
@@ -13,17 +13,28 @@ import { Router } from '@angular/router';
   templateUrl: './certiprof.component.html',
   styleUrls: ['./certiprof.component.css']
 })
-export class CertiprofComponent {
+export class CertiprofComponent implements OnInit {
   selectedFile: File | null = null;
   previewData: any[] = [];
   isDragging = false;
   isProcessing = false;
-  mostrarModalResultados: boolean = false;
-  esErrorFatal: boolean = false;
-  mensajeErrorFatal: string = '';
-  resultadosCarga = { exitosos: 0, fallidos: 0, total: 0 };
 
   constructor(private http: HttpClient, private router: Router) {}
+
+  ngOnInit() {
+    this.obtenerUltimaActualizacion();
+  }
+
+  obtenerUltimaActualizacion() {
+    this.http.get<any>('/api/certiprof/last-update').subscribe({
+      next: (res) => {
+        if (res.lastUpdateDate) {
+          this.fechaUltimaActualizacion = new Date(res.lastUpdateDate);
+        }
+      },
+      error: (err) => console.error('Error obteniendo la última fecha', err)
+    });
+  }
 
   onDragOver(event: DragEvent) {
     event.preventDefault();
@@ -68,31 +79,26 @@ export class CertiprofComponent {
     // Call backend API directly to process and save
     this.http.post<any>('/api/certiprof/process-report', formData)
       .subscribe({
-        next: (res: any) => {
+        next: (response) => {
           this.isProcessing = false;
-          this.resultadosCarga = {
-              exitosos: res.exitosos || res.successCount || 0,
-              fallidos: res.fallidos || res.errorCount || 0,
-              total: (res.exitosos || res.successCount || 0) + (res.fallidos || res.errorCount || 0)
-          };
-          this.esErrorFatal = false;
-          this.mostrarModalResultados = true;
           this.selectedFile = null;
+          this.successMessage = 'Carga exitosa';
+
+          // Wait briefly to show the success message, then navigate to history
+          setTimeout(() => {
+            this.router.navigate(['/history']);
+          }, 1500);
         },
-        error: (err: any) => {
+        error: (err) => {
           this.isProcessing = false;
-          this.esErrorFatal = true;
-          this.mensajeErrorFatal = err.error?.mensaje || err.error?.message || err.error?.Message || 'Error de conexión o formato no soportado.';
-          this.mostrarModalResultados = true;
-          this.selectedFile = null;
+          console.error('Error processing file:', err);
+
+          let errorMsg = 'Error al procesar el archivo.';
+          if (err.error && err.error.message) {
+            errorMsg = `Error: ${err.error.message}`;
+          }
+          alert(errorMsg);
         }
       });
-  }
-
-  cerrarModalResultados() {
-    this.mostrarModalResultados = false;
-    if (!this.esErrorFatal) {
-      this.router.navigate(['/history']);
-    }
   }
 }
