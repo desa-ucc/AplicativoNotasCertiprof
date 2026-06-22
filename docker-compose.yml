@@ -11,8 +11,7 @@ services:
     environment:
       - ConnectionStrings__DefaultConnection=Server=172.29.99.8;Database=CERTIFICACIONES_BD;User Id=app_certificaciones;Password=642NcRgNYBs6FggU;TrustServerCertificate=True;MultipleActiveResultSets=true;
       - ASPNETCORE_ENVIRONMENT=Development
-      - JWT_SECRET_KEY=${JWT_SECRET_KEY:-ThisIsASecureFallbackKeyForDevelopmentOnly123456789!}
-      
+      - JWT_SECRET_KEY=${JWT_SECRET_KEY:-ThisIsASecureFallbackKeyForDevelopmentOnly123456789!}      
   frontend:
     build:
       context: ./Frontend
