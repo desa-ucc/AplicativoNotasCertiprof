@@ -38,6 +38,9 @@ namespace Backend.Models
         [Column("cert_created_at")]
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
+        [Column("updated_at")]
+        public DateTime? updated_at { get; set; }
+
         // Foreign key to upload history
         [NotMapped]
         public int UploadHistoryId { get; set; }

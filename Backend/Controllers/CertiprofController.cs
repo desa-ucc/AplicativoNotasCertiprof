@@ -177,6 +177,15 @@ namespace Backend.Controllers
             }
         }
 
+        [HttpGet("last-update")]
+        public async Task<IActionResult> GetLastUpdateDate([FromServices] Backend.Data.AppDbContext dbContext)
+        {
+            var lastUpdate = await dbContext.CertiprofRecords
+                .MaxAsync(r => r.updated_at);
+
+            return Ok(new { lastUpdateDate = lastUpdate });
+        }
+
         [HttpGet("export-avatar/{uploadId}")]
         public async Task<IActionResult> ExportAvatar(int uploadId)
         {
