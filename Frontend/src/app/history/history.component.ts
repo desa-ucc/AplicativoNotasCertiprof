@@ -256,11 +256,14 @@ export class HistoryComponent implements OnInit {
   isEditing = false;
   editRecord: any = null;
   userRole: string | null = null;
+  esAdministrador: boolean = false;
 
   constructor(private http: HttpClient) {}
 
   ngOnInit(): void {
     this.userRole = localStorage.getItem('role');
+    const rolActual = this.userRole;
+    this.esAdministrador = (rolActual === 'Administrador' || rolActual === 'Administrador Maestro');
     this.fetchHistory();
   }
 

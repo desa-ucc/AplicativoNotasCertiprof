@@ -84,11 +84,9 @@ namespace Backend.Controllers
                             last_name = reader.IsDBNull(reader.GetOrdinal("last_name")) ? null : reader.GetValue(reader.GetOrdinal("last_name")).ToString(),
                             percentage = percentageVal,
                             status = reader.IsDBNull(reader.GetOrdinal("status")) ? null : reader.GetValue(reader.GetOrdinal("status")).ToString(),
-                            created_at = reader.IsDBNull(reader.GetOrdinal("created_at")) ? (System.DateTime?)null : reader.GetDateTime(reader.GetOrdinal("created_at")),
-                            
-                            // INYECTA ESTA LÍNEA PARA MAPEAR LA NUEVA COLUMNA:
-                            updated_at = reader.IsDBNull(reader.GetOrdinal("updated_at")) ? (System.DateTime?)null : reader.GetDateTime(reader.GetOrdinal("updated_at"))
-                            });
+                            // Including created_at for frontend as requested
+                            created_at = reader.IsDBNull(reader.GetOrdinal("created_at")) ? (System.DateTime?)null : reader.GetDateTime(reader.GetOrdinal("created_at"))
+                        });
                     }
                 }
             }
@@ -112,7 +110,7 @@ namespace Backend.Controllers
             public string? CertificationName { get; set; }
         }
 
-        [Backend.Attributes.PermissionAuthorize("/upload")]
+        [Backend.Attributes.PermissionAuthorize("/security")]
         [HttpPost("edit")]
         public async Task<IActionResult> EditRecord([FromBody] EditRecordRequest request, [FromServices] Backend.Data.AppDbContext dbContext)
         {
@@ -147,7 +145,7 @@ namespace Backend.Controllers
         }
 
 
-        [Backend.Attributes.PermissionAuthorize("/upload")]
+        [Backend.Attributes.PermissionAuthorize("/security")]
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteRecord(int id, [FromServices] Backend.Data.AppDbContext dbContext)
         {
