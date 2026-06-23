@@ -84,9 +84,10 @@ namespace Backend.Controllers
                             last_name = reader.IsDBNull(reader.GetOrdinal("last_name")) ? null : reader.GetValue(reader.GetOrdinal("last_name")).ToString(),
                             percentage = percentageVal,
                             status = reader.IsDBNull(reader.GetOrdinal("status")) ? null : reader.GetValue(reader.GetOrdinal("status")).ToString(),
-                            // Including created_at for frontend as requested
-                            created_at = reader.IsDBNull(reader.GetOrdinal("created_at")) ? (System.DateTime?)null : reader.GetDateTime(reader.GetOrdinal("created_at"))
-                        });
+                            created_at = reader.IsDBNull(reader.GetOrdinal("created_at")) ? (System.DateTime?)null : reader.GetDateTime(reader.GetOrdinal("created_at")),
+                            
+                            updated_at = reader.IsDBNull(reader.GetOrdinal("updated_at")) ? (System.DateTime?)null : reader.GetDateTime(reader.GetOrdinal("updated_at"))
+                            });
                     }
                 }
             }
@@ -110,7 +111,7 @@ namespace Backend.Controllers
             public string? CertificationName { get; set; }
         }
 
-        [Backend.Attributes.PermissionAuthorize("/security")]
+        [Backend.Attributes.PermissionAuthorize("/upload")]
         [HttpPost("edit")]
         public async Task<IActionResult> EditRecord([FromBody] EditRecordRequest request, [FromServices] Backend.Data.AppDbContext dbContext)
         {
@@ -145,7 +146,7 @@ namespace Backend.Controllers
         }
 
 
-        [Backend.Attributes.PermissionAuthorize("/security")]
+        [Backend.Attributes.PermissionAuthorize("/upload")]
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteRecord(int id, [FromServices] Backend.Data.AppDbContext dbContext)
         {
