@@ -2,9 +2,9 @@
 <h2 class="text-headline-lg font-headline-lg text-on-background">Procesar Reporte de Certiprof</h2>
 <p class="text-body-lg font-body-lg text-on-surface-variant mt-xs">Sube tus archivos de reporte para su procesamiento y validación en el sistema.</p>
 <div *ngIf="fechaUltimaActualizacion" class="mt-4 flex items-center gap-2 text-sm text-[#006971] bg-[#006971]/10 px-3 py-2 rounded-lg w-fit border border-[#006971]/20">
-    <span class="material-symbols-outlined text-[18px]">update</span>
+    <span class="material-symbols-outlined text-[18px]" style="font-variation-settings: 'FILL' 1;">update</span>
     <span class="font-medium">Última actualización de datos:</span>
-    <span class="font-bold">{{ fechaUltimaActualizacion | date:'EEEE dd/MM/yyyy, h:mm a' }}</span>
+    <span class="font-bold">{{ fechaUltimaActualizacion | date:'EEEE dd/MM/yyyy, h:mm a':'UTC' }}</span>
 </div>
 
 <div *ngIf="!fechaUltimaActualizacion" class="mt-4 flex items-center gap-2 text-sm text-outline-variant bg-surface-container-low px-3 py-2 rounded-lg w-fit border border-outline-variant/20">

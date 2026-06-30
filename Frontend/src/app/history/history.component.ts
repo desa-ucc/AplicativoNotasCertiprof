@@ -229,6 +229,19 @@ export class HistoryComponent implements OnInit {
 
   estadosDisponibles: string[] = [];
 
+  obtenerUltimaActualizacion() {
+    this.http.get<any>('/api/certiprof/last-update').subscribe({
+        next: (res) => {
+            if (res.lastUpdateDate) {
+                // Forzamos el parseo agregando 'Z' para manejarlo como tiempo absoluto
+                let cleanDate = res.lastUpdateDate.endsWith('Z') ? res.lastUpdateDate : res.lastUpdateDate + 'Z';
+                this.fechaUltimaActualizacion = new Date(cleanDate);
+            }
+        },
+        error: (err) => console.error('Error obteniendo la última fecha', err)
+    });
+  }
+
   fetchHistory() {
     this.http.get<any[]>('/api/certiprof/history')
       .subscribe({
@@ -253,6 +266,7 @@ export class HistoryComponent implements OnInit {
       });
   }
 
+  fechaUltimaActualizacion: Date | null = null;
   isEditing = false;
   editRecord: any = null;
   userRole: string | null = null;
@@ -261,6 +275,7 @@ export class HistoryComponent implements OnInit {
   constructor(private http: HttpClient) {}
 
   ngOnInit(): void {
+    this.obtenerUltimaActualizacion();
     this.userRole = localStorage.getItem('role');
     const rolActual = this.userRole;
     this.esAdministrador = (rolActual === 'Administrador' || rolActual === 'Administrador Maestro');

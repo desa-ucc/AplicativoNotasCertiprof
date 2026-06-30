@@ -4,6 +4,13 @@
     <h2 class="font-headline-lg text-headline-lg text-on-background mb-xs">Historial de Cargas</h2>
     <p class="font-body-lg text-body-lg text-on-surface-variant">Un registro de todas las certificaciones procesadas en el sistema.</p>
   </div>
+
+  <!-- Indicador de Última Actualización en Historial -->
+  <div *ngIf="fechaUltimaActualizacion" class="mt-2 mb-4 flex items-center gap-2 text-sm text-[#006971] bg-[#006971]/10 px-3 py-2 rounded-lg w-fit border border-[#006971]/20">
+      <span class="material-symbols-outlined text-[18px]" style="font-variation-settings: 'FILL' 1;">update</span>
+      <span class="font-medium">Última actualización de datos:</span>
+      <span class="font-bold">{{ fechaUltimaActualizacion | date:'EEEE dd/MM/yyyy, h:mm a':'UTC' }}</span>
+  </div>
   <!-- Data Table Card -->
   <div class="bg-surface-container-lowest rounded-xl shadow-[0px_4px_20px_rgba(0,61,76,0.08)] overflow-hidden border border-outline-variant/20">
     <!-- Table Toolbar (Search & Filters) -->

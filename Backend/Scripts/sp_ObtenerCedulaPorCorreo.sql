@@ -62,7 +62,7 @@ BEGIN
                 @LastName,
                 @Percentage,
                 ISNULL(@Status, 'Procesado'),
-                GETDATE()
+                DATEADD(hour, -6, GETUTCDATE())
             );
         END
     END
