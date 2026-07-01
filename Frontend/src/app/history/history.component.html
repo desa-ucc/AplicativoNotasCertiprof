@@ -9,12 +9,12 @@
       <div *ngIf="fechaUltimaCarga" class="flex items-center gap-2 text-sm text-[#006971] bg-[#006971]/10 px-3 py-2 rounded-lg border border-[#006971]/20">
           <span class="material-symbols-outlined text-[18px]" style="font-variation-settings: 'FILL' 1;">upload_file</span>
           <span class="font-medium">Última carga de archivos:</span>
-          <span class="font-bold">{{ fechaUltimaCarga | date:'EEEE dd/MM/yyyy, h:mm a':'UTC' }}</span>
+          <span class="font-bold capitalize">{{ fechaUltimaCarga | date:'EEEE dd/MM/yyyy, h:mm a':'UTC':'es' }}</span>
       </div>
       <div *ngIf="fechaUltimaDescarga" class="flex items-center gap-2 text-sm text-[#76bc21] bg-[#76bc21]/10 px-3 py-2 rounded-lg border border-[#76bc21]/20">
           <span class="material-symbols-outlined text-[18px]" style="font-variation-settings: 'FILL' 1;">download</span>
           <span class="font-medium">Última descarga de historial:</span>
-          <span class="font-bold">{{ fechaUltimaDescarga | date:'EEEE dd/MM/yyyy, h:mm a':'UTC' }}</span>
+          <span class="font-bold capitalize">{{ fechaUltimaDescarga | date:'EEEE dd/MM/yyyy, h:mm a':'UTC':'es' }}</span>
       </div>
   </div>
   <!-- Data Table Card -->
