@@ -196,6 +196,18 @@ namespace Backend.Services
                 }
             }
 
+            using (var cmd = _dbContext.Database.GetDbConnection().CreateCommand())
+            {
+                cmd.CommandText = "sp_RegistrarAuditoria";
+                cmd.CommandType = System.Data.CommandType.StoredProcedure;
+
+                var pAccion = cmd.CreateParameter(); pAccion.ParameterName = "@Accion"; pAccion.Value = "CARGA_EXCEL"; cmd.Parameters.Add(pAccion);
+                var pUsuario = cmd.CreateParameter(); pUsuario.ParameterName = "@Usuario"; pUsuario.Value = uploadedBy ?? "Sistema"; cmd.Parameters.Add(pUsuario);
+
+                if (_dbContext.Database.GetDbConnection().State != System.Data.ConnectionState.Open) await _dbContext.Database.OpenConnectionAsync();
+                await cmd.ExecuteNonQueryAsync();
+            }
+
             return new { exitosos = exitosos, fallidos = fallidos, mensaje = $"Se procesaron {exitosos} registros exitosamente. No se subieron {fallidos} registros porque la cédula no se encontró en el sistema." };
         }
 

@@ -208,6 +208,8 @@ export class HistoryComponent implements OnInit {
 
     const buffer = await workbook.xlsx.writeBuffer();
     saveAs.saveAs(new Blob([buffer]), 'Reporte_Historial.xlsx');
+
+    this.http.post('/api/certiprof/log-download', {}).subscribe(() => this.obtenerFechasSistema());
   }
 
 
@@ -229,16 +231,19 @@ export class HistoryComponent implements OnInit {
 
   estadosDisponibles: string[] = [];
 
-  obtenerUltimaActualizacion() {
-    this.http.get<any>('/api/certiprof/last-update').subscribe({
+  obtenerFechasSistema() {
+    this.http.get<any>('/api/certiprof/system-dates').subscribe({
         next: (res) => {
-            if (res.lastUpdateDate) {
-                // Forzamos el parseo agregando 'Z' para manejarlo como tiempo absoluto
-                let cleanDate = res.lastUpdateDate.endsWith('Z') ? res.lastUpdateDate : res.lastUpdateDate + 'Z';
-                this.fechaUltimaActualizacion = new Date(cleanDate);
+            if (res.lastUploadDate) {
+                let cleanDate = res.lastUploadDate.endsWith('Z') ? res.lastUploadDate : res.lastUploadDate + 'Z';
+                this.fechaUltimaCarga = new Date(cleanDate);
+            }
+            if (res.lastDownloadDate) {
+                let cleanDate = res.lastDownloadDate.endsWith('Z') ? res.lastDownloadDate : res.lastDownloadDate + 'Z';
+                this.fechaUltimaDescarga = new Date(cleanDate);
             }
         },
-        error: (err) => console.error('Error obteniendo la última fecha', err)
+        error: (err) => console.error('Error obteniendo las fechas', err)
     });
   }
 
@@ -266,7 +271,8 @@ export class HistoryComponent implements OnInit {
       });
   }
 
-  fechaUltimaActualizacion: Date | null = null;
+  fechaUltimaCarga: Date | null = null;
+  fechaUltimaDescarga: Date | null = null;
   isEditing = false;
   editRecord: any = null;
   userRole: string | null = null;
@@ -275,7 +281,7 @@ export class HistoryComponent implements OnInit {
   constructor(private http: HttpClient) {}
 
   ngOnInit(): void {
-    this.obtenerUltimaActualizacion();
+    this.obtenerFechasSistema();
     this.userRole = localStorage.getItem('role');
     const rolActual = this.userRole;
     this.esAdministrador = (rolActual === 'Administrador' || rolActual === 'Administrador Maestro');

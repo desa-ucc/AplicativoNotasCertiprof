@@ -178,13 +178,45 @@ namespace Backend.Controllers
             }
         }
 
-        [HttpGet("last-update")]
-        public async Task<IActionResult> GetLastUpdateDate([FromServices] Backend.Data.AppDbContext dbContext)
+        [HttpGet("system-dates")]
+        public async Task<IActionResult> GetSystemDates([FromServices] Backend.Data.AppDbContext dbContext)
         {
-            var lastUpdate = await dbContext.CertiprofRecords
-                .MaxAsync(r => r.updated_at);
+            DateTime? uploadDate = null;
+            DateTime? downloadDate = null;
 
-            return Ok(new { lastUpdateDate = lastUpdate });
+            using (var cmd = dbContext.Database.GetDbConnection().CreateCommand())
+            {
+                cmd.CommandText = "sp_ConsultarFechasSistema";
+                cmd.CommandType = System.Data.CommandType.StoredProcedure;
+                if (dbContext.Database.GetDbConnection().State != System.Data.ConnectionState.Open) dbContext.Database.OpenConnection();
+
+                using (var reader = await cmd.ExecuteReaderAsync())
+                {
+                    if (reader.Read())
+                    {
+                        uploadDate = reader.IsDBNull(0) ? (DateTime?)null : reader.GetDateTime(0);
+                        downloadDate = reader.IsDBNull(1) ? (DateTime?)null : reader.GetDateTime(1);
+                    }
+                }
+            }
+            return Ok(new { lastUploadDate = uploadDate, lastDownloadDate = downloadDate });
+        }
+
+        [HttpPost("log-download")]
+        public async Task<IActionResult> LogDownload([FromServices] Backend.Data.AppDbContext dbContext)
+        {
+            var usuario = User.Identity?.Name ?? "Usuario_Sistema";
+            using (var cmd = dbContext.Database.GetDbConnection().CreateCommand())
+            {
+                cmd.CommandText = "sp_RegistrarAuditoria";
+                cmd.CommandType = System.Data.CommandType.StoredProcedure;
+                var pAccion = cmd.CreateParameter(); pAccion.ParameterName = "@Accion"; pAccion.Value = "DESCARGA_HISTORIAL"; cmd.Parameters.Add(pAccion);
+                var pUsuario = cmd.CreateParameter(); pUsuario.ParameterName = "@Usuario"; pUsuario.Value = usuario; cmd.Parameters.Add(pUsuario);
+
+                if (dbContext.Database.GetDbConnection().State != System.Data.ConnectionState.Open) dbContext.Database.OpenConnection();
+                await cmd.ExecuteNonQueryAsync();
+            }
+            return Ok();
         }
 
         [HttpGet("export-avatar/{uploadId}")]
