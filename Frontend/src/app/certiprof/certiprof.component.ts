@@ -14,7 +14,7 @@ import { Router } from '@angular/router';
   styleUrls: ['./certiprof.component.css']
 })
 export class CertiprofComponent implements OnInit {
-  fechaUltimaActualizacion: Date | null = null;
+  fechaUltimaCarga: Date | null = null;
 
   selectedFile: File | null = null;
   previewData: any[] = [];
@@ -28,15 +28,17 @@ export class CertiprofComponent implements OnInit {
   constructor(private http: HttpClient, private router: Router) {}
 
   ngOnInit() {
-    this.obtenerUltimaActualizacion();
+    this.obtenerFechasSistema();
   }
 
-  obtenerUltimaActualizacion() {
-    this.http.get<any>('/api/certiprof/last-update').subscribe({
+  obtenerFechasSistema() {
+    // Consumimos el nuevo endpoint global de auditoría
+    this.http.get<any>('/api/certiprof/system-dates').subscribe({
         next: (res) => {
-            console.log('Fecha recibida del API:', res.lastUpdateDate);
-            if (res.lastUpdateDate) {
-                this.fechaUltimaActualizacion = new Date(res.lastUpdateDate);
+            // Mapeamos lastUploadDate igual que en el Historial
+            if (res.lastUploadDate) {
+                let cleanDate = res.lastUploadDate.endsWith('Z') ? res.lastUploadDate : res.lastUploadDate + 'Z';
+                this.fechaUltimaCarga = new Date(cleanDate);
             }
         },
         error: (err) => console.error('Error obteniendo la última fecha', err)

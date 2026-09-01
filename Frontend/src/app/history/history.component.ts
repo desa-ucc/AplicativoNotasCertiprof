@@ -208,6 +208,8 @@ export class HistoryComponent implements OnInit {
 
     const buffer = await workbook.xlsx.writeBuffer();
     saveAs.saveAs(new Blob([buffer]), 'Reporte_Historial.xlsx');
+
+    this.http.post('/api/certiprof/log-download', {}).subscribe(() => this.obtenerFechasSistema());
   }
 
 
@@ -228,6 +230,22 @@ export class HistoryComponent implements OnInit {
   }
 
   estadosDisponibles: string[] = [];
+
+  obtenerFechasSistema() {
+    this.http.get<any>('/api/certiprof/system-dates').subscribe({
+        next: (res) => {
+            if (res.lastUploadDate) {
+                let cleanDate = res.lastUploadDate.endsWith('Z') ? res.lastUploadDate : res.lastUploadDate + 'Z';
+                this.fechaUltimaCarga = new Date(cleanDate);
+            }
+            if (res.lastDownloadDate) {
+                let cleanDate = res.lastDownloadDate.endsWith('Z') ? res.lastDownloadDate : res.lastDownloadDate + 'Z';
+                this.fechaUltimaDescarga = new Date(cleanDate);
+            }
+        },
+        error: (err) => console.error('Error obteniendo las fechas', err)
+    });
+  }
 
   fetchHistory() {
     this.http.get<any[]>('/api/certiprof/history')
@@ -253,6 +271,8 @@ export class HistoryComponent implements OnInit {
       });
   }
 
+  fechaUltimaCarga: Date | null = null;
+  fechaUltimaDescarga: Date | null = null;
   isEditing = false;
   editRecord: any = null;
   userRole: string | null = null;
@@ -261,6 +281,7 @@ export class HistoryComponent implements OnInit {
   constructor(private http: HttpClient) {}
 
   ngOnInit(): void {
+    this.obtenerFechasSistema();
     this.userRole = localStorage.getItem('role');
     const rolActual = this.userRole;
     this.esAdministrador = (rolActual === 'Administrador' || rolActual === 'Administrador Maestro');
