@@ -110,7 +110,7 @@ namespace Backend.Controllers
             public string? CertificationName { get; set; }
         }
 
-        [Backend.Attributes.PermissionAuthorize("/upload")]
+        [Backend.Attributes.PermissionAuthorize("/security")]
         [HttpPost("edit")]
         public async Task<IActionResult> EditRecord([FromBody] EditRecordRequest request, [FromServices] Backend.Data.AppDbContext dbContext)
         {
@@ -145,7 +145,7 @@ namespace Backend.Controllers
         }
 
 
-        [Backend.Attributes.PermissionAuthorize("/upload")]
+        [Backend.Attributes.PermissionAuthorize("/security")]
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteRecord(int id, [FromServices] Backend.Data.AppDbContext dbContext)
         {
@@ -175,6 +175,15 @@ namespace Backend.Controllers
             {
                 return BadRequest(new { Message = ex.Message });
             }
+        }
+
+        [HttpGet("last-update")]
+        public async Task<IActionResult> GetLastUpdateDate([FromServices] Backend.Data.AppDbContext dbContext)
+        {
+            var lastUpdate = await dbContext.CertiprofRecords
+                .MaxAsync(r => r.updated_at);
+
+            return Ok(new { lastUpdateDate = lastUpdate });
         }
 
         [HttpGet("export-avatar/{uploadId}")]

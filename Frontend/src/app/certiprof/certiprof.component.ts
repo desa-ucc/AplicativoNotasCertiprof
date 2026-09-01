@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import * as Papa from 'papaparse';
@@ -13,7 +13,9 @@ import { Router } from '@angular/router';
   templateUrl: './certiprof.component.html',
   styleUrls: ['./certiprof.component.css']
 })
-export class CertiprofComponent {
+export class CertiprofComponent implements OnInit {
+  fechaUltimaActualizacion: Date | null = null;
+
   selectedFile: File | null = null;
   previewData: any[] = [];
   isDragging = false;
@@ -24,6 +26,23 @@ export class CertiprofComponent {
   resultadosCarga = { exitosos: 0, fallidos: 0, total: 0 };
 
   constructor(private http: HttpClient, private router: Router) {}
+
+  ngOnInit() {
+    this.obtenerUltimaActualizacion();
+  }
+
+  obtenerUltimaActualizacion() {
+    this.http.get<any>('/api/certiprof/last-update').subscribe({
+        next: (res) => {
+            console.log('Fecha recibida del API:', res.lastUpdateDate);
+            if (res.lastUpdateDate) {
+                this.fechaUltimaActualizacion = new Date(res.lastUpdateDate);
+            }
+        },
+        error: (err) => console.error('Error obteniendo la última fecha', err)
+    });
+  }
+
 
   onDragOver(event: DragEvent) {
     event.preventDefault();

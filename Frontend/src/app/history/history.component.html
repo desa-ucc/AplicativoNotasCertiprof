@@ -36,6 +36,7 @@
             <th class="py-sm px-md font-label-md text-label-md text-white uppercase tracking-wider">Nota</th>
             <th class="py-sm px-md font-label-md text-label-md text-white uppercase tracking-wider">Estado</th>
             <th class="py-sm px-md font-label-md text-label-md text-white uppercase tracking-wider">Fecha</th>
+            <th class="py-sm px-md font-label-md text-label-md text-white uppercase tracking-wider">Última Mod.</th>
             <th class="py-sm px-md font-label-md text-label-md text-white uppercase tracking-wider text-right">Acciones</th>
           </tr>
         </thead>
@@ -62,14 +63,24 @@
     </span>
 </td>
             <td class="py-sm px-md font-body-md text-body-md text-on-surface-variant">{{ record.created_at | date:'dd MMM yyyy' }}</td>
+            <td class="py-sm px-md font-body-md text-body-md text-on-surface-variant">
+              <div class="flex flex-col">
+                  <span *ngIf="record.updated_at">{{ record.updated_at | date:'dd MMM yyyy' }}</span>
+                  <span *ngIf="record.updated_at" class="text-[11px] text-outline-variant font-medium">{{ record.updated_at | date:'h:mm a' }}</span>
+                  <span *ngIf="!record.updated_at" class="text-outline-variant italic">-</span>
+              </div>
+            </td>
             <td class="px-6 py-5 text-right">
-              <div class="flex justify-end gap-2" *ngIf="userRole !== 'Consulta'">
+              <div class="flex justify-end gap-2" *ngIf="esAdministrador">
                 <button (click)="openEditModal(record)" class="p-2 text-[#006971] hover:bg-[#006971]/10 rounded-lg transition-colors" title="Editar">
                   <span class="material-symbols-outlined text-[20px]">edit</span>
                 </button>
                 <button (click)="deleteRecord(record.id)" class="p-2 text-red-600 hover:bg-red-600/10 rounded-lg transition-colors" title="Eliminar">
                   <span class="material-symbols-outlined text-[20px]">delete</span>
                 </button>
+              </div>
+              <div *ngIf="!esAdministrador" class="text-outline-variant italic text-sm pr-4">
+                Solo lectura
               </div>
             </td>
           </tr>
