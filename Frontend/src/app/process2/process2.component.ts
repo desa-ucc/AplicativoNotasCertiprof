@@ -13,10 +13,14 @@ import { throwError } from 'rxjs';
   styleUrls: ['./process2.component.css']
 })
 export class Process2Component implements OnInit {
+
   registros: any[] = [];
-  registrosFiltrados: any[] = [];
+  proyectosAgrupados: any[] = [];
+  proyectosFiltrados: any[] = [];
+  proyectosExpandidos: { [key: string]: boolean } = {};
 
   // Permisos
+
   puedeVer: boolean = false;
   puedeLeer: boolean = false;
   puedeEditar: boolean = false; // Equivalente a Puede Cargar (Upload)
@@ -66,36 +70,71 @@ export class Process2Component implements OnInit {
       }
   }
 
+
   cargarHistorial() {
       this.http.get<any[]>('/api/plannermetas/history').subscribe({
           next: (data) => {
               this.registros = data;
-              this.registrosFiltrados = [...this.registros];
+              this.agruparProyectos();
           },
           error: (err) => {
               console.error('Error cargando historial de Metas:', err);
-              // Fallback dev data si no existe SP o tabla
               this.registros = [];
-              this.registrosFiltrados = [];
+              this.agruparProyectos();
           }
       });
   }
 
+  agruparProyectos() {
+      const grupos = this.registros.reduce((acc, curr) => {
+          const key = curr.codigo_proyecto || curr.proyecto_umbrella || 'Sin Proyecto';
+          if (!acc[key]) {
+              acc[key] = {
+                  codigo_proyecto: key,
+                  nombre_proyecto: curr.nombre_proyecto || 'N/A',
+                  area: curr.area || 'N/A',
+                  fecha_carga: curr.fecha_carga, // Toma la primera
+                  total_tareas: 0,
+                  tareas: []
+              };
+          }
+          acc[key].tareas.push(curr);
+          acc[key].total_tareas++;
+
+          // Mantener la fecha más reciente si hay varias
+          if (curr.fecha_carga && (!acc[key].fecha_carga || curr.fecha_carga > acc[key].fecha_carga)) {
+               acc[key].fecha_carga = curr.fecha_carga;
+          }
+
+          return acc;
+      }, {});
+
+      this.proyectosAgrupados = Object.values(grupos);
+      this.proyectosFiltrados = [...this.proyectosAgrupados];
+  }
+
   filtrarRegistros() {
       if (!this.searchTerm) {
-          this.registrosFiltrados = [...this.registros];
+          this.proyectosFiltrados = [...this.proyectosAgrupados];
           return;
       }
 
       const term = this.searchTerm.toLowerCase();
-      this.registrosFiltrados = this.registros.filter(r =>
-          (r.area && r.area.toLowerCase().includes(term)) ||
-          (r.responsable && r.responsable.toLowerCase().includes(term)) ||
-          (r.codigo_proyecto && r.codigo_proyecto.toLowerCase().includes(term)) ||
-          (r.nombre_proyecto && r.nombre_proyecto.toLowerCase().includes(term))
+      this.proyectosFiltrados = this.proyectosAgrupados.filter(p =>
+          (p.codigo_proyecto && p.codigo_proyecto.toLowerCase().includes(term)) ||
+          (p.nombre_proyecto && p.nombre_proyecto.toLowerCase().includes(term)) ||
+          (p.area && p.area.toLowerCase().includes(term)) ||
+          // Buscar también dentro de las tareas del proyecto
+          p.tareas.some((t: any) =>
+              (t.responsable && t.responsable.toLowerCase().includes(term)) ||
+              (t.id_planner_task && t.id_planner_task.toLowerCase().includes(term))
+          )
       );
   }
 
+  toggleProyecto(codigo: string) {
+      this.proyectosExpandidos[codigo] = !this.proyectosExpandidos[codigo];
+  }
   // --- Upload Logic ---
 
   onDragOver(event: DragEvent) {
