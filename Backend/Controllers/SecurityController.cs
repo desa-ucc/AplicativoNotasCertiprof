@@ -358,7 +358,8 @@ namespace Backend.Controllers
                     {
                         new { id = 1, nombre = "Cargar Archivo", ruta = "/upload", icono = "upload_file" },
                         new { id = 2, nombre = "Historial", ruta = "/history", icono = "history" },
-                        new { id = 3, nombre = "Seguridad", ruta = "/security", icono = "security" }
+                        new { id = 3, nombre = "Seguridad", ruta = "/security", icono = "security" },
+                        new { id = 4, nombre = "Proceso 2", ruta = "/process2", icono = "manage_accounts" }
                     });
                 }
                 return BadRequest(new { Message = ex.Message });
