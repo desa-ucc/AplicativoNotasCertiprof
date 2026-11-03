@@ -65,7 +65,7 @@ export class Process2Component implements OnInit {
   }
 
   cargarHistorial() {
-      this.http.get<any[]>('/api/process2/history').subscribe({
+      this.http.get<any[]>('/api/plannermetas/history').subscribe({
           next: (data) => {
               this.registros = data;
               this.registrosFiltrados = [...this.registros];
@@ -153,7 +153,7 @@ export class Process2Component implements OnInit {
     const formData = new FormData();
     formData.append('file', this.selectedFile);
 
-    this.http.post<any>('/api/process2/upload-goals', formData).subscribe({
+    this.http.post<any>('/api/plannermetas/upload', formData).subscribe({
       next: (res) => {
         this.isUploading = false;
         this.showResultModal(true, res.message || 'El archivo se procesó correctamente.');
