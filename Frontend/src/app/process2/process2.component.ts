@@ -2,6 +2,8 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
+import { timeout, catchError } from 'rxjs/operators';
+import { throwError } from 'rxjs';
 
 @Component({
   selector: 'app-process2',
@@ -146,6 +148,7 @@ export class Process2Component implements OnInit {
     if (input) input.value = '';
   }
 
+
   uploadFile() {
     if (!this.selectedFile) return;
 
@@ -153,22 +156,31 @@ export class Process2Component implements OnInit {
     const formData = new FormData();
     formData.append('file', this.selectedFile);
 
-    this.http.post<any>('/api/plannermetas/upload', formData).subscribe({
+    this.http.post<any>('/api/plannermetas/upload', formData).pipe(
+        timeout(30000), // Generous 30s timeout for the initial request
+        catchError(err => {
+            return throwError(() => err);
+        })
+    ).subscribe({
       next: (res) => {
         this.isUploading = false;
-        this.showResultModal(true, res.message || 'El archivo se procesó correctamente.');
+        // Check for 202 Accepted message pattern or just assume success if it lands here
+        this.showResultModal(true, res.message || 'El archivo se está procesando en segundo plano. Puede continuar usando el sistema.');
         this.selectedFile = null;
-        this.cargarHistorial(); // Refrescar tabla
       },
       error: (err) => {
         this.isUploading = false;
         console.error('Error uploading file:', err);
-        const errorMsg = err.error?.message || err.error?.detail || 'Ocurrió un error inesperado al procesar el archivo.';
+        let errorMsg = 'Ocurrió un error inesperado al procesar el archivo.';
+        if (err.name === 'TimeoutError') {
+             errorMsg = 'La petición tomó demasiado tiempo. Intente de nuevo más tarde.';
+        } else if (err.error?.message) {
+             errorMsg = err.error.message;
+        }
         this.showResultModal(false, errorMsg);
       }
     });
   }
-
   showResultModal(success: boolean, message: string) {
       this.isUploadSuccess = success;
       this.uploadMessage = message;

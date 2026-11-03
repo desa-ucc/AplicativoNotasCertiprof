@@ -18,6 +18,8 @@ builder.Services.AddScoped<Backend.Repositories.IUploadHistoryRepository, Backen
 builder.Services.AddScoped<IFileProcessingService, FileProcessingService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IPlannerService, PlannerService>();
+builder.Services.AddSingleton<IBackgroundTaskQueue, BackgroundTaskQueue>();
+builder.Services.AddHostedService<QueuedHostedService>();
 
 // Add basic JWT Authentication for RBAC
 builder.Services.AddAuthentication("Bearer")
