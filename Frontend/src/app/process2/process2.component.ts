@@ -2,12 +2,11 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
-import { NgxChartsModule } from '@swimlane/ngx-charts';
 
 @Component({
   selector: 'app-process2',
   standalone: true,
-  imports: [CommonModule, FormsModule, NgxChartsModule],
+  imports: [CommonModule, FormsModule],
   templateUrl: './process2.component.html',
   styleUrls: ['./process2.component.css']
 })
@@ -18,15 +17,20 @@ export class Process2Component implements OnInit {
   // Permisos
   puedeVer: boolean = false;
   puedeLeer: boolean = false;
-  puedeEditar: boolean = false;
+  puedeEditar: boolean = false; // Equivalente a Puede Cargar (Upload)
 
   // Filtros
   searchTerm: string = '';
 
-  // Edición
-  isEditing = false;
-  editRecord: any = null;
-  listaEstados = ['Approved', 'Failed', 'Pending'];
+  // Upload state
+  isDragging = false;
+  selectedFile: File | null = null;
+  isUploading = false;
+
+  // Modal de Resultado
+  uploadResultModalOpen = false;
+  isUploadSuccess = false;
+  uploadMessage = '';
 
   // Modal de Detalle
   isDetailOpen = false;
@@ -36,12 +40,13 @@ export class Process2Component implements OnInit {
 
   ngOnInit(): void {
     this.verificarPermisos();
-    this.cargarDatos();
+    if (this.puedeVer) {
+        this.cargarHistorial();
+    }
   }
 
   verificarPermisos() {
-      // Mock de verificación de permisos por roles
-      // En la vida real, se evaluaría un JWT o respuesta del backend
+      // Logic from local storage to define permissions.
       const userRole = localStorage.getItem('role') || '';
 
       if (userRole.includes('Administrador')) {
@@ -51,28 +56,25 @@ export class Process2Component implements OnInit {
       } else if (userRole.includes('Operador') || userRole.includes('Docente')) {
           this.puedeVer = true;
           this.puedeLeer = true;
-          this.puedeEditar = false;
+          this.puedeEditar = false; // Solo Administrador puede cargar
       } else {
-          // Asumir nivel de vista básico
           this.puedeVer = true;
           this.puedeLeer = false;
           this.puedeEditar = false;
       }
   }
 
-  cargarDatos() {
-      this.http.get<any[]>('/api/process2').subscribe({
+  cargarHistorial() {
+      this.http.get<any[]>('/api/process2/history').subscribe({
           next: (data) => {
               this.registros = data;
               this.registrosFiltrados = [...this.registros];
           },
           error: (err) => {
-              console.error('Error cargando datos de Proceso 2:', err);
-              // Fallback for development
-              this.registrosFiltrados = [
-                  { id: 1, cedula: '111111111', first_name: 'Juan', last_name: 'Pérez', status: 'Approved', percentage: 85, certification_name: 'Cert 1', created_at: new Date() },
-                  { id: 2, cedula: '222222222', first_name: 'María', last_name: 'Gómez', status: 'Pending', percentage: 60, certification_name: 'Cert 2', created_at: new Date() }
-              ];
+              console.error('Error cargando historial de Metas:', err);
+              // Fallback dev data si no existe SP o tabla
+              this.registros = [];
+              this.registrosFiltrados = [];
           }
       });
   }
@@ -85,16 +87,102 @@ export class Process2Component implements OnInit {
 
       const term = this.searchTerm.toLowerCase();
       this.registrosFiltrados = this.registros.filter(r =>
-          (r.first_name + ' ' + r.last_name).toLowerCase().includes(term) ||
-          r.cedula?.toLowerCase().includes(term) ||
-          r.certification_name?.toLowerCase().includes(term)
+          (r.area && r.area.toLowerCase().includes(term)) ||
+          (r.responsable && r.responsable.toLowerCase().includes(term)) ||
+          (r.codigo_proyecto && r.codigo_proyecto.toLowerCase().includes(term)) ||
+          (r.nombre_proyecto && r.nombre_proyecto.toLowerCase().includes(term))
       );
   }
 
-  // --- Acciones ---
+  // --- Upload Logic ---
+
+  onDragOver(event: DragEvent) {
+    event.preventDefault();
+    event.stopPropagation();
+    this.isDragging = true;
+  }
+
+  onDragLeave(event: DragEvent) {
+    event.preventDefault();
+    event.stopPropagation();
+    this.isDragging = false;
+  }
+
+  onDrop(event: DragEvent) {
+    event.preventDefault();
+    event.stopPropagation();
+    this.isDragging = false;
+
+    if (event.dataTransfer?.files && event.dataTransfer.files.length > 0) {
+      const file = event.dataTransfer.files[0];
+      if (this.isValidFileType(file)) {
+        this.selectedFile = file;
+      } else {
+        this.showResultModal(false, 'Formato inválido. Solo se permite un archivo .xlsx consolidado.');
+      }
+    }
+  }
+
+  onFileSelected(event: any) {
+    const file = event.target.files[0];
+    if (file) {
+      if (this.isValidFileType(file)) {
+        this.selectedFile = file;
+      } else {
+        this.showResultModal(false, 'Formato inválido. Solo se permite un archivo .xlsx consolidado.');
+        event.target.value = ''; // Reset input
+      }
+    }
+  }
+
+  isValidFileType(file: File): boolean {
+    return file.name.toLowerCase().endsWith('.xlsx') || file.type === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+  }
+
+  clearFile(event: Event) {
+    event.preventDefault();
+    this.selectedFile = null;
+    const input = document.getElementById('file-upload') as HTMLInputElement;
+    if (input) input.value = '';
+  }
+
+  uploadFile() {
+    if (!this.selectedFile) return;
+
+    this.isUploading = true;
+    const formData = new FormData();
+    formData.append('file', this.selectedFile);
+
+    this.http.post<any>('/api/process2/upload-goals', formData).subscribe({
+      next: (res) => {
+        this.isUploading = false;
+        this.showResultModal(true, res.message || 'El archivo se procesó correctamente.');
+        this.selectedFile = null;
+        this.cargarHistorial(); // Refrescar tabla
+      },
+      error: (err) => {
+        this.isUploading = false;
+        console.error('Error uploading file:', err);
+        const errorMsg = err.error?.message || err.error?.detail || 'Ocurrió un error inesperado al procesar el archivo.';
+        this.showResultModal(false, errorMsg);
+      }
+    });
+  }
+
+  showResultModal(success: boolean, message: string) {
+      this.isUploadSuccess = success;
+      this.uploadMessage = message;
+      this.uploadResultModalOpen = true;
+  }
+
+  closeResultModal() {
+      this.uploadResultModalOpen = false;
+  }
+
+  // --- Acciones de Vista ---
 
   abrirDetalle(registro: any) {
-      if (!this.puedeLeer && !this.puedeEditar) return;
+      if (!this.puedeLeer) return;
       this.detailRecord = registro;
       this.isDetailOpen = true;
   }
@@ -102,32 +190,5 @@ export class Process2Component implements OnInit {
   cerrarDetalle() {
       this.isDetailOpen = false;
       this.detailRecord = null;
-  }
-
-  abrirEdicion(registro: any) {
-      if (!this.puedeEditar) return;
-      this.editRecord = { ...registro };
-      this.isEditing = true;
-  }
-
-  cerrarEdicion() {
-      this.isEditing = false;
-      this.editRecord = null;
-  }
-
-  guardarEdicion() {
-      if (!this.editRecord) return;
-
-      this.http.post('/api/process2/edit', this.editRecord).subscribe({
-          next: () => {
-              alert('Registro actualizado');
-              this.cargarDatos();
-              this.cerrarEdicion();
-          },
-          error: (err) => {
-              console.error('Error:', err);
-              alert('Error actualizando registro');
-          }
-      });
   }
 }
