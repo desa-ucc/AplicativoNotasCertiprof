@@ -1,4 +1,5 @@
 import { SecurityComponent } from './security/security.component';
+import { Process2Component } from './process2/process2.component';
 import { Routes } from '@angular/router';
 import { LoginComponent } from './login/login.component';
 import { CertiprofComponent } from './certiprof/certiprof.component';
@@ -19,7 +20,8 @@ export const routes: Routes = [
           { path: '', redirectTo: 'history', pathMatch: 'full' },
           { path: 'upload', component: CertiprofComponent },
           { path: 'history', component: HistoryComponent },
-          { path: 'security', component: SecurityComponent }
+          { path: 'security', component: SecurityComponent },
+          { path: 'process2', component: Process2Component }
       ]
   },
 

@@ -144,7 +144,8 @@ namespace Backend.Controllers
                         var fallbackMenuAdmin = new[] {
                             new { name = "Cargar Archivo", path = "/upload", icon = "upload_file" },
                             new { name = "Historial", path = "/history", icon = "history" },
-                            new { name = "Seguridad", path = "/security", icon = "security" }
+                            new { name = "Seguridad", path = "/security", icon = "security" },
+                            new { name = "Proceso 2", path = "/process2", icon = "manage_accounts" }
                         };
                         return Ok(new { Token = token, Role = "Administrador", Menu = fallbackMenuAdmin });
                     }
