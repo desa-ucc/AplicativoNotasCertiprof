@@ -42,7 +42,7 @@ namespace Backend.Controllers
             {
                 using (var command = _dbContext.Database.GetDbConnection().CreateCommand())
                 {
-                    command.CommandText = "SELECT id, area, codigo_proyecto, url, nombre_proyecto, mes_de_cierre, responsable, etapa_actividad_tarea, mes, mes_ud, anio, solicitudes_cambio, id_planner_task, estado_bucket, fecha_expectativa, fecha_cierre_real, proyecto_umbrella, correos_autorizados, fecha_carga, usuario_carga FROM [dbo].[fact_metas_planner] ORDER BY fecha_carga DESC";
+                    command.CommandText = "SELECT id, area, codigo_proyecto, url, nombre_proyecto, mes_de_cierre, responsable, etapa_actividad_tarea, mes, mes_ud, anio, solicitudes_cambio, id_planner_task, estado_bucket, fecha_expectativa, fecha_cierre_real, proyecto_umbrella, correos_autorizados, fecha_carga, usuario_carga, estado_proyecto FROM [dbo].[pry_metas_planner] ORDER BY fecha_carga DESC";
                     command.CommandType = System.Data.CommandType.Text;
 
                     if (_dbContext.Database.GetDbConnection().State != System.Data.ConnectionState.Open)
@@ -58,6 +58,7 @@ namespace Backend.Controllers
                             {
                                 id = reader.GetInt32(reader.GetOrdinal("id")),
                                 id_planner_task = reader.IsDBNull(reader.GetOrdinal("id_planner_task")) ? null : reader.GetString(reader.GetOrdinal("id_planner_task")),
+                                estado_proyecto = reader.IsDBNull(reader.GetOrdinal("estado_proyecto")) ? null : reader.GetString(reader.GetOrdinal("estado_proyecto")),
                                 area = reader.IsDBNull(reader.GetOrdinal("area")) ? null : reader.GetString(reader.GetOrdinal("area")),
                                 codigo_proyecto = reader.IsDBNull(reader.GetOrdinal("codigo_proyecto")) ? null : reader.GetString(reader.GetOrdinal("codigo_proyecto")),
                                 url = reader.IsDBNull(reader.GetOrdinal("url")) ? null : reader.GetString(reader.GetOrdinal("url")),
@@ -270,7 +271,7 @@ namespace Backend.Controllers
 
                     using (var command = dbContext.Database.GetDbConnection().CreateCommand())
                     {
-                        command.CommandText = "sp_InsertarMetaPlanner";
+                        command.CommandText = "sp_UpsertMetaPlanner";
                         command.CommandType = System.Data.CommandType.StoredProcedure;
 
                         command.Parameters.Add(new SqlParameter("@Area", string.IsNullOrWhiteSpace(area) ? DBNull.Value : area));
@@ -285,7 +286,7 @@ namespace Backend.Controllers
                         command.Parameters.Add(new SqlParameter("@Anio", string.IsNullOrWhiteSpace(anio) ? DBNull.Value : anio));
                         command.Parameters.Add(new SqlParameter("@SolicitudesCambio", string.IsNullOrWhiteSpace(solicitudesCambio) ? DBNull.Value : solicitudesCambio));
                         command.Parameters.Add(new SqlParameter("@IdPlannerTask", string.IsNullOrWhiteSpace(plannerTaskId) ? DBNull.Value : plannerTaskId));
-                        command.Parameters.Add(new SqlParameter("@EstadoBucket", string.IsNullOrWhiteSpace(plannerTaskId) ? "Error" : "En blanco"));
+                        command.Parameters.Add(new SqlParameter("@EstadoBucket", string.IsNullOrWhiteSpace(plannerTaskId) ? "Pendiente" : "En blanco"));
                         command.Parameters.Add(new SqlParameter("@FechaExpectativa", DBNull.Value));
                         command.Parameters.Add(new SqlParameter("@FechaCierreReal", DBNull.Value));
                         command.Parameters.Add(new SqlParameter("@ProyectoUmbrella", DBNull.Value));
@@ -337,7 +338,7 @@ namespace Backend.Controllers
                                 codigo_proyecto = reader.IsDBNull(reader.GetOrdinal("codigo_proyecto")) ? null : reader.GetString(reader.GetOrdinal("codigo_proyecto")),
                                 nombre_proyecto = reader.IsDBNull(reader.GetOrdinal("nombre_proyecto")) ? null : reader.GetString(reader.GetOrdinal("nombre_proyecto")),
                                 area = reader.IsDBNull(reader.GetOrdinal("area")) ? null : reader.GetString(reader.GetOrdinal("area")),
-                                estado_global = reader.IsDBNull(reader.GetOrdinal("estado_global")) ? null : reader.GetString(reader.GetOrdinal("estado_global"))
+                                estado_global = reader.IsDBNull(reader.GetOrdinal("estado_global")) ? "Activo" : reader.GetString(reader.GetOrdinal("estado_global"))
                             });
                         }
                     }
@@ -448,6 +449,7 @@ namespace Backend.Controllers
                     command.Parameters.Add(new SqlParameter("@ProyectoUmbrella", string.IsNullOrWhiteSpace(payload.ProyectoUmbrella) ? DBNull.Value : payload.ProyectoUmbrella));
                     command.Parameters.Add(new SqlParameter("@CorreosAutorizados", string.IsNullOrWhiteSpace(payload.CorreosAutorizados) ? DBNull.Value : payload.CorreosAutorizados));
                     command.Parameters.Add(new SqlParameter("@UsuarioCarga", "n8n_Automation"));
+                    command.Parameters.Add(new SqlParameter("@EstadoProyecto", DBNull.Value));
 
                     if (_dbContext.Database.GetDbConnection().State != System.Data.ConnectionState.Open)
                     {

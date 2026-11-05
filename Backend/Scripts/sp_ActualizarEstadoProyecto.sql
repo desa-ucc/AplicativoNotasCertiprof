@@ -13,16 +13,9 @@ AS
 BEGIN
     SET NOCOUNT ON;
 
-    IF EXISTS (SELECT 1 FROM dbo.cert_estado_proyectos WHERE codigo_proyecto = @CodigoProyecto)
-    BEGIN
-        UPDATE dbo.cert_estado_proyectos
-        SET estado = @Estado
-        WHERE codigo_proyecto = @CodigoProyecto;
-    END
-    ELSE
-    BEGIN
-        INSERT INTO dbo.cert_estado_proyectos (codigo_proyecto, estado)
-        VALUES (@CodigoProyecto, @Estado);
-    END
+    UPDATE dbo.pry_metas_planner
+    SET estado_proyecto = @Estado
+    WHERE codigo_proyecto = @CodigoProyecto;
+
 END;
 GO
