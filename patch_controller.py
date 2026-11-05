@@ -13,7 +13,7 @@ new_endpoints = """
             {
                 using (var command = _dbContext.Database.GetDbConnection().CreateCommand())
                 {
-                    command.CommandText = "sp_ObtenerProyectosUmbrella";
+                    command.CommandText = "v_pry_ProyectosPrincipales";
                     command.CommandType = System.Data.CommandType.StoredProcedure;
 
                     if (_dbContext.Database.GetDbConnection().State != System.Data.ConnectionState.Open)

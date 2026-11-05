@@ -6,7 +6,7 @@ GO
 SET QUOTED_IDENTIFIER ON
 GO
 
-CREATE PROCEDURE [dbo].[sp_ObtenerProyectosUmbrella]
+CREATE PROCEDURE [dbo].[v_pry_ProyectosPrincipales]
 AS
 BEGIN
     SET NOCOUNT ON;
