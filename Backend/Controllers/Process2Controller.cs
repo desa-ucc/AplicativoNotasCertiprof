@@ -33,8 +33,9 @@ namespace Backend.Controllers
             {
                 using (var command = _dbContext.Database.GetDbConnection().CreateCommand())
                 {
-                    command.CommandText = "sp_ObtenerHistorialMetas";
+                    command.CommandText = "sp_pry_GestionMetas";
                     command.CommandType = System.Data.CommandType.StoredProcedure;
+                    command.Parameters.Add(new SqlParameter("@Accion", "HISTORIAL"));
 
                     if (_dbContext.Database.GetDbConnection().State != System.Data.ConnectionState.Open)
                     {
@@ -128,8 +129,10 @@ namespace Backend.Controllers
 
                             using (var command = _dbContext.Database.GetDbConnection().CreateCommand())
                             {
-                                command.CommandText = "sp_CargarMetas";
+                                command.CommandText = "sp_pry_GestionMetas";
                                 command.CommandType = System.Data.CommandType.StoredProcedure;
+
+                                var pAccion = command.CreateParameter(); pAccion.ParameterName = "@Accion"; pAccion.Value = "UPSERT_META"; command.Parameters.Add(pAccion);
 
                                 var pArea = command.CreateParameter(); pArea.ParameterName = "@Area"; pArea.Value = string.IsNullOrWhiteSpace(area) ? DBNull.Value : area; command.Parameters.Add(pArea);
                                 var pCod = command.CreateParameter(); pCod.ParameterName = "@CodigoProyecto"; pCod.Value = string.IsNullOrWhiteSpace(codigoProyecto) ? DBNull.Value : codigoProyecto; command.Parameters.Add(pCod);
