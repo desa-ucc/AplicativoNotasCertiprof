@@ -301,6 +301,7 @@ namespace Backend.Controllers
                         }
                         catch (Exception ex)
                         {
+                            Console.WriteLine($"Error ejecutando sp_pry_GestionMetas en la fila {i}: {ex.Message}");
                             if(ex.Message.Contains("Could not find stored procedure")) break;
                         }
                     }
