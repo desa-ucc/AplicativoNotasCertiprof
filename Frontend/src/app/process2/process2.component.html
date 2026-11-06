@@ -1,4 +1,10 @@
 <div class="bg-surface-container-lowest min-h-screen w-full font-sans pb-10">
+<!-- Upload Loading Overlay -->
+<div *ngIf="isUploading" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-[100] flex flex-col items-center justify-center text-white">
+    <span class="material-symbols-outlined animate-spin text-[48px] mb-4 text-primary">progress_activity</span>
+    <h2 class="text-xl font-bold">Procesando archivo... por favor espere</h2>
+</div>
+
     <div class="max-w-7xl mx-auto space-y-6">
 
         <!-- Header Section -->
@@ -91,6 +97,9 @@
                     <h3 class="text-lg font-bold text-on-surface flex items-center gap-2">
                         <span class="material-symbols-outlined text-primary">account_tree</span>
                         Proyectos y Metas Planner
+                        <button (click)="cargarHistorial()" class="ml-2 text-outline-variant hover:text-primary transition-colors flex items-center justify-center rounded-full p-1" title="Actualizar datos">
+                            <span class="material-symbols-outlined text-[20px]">sync</span>
+                        </button>
                     </h3>
                 </div>
 
@@ -304,21 +313,21 @@
                     </div>
 
                     <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                         <div>
+                         <div *ngIf="detailRecord.mes">
                             <p class="text-xs text-on-surface-variant font-semibold uppercase tracking-wider mb-1">Mes</p>
-                            <p class="font-medium text-on-surface">{{ detailRecord.mes || '-' }}</p>
+                            <p class="font-medium text-on-surface">{{ detailRecord.mes }}</p>
                         </div>
-                        <div>
+                        <div *ngIf="detailRecord.anio">
                             <p class="text-xs text-on-surface-variant font-semibold uppercase tracking-wider mb-1">Año</p>
-                            <p class="font-medium text-on-surface">{{ detailRecord.anio || '-' }}</p>
+                            <p class="font-medium text-on-surface">{{ detailRecord.anio }}</p>
                         </div>
-                        <div>
+                        <div *ngIf="detailRecord.estado_bucket">
                             <p class="text-xs text-on-surface-variant font-semibold uppercase tracking-wider mb-1">Estado Bucket</p>
-                            <p class="font-medium text-on-surface"><span class="px-2 py-0.5 rounded bg-surface-container text-xs">{{ detailRecord.estado_bucket || 'N/A' }}</span></p>
+                            <p class="font-medium text-on-surface"><span class="px-2 py-0.5 rounded bg-surface-container text-xs">{{ detailRecord.estado_bucket }}</span></p>
                         </div>
-                        <div>
+                        <div *ngIf="detailRecord.mes_ud">
                             <p class="text-xs text-on-surface-variant font-semibold uppercase tracking-wider mb-1">Mes UD</p>
-                            <p class="font-medium text-on-surface">{{ detailRecord.mes_ud || '-' }}</p>
+                            <p class="font-medium text-on-surface">{{ detailRecord.mes_ud }}</p>
                         </div>
                     </div>
 

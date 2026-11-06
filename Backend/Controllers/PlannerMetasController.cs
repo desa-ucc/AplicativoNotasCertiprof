@@ -20,6 +20,7 @@ namespace Backend.Controllers
     [Authorize]
     public class PlannerMetasController : ControllerBase
     {
+        private static readonly System.Collections.Concurrent.ConcurrentDictionary<string, string> _jobStatus = new();
         private readonly AppDbContext _dbContext;
         private readonly IBackgroundTaskQueue _taskQueue;
         private readonly Microsoft.Extensions.DependencyInjection.IServiceScopeFactory _serviceScopeFactory;
@@ -98,6 +99,8 @@ namespace Backend.Controllers
                 return BadRequest(new { Message = "Solo se permiten archivos Excel (.xlsx)." });
 
             var usuarioCarga = User.Identity?.Name ?? "Sistema";
+            var jobId = Guid.NewGuid().ToString();
+            _jobStatus[jobId] = "Procesando";
 
             // Read file into memory to pass it to the background task
             using var memoryStream = new MemoryStream();
@@ -110,10 +113,25 @@ namespace Backend.Controllers
                 var scopedDbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
                 var scopedPlannerService = scope.ServiceProvider.GetRequiredService<IPlannerService>();
 
-                await ProcessExcelInBackground(fileBytes, usuarioCarga, scopedDbContext, scopedPlannerService, token);
+                try {
+                    await ProcessExcelInBackground(fileBytes, usuarioCarga, scopedDbContext, scopedPlannerService, token);
+                    _jobStatus[jobId] = "Completado";
+                } catch(Exception) {
+                    _jobStatus[jobId] = "Error";
+                }
             });
 
-            return Accepted(new { Message = "El archivo se ha recibido y se está procesando en segundo plano." });
+            return Accepted(new { Message = "El archivo se ha recibido y se está procesando en segundo plano.", JobId = jobId });
+        }
+
+        [HttpGet("status/{jobId}")]
+        public IActionResult GetStatus(string jobId)
+        {
+            if (_jobStatus.TryGetValue(jobId, out var status))
+            {
+                return Ok(new { Status = status });
+            }
+            return NotFound();
         }
 
 
@@ -246,8 +264,24 @@ namespace Backend.Controllers
                     var solicitudesCambio = row.Cell(11).GetString();
 
                     string plannerTaskId = null;
+
+                    // Check for existing task to prevent duplicates
+                    using (var checkCmd = dbContext.Database.GetDbConnection().CreateCommand())
+                    {
+                        checkCmd.CommandText = "SELECT id_planner_task FROM pry_metas_planner WHERE codigo_proyecto = @codigo AND etapa_actividad_tarea = @etapa AND nombre_proyecto = @nombre";
+                        checkCmd.CommandType = System.Data.CommandType.Text;
+                        checkCmd.Parameters.Add(new SqlParameter("@codigo", string.IsNullOrWhiteSpace(codigoProyecto) ? DBNull.Value : codigoProyecto));
+                        checkCmd.Parameters.Add(new SqlParameter("@etapa", string.IsNullOrWhiteSpace(etapaActividadTarea) ? DBNull.Value : etapaActividadTarea));
+                        checkCmd.Parameters.Add(new SqlParameter("@nombre", string.IsNullOrWhiteSpace(nombreProyecto) ? DBNull.Value : nombreProyecto));
+                        var result = await checkCmd.ExecuteScalarAsync(token);
+                        if (result != null && result != DBNull.Value)
+                        {
+                            plannerTaskId = result.ToString();
+                        }
+                    }
+
                     int maxRetries = 3;
-                    for (int retry = 0; retry < maxRetries; retry++)
+                    for (int retry = 0; retry < maxRetries && string.IsNullOrEmpty(plannerTaskId); retry++)
                     {
                         try
                         {
@@ -271,7 +305,7 @@ namespace Backend.Controllers
 
                     using (var command = dbContext.Database.GetDbConnection().CreateCommand())
                     {
-                        command.CommandText = "sp_UpsertMetaPlanner";
+                        command.CommandText = "sp_pry_GestionMetas";
                         command.CommandType = System.Data.CommandType.StoredProcedure;
 
                         command.Parameters.Add(new SqlParameter("@Area", string.IsNullOrWhiteSpace(area) ? DBNull.Value : area));
@@ -281,6 +315,7 @@ namespace Backend.Controllers
                         command.Parameters.Add(new SqlParameter("@MesDeCierre", string.IsNullOrWhiteSpace(mesDeCierre) ? DBNull.Value : mesDeCierre));
                         command.Parameters.Add(new SqlParameter("@Responsable", string.IsNullOrWhiteSpace(responsable) ? DBNull.Value : responsable));
                         command.Parameters.Add(new SqlParameter("@EtapaActividadTarea", string.IsNullOrWhiteSpace(etapaActividadTarea) ? DBNull.Value : etapaActividadTarea));
+                        command.Parameters.Add(new SqlParameter("@Accion", "UPSERT_META"));
                         command.Parameters.Add(new SqlParameter("@Mes", string.IsNullOrWhiteSpace(mes) ? DBNull.Value : mes));
                         command.Parameters.Add(new SqlParameter("@MesUd", string.IsNullOrWhiteSpace(mesUd) ? DBNull.Value : mesUd));
                         command.Parameters.Add(new SqlParameter("@Anio", string.IsNullOrWhiteSpace(anio) ? DBNull.Value : anio));
@@ -321,7 +356,7 @@ namespace Backend.Controllers
             {
                 using (var command = _dbContext.Database.GetDbConnection().CreateCommand())
                 {
-                    command.CommandText = "v_pry_ProyectosPrincipales";
+                    command.CommandText = "sp_pry_ObtenerProyectosUmbrella";
                     command.CommandType = System.Data.CommandType.StoredProcedure;
 
                     if (_dbContext.Database.GetDbConnection().State != System.Data.ConnectionState.Open)
@@ -428,7 +463,7 @@ namespace Backend.Controllers
             {
                 using (var command = _dbContext.Database.GetDbConnection().CreateCommand())
                 {
-                    command.CommandText = "sp_UpsertMetaPlanner";
+                    command.CommandText = "sp_pry_GestionMetas";
                     command.CommandType = System.Data.CommandType.StoredProcedure;
 
                     command.Parameters.Add(new SqlParameter("@IdPlannerTask", payload.IdPlannerTask));
@@ -439,6 +474,7 @@ namespace Backend.Controllers
                     command.Parameters.Add(new SqlParameter("@MesDeCierre", string.IsNullOrWhiteSpace(payload.MesDeCierre) ? DBNull.Value : payload.MesDeCierre));
                     command.Parameters.Add(new SqlParameter("@Responsable", string.IsNullOrWhiteSpace(payload.Responsable) ? DBNull.Value : payload.Responsable));
                     command.Parameters.Add(new SqlParameter("@EtapaActividadTarea", string.IsNullOrWhiteSpace(payload.EtapaActividadTarea) ? DBNull.Value : payload.EtapaActividadTarea));
+                        command.Parameters.Add(new SqlParameter("@Accion", "UPSERT_META"));
                     command.Parameters.Add(new SqlParameter("@Mes", string.IsNullOrWhiteSpace(payload.Mes) ? DBNull.Value : payload.Mes));
                     command.Parameters.Add(new SqlParameter("@MesUd", string.IsNullOrWhiteSpace(payload.MesUd) ? DBNull.Value : payload.MesUd));
                     command.Parameters.Add(new SqlParameter("@Anio", string.IsNullOrWhiteSpace(payload.Anio) ? DBNull.Value : payload.Anio));
