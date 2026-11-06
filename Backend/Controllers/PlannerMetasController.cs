@@ -21,6 +21,7 @@ namespace Backend.Controllers
     public class PlannerMetasController : ControllerBase
     {
         private static readonly System.Collections.Concurrent.ConcurrentDictionary<string, string> _jobStatus = new();
+        private static string _lastFileHash = string.Empty;
         private readonly AppDbContext _dbContext;
         private readonly IBackgroundTaskQueue _taskQueue;
         private readonly Microsoft.Extensions.DependencyInjection.IServiceScopeFactory _serviceScopeFactory;
@@ -98,14 +99,50 @@ namespace Backend.Controllers
             if (extension != ".xlsx")
                 return BadRequest(new { Message = "Solo se permiten archivos Excel (.xlsx)." });
 
-            var usuarioCarga = User.Identity?.Name ?? "Sistema";
-            var jobId = Guid.NewGuid().ToString();
-            _jobStatus[jobId] = "Procesando";
-
-            // Read file into memory to pass it to the background task
+            // Read file into memory
             using var memoryStream = new MemoryStream();
             await file.CopyToAsync(memoryStream);
             var fileBytes = memoryStream.ToArray();
+
+            // Calculate Hash
+            using var sha256 = System.Security.Cryptography.SHA256.Create();
+            var hashBytes = sha256.ComputeHash(fileBytes);
+            var hashString = Convert.ToBase64String(hashBytes);
+
+            if (hashString == _lastFileHash)
+            {
+                return Conflict(new { Message = "Este archivo ya fue subido recientemente." });
+            }
+            _lastFileHash = hashString;
+
+            // Pre-count rows
+            int validRows = 0;
+            try
+            {
+                using var stream = new MemoryStream(fileBytes);
+                using var workbook = new XLWorkbook(stream);
+                var worksheet = workbook.Worksheet(1);
+                var rowCount = worksheet.LastRowUsed()?.RowNumber() ?? 0;
+
+                for (int i = 2; i <= rowCount; i++)
+                {
+                    var row = worksheet.Row(i);
+                    var area = row.Cell(1).GetString();
+                    var codigoProyecto = row.Cell(2).GetString();
+                    if (!string.IsNullOrWhiteSpace(area) || !string.IsNullOrWhiteSpace(codigoProyecto))
+                    {
+                        validRows++;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { Message = "Error al leer el archivo Excel.", Detail = ex.Message });
+            }
+
+            var usuarioCarga = User.Identity?.Name ?? "Sistema";
+            var jobId = Guid.NewGuid().ToString();
+            _jobStatus[jobId] = "Procesando";
 
             _taskQueue.QueueBackgroundWorkItem(async token =>
             {
@@ -121,7 +158,7 @@ namespace Backend.Controllers
                 }
             });
 
-            return Accepted(new { Message = "El archivo se ha recibido y se está procesando en segundo plano.", JobId = jobId });
+            return Accepted(new { Message = $"El archivo fue recibido. Se procesarán {validRows} metas en segundo plano.", JobId = jobId });
         }
 
         [HttpGet("status/{jobId}")]

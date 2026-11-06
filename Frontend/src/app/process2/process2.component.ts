@@ -268,7 +268,9 @@ export class Process2Component implements OnInit {
       next: (res) => {
         const jobId = res.jobId;
         if (jobId) {
-            this.pollJobStatus(jobId);
+            // Show immediate feedback to user that the file was accepted
+            this.showResultModal(true, res.message || 'El archivo se está procesando en segundo plano.');
+            this.pollJobStatus(jobId, "Procesamiento finalizado con éxito.");
         } else {
             this.isUploading = false;
             this.showResultModal(true, 'El archivo se está procesando en segundo plano. Puede continuar usando el sistema.');
@@ -281,6 +283,8 @@ export class Process2Component implements OnInit {
         let errorMsg = 'Ocurrió un error inesperado al procesar el archivo.';
         if (err.name === 'TimeoutError') {
              errorMsg = 'La petición tomó demasiado tiempo. Intente de nuevo más tarde.';
+        } else if (err.status === 409 || err.status === 400) {
+             errorMsg = err.error?.message || 'El archivo ya fue procesado o es inválido.';
         } else if (err.error?.message) {
              errorMsg = err.error.message;
         }
@@ -289,7 +293,7 @@ export class Process2Component implements OnInit {
     });
   }
 
-  pollJobStatus(jobId: string) {
+  pollJobStatus(jobId: string, successMessage: string = "Carga completada") {
     const intervalId = setInterval(() => {
         this.http.get<any>(`/api/plannermetas/status/${jobId}`).subscribe({
             next: (res) => {
@@ -298,7 +302,7 @@ export class Process2Component implements OnInit {
                     this.isUploading = false;
                     this.selectedFile = null;
                     if (res.status === 'Completado') {
-                        this.showResultModal(true, 'Carga completada');
+                        this.showResultModal(true, successMessage);
                         this.cargarHistorial();
                     } else {
                         this.showResultModal(false, 'Ocurrió un error al procesar el archivo en segundo plano.');
