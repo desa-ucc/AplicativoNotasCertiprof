@@ -287,7 +287,7 @@ namespace Backend.Controllers
                         command.Parameters.Add(new SqlParameter("@MesUd", string.IsNullOrWhiteSpace(mesUd) ? DBNull.Value : mesUd));
                         command.Parameters.Add(new SqlParameter("@Anio", string.IsNullOrWhiteSpace(anio) ? DBNull.Value : anio));
                         command.Parameters.Add(new SqlParameter("@SolicitudesCambio", string.IsNullOrWhiteSpace(solicitudesCambio) ? DBNull.Value : solicitudesCambio));
-                        command.Parameters.Add(new SqlParameter("@id_planner_task", string.IsNullOrWhiteSpace(plannerTaskId) ? DBNull.Value : plannerTaskId));
+                        command.Parameters.Add(new SqlParameter("@IdPlannerTask", string.IsNullOrWhiteSpace(plannerTaskId) ? DBNull.Value : plannerTaskId));
                         command.Parameters.Add(new SqlParameter("@EstadoBucket", string.IsNullOrWhiteSpace(plannerTaskId) ? "Pendiente" : "En blanco"));
                         command.Parameters.Add(new SqlParameter("@FechaExpectativa", DBNull.Value));
                         command.Parameters.Add(new SqlParameter("@FechaCierreReal", DBNull.Value));
@@ -435,7 +435,7 @@ namespace Backend.Controllers
                     command.CommandType = System.Data.CommandType.StoredProcedure;
                     command.Parameters.Add(new SqlParameter("@Accion", "UPSERT_META"));
 
-                    command.Parameters.Add(new SqlParameter("@id_planner_task", payload.IdPlannerTask));
+                    command.Parameters.Add(new SqlParameter("@IdPlannerTask", payload.IdPlannerTask));
                     command.Parameters.Add(new SqlParameter("@Area", string.IsNullOrWhiteSpace(payload.Area) ? DBNull.Value : payload.Area));
                     command.Parameters.Add(new SqlParameter("@CodigoProyecto", string.IsNullOrWhiteSpace(payload.CodigoProyecto) ? DBNull.Value : payload.CodigoProyecto));
                     command.Parameters.Add(new SqlParameter("@Url", string.IsNullOrWhiteSpace(payload.Url) ? DBNull.Value : payload.Url));
