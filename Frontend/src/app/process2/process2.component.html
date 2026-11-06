@@ -267,7 +267,7 @@
     <div class="fixed inset-0 bg-black/40 backdrop-blur-sm"></div>
     <div class="fixed inset-0 z-10 overflow-y-auto">
         <div class="flex min-h-full items-center justify-center p-4">
-            <div class="relative w-full max-w-2xl bg-white rounded-2xl shadow-xl overflow-hidden">
+            <div class="relative w-full max-w-2xl max-w-full bg-white rounded-2xl shadow-xl overflow-hidden">
                 <div class="px-6 py-4 border-b border-outline-variant/20 flex justify-between items-center bg-surface-container-lowest">
                     <h3 class="text-lg font-bold text-on-surface flex items-center gap-2">
                         <span class="material-symbols-outlined text-primary">visibility</span>
@@ -281,23 +281,23 @@
                 <div class="p-6 space-y-5 max-h-[70vh] overflow-y-auto">
                     <div class="flex items-center gap-2 bg-primary/5 text-primary p-3 rounded-lg border border-primary/20">
                         <span class="material-symbols-outlined">task_alt</span>
-                        <span class="font-medium text-sm">Planner Task ID: {{ detailRecord.id_planner_task || 'No asignado' }}</span>
+                        <span class="font-bold text-base break-words">{{ detailRecord.etapa_actividad_tarea || 'Sin descripción' }}</span>
                     </div>
 
                     <div class="grid grid-cols-2 gap-4 bg-surface p-4 rounded-xl border border-outline-variant/20">
                         <div>
                             <p class="text-xs text-on-surface-variant font-semibold uppercase tracking-wider mb-1">Área</p>
-                            <p class="font-medium text-on-surface">{{ detailRecord.area || 'N/A' }}</p>
+                            <p class="font-medium text-on-surface break-words">{{ detailRecord.area || 'N/A' }}</p>
                         </div>
                         <div>
                             <p class="text-xs text-on-surface-variant font-semibold uppercase tracking-wider mb-1">Responsable</p>
-                            <p class="font-medium text-on-surface">{{ detailRecord.responsable || 'N/A' }}</p>
+                            <p class="font-medium text-on-surface break-words">{{ detailRecord.responsable || 'N/A' }}</p>
                         </div>
                     </div>
 
                     <div>
                         <p class="text-xs text-on-surface-variant font-semibold uppercase tracking-wider mb-1">Proyecto</p>
-                        <p class="font-bold text-on-surface text-lg leading-tight">{{ detailRecord.codigo_proyecto }} - {{ detailRecord.nombre_proyecto || 'N/A' }}</p>
+                        <p class="font-bold text-on-surface text-lg leading-tight break-words">{{ detailRecord.codigo_proyecto }} - {{ detailRecord.nombre_proyecto || 'N/A' }}</p>
                     </div>
 
                     <div *ngIf="detailRecord.url">
@@ -305,12 +305,7 @@
                         <a [href]="detailRecord.url" target="_blank" class="text-primary hover:underline break-all">{{ detailRecord.url }}</a>
                     </div>
 
-                    <div>
-                        <p class="text-xs text-on-surface-variant font-semibold uppercase tracking-wider mb-1">Etapa / Actividades / Tareas</p>
-                        <div class="bg-surface-container-lowest p-3 rounded-lg border border-outline-variant/20 text-sm whitespace-pre-wrap text-on-surface">
-                            {{ detailRecord.etapa_actividad_tarea || 'Sin descripción' }}
-                        </div>
-                    </div>
+
 
                     <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
                          <div *ngIf="detailRecord.mes">
@@ -335,6 +330,10 @@
                         <div>
                             <p class="text-xs text-on-surface-variant font-semibold uppercase tracking-wider mb-1">Mes de Cierre</p>
                             <p class="font-medium text-on-surface">{{ detailRecord.mes_de_cierre || 'N/A' }}</p>
+                        </div>
+                        <div>
+                            <p class="text-[10px] text-on-surface-variant font-semibold uppercase tracking-wider mb-1">Planner ID</p>
+                            <p class="text-xs text-on-surface-variant break-all">{{ detailRecord.id_planner_task || 'No asignado' }}</p>
                         </div>
                         <div>
                             <p class="text-xs text-on-surface-variant font-semibold uppercase tracking-wider mb-1">Fecha de Carga</p>
