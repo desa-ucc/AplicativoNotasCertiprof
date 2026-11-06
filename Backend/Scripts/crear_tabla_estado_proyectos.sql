@@ -6,10 +6,10 @@ GO
 SET QUOTED_IDENTIFIER ON
 GO
 
-CREATE TABLE [dbo].[cert_estado_proyectos](
+CREATE TABLE [dbo].[pry_estado_proyectos](
     [codigo_proyecto] [varchar](255) NOT NULL,
     [estado] [varchar](50) NOT NULL DEFAULT 'Activo',
- CONSTRAINT [PK_cert_estado_proyectos] PRIMARY KEY CLUSTERED
+ CONSTRAINT [PK_pry_estado_proyectos] PRIMARY KEY CLUSTERED
 (
     [codigo_proyecto] ASC
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
