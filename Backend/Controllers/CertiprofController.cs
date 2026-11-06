@@ -178,30 +178,6 @@ namespace Backend.Controllers
             }
         }
 
-        [HttpGet("system-dates")]
-        public async Task<IActionResult> GetSystemDates([FromServices] Backend.Data.AppDbContext dbContext)
-        {
-            DateTime? uploadDate = null;
-            DateTime? downloadDate = null;
-
-            using (var cmd = dbContext.Database.GetDbConnection().CreateCommand())
-            {
-                cmd.CommandText = "sp_ConsultarFechasSistema";
-                cmd.CommandType = System.Data.CommandType.StoredProcedure;
-                if (dbContext.Database.GetDbConnection().State != System.Data.ConnectionState.Open) dbContext.Database.OpenConnection();
-
-                using (var reader = await cmd.ExecuteReaderAsync())
-                {
-                    if (reader.Read())
-                    {
-                        uploadDate = reader.IsDBNull(0) ? (DateTime?)null : reader.GetDateTime(0);
-                        downloadDate = reader.IsDBNull(1) ? (DateTime?)null : reader.GetDateTime(1);
-                    }
-                }
-            }
-            return Ok(new { lastUploadDate = uploadDate, lastDownloadDate = downloadDate });
-        }
-
         [HttpGet("export-avatar/{uploadId}")]
         public async Task<IActionResult> ExportAvatar(int uploadId)
         {
