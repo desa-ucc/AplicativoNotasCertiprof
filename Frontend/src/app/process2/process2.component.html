@@ -144,8 +144,7 @@
                                                         <th scope="col" class="py-2 pl-2 pr-3 text-left text-[11px] font-semibold text-on-surface-variant uppercase tracking-wider">TAREA / ACTIVIDAD</th>
                                                         <th scope="col" class="px-2 py-2 text-left text-[11px] font-semibold text-on-surface-variant uppercase tracking-wider">Responsable</th>
                                                         <th scope="col" class="px-2 py-2 text-left text-[11px] font-semibold text-on-surface-variant uppercase tracking-wider">Mes Cierre</th>
-                                                        <th scope="col" class="px-2 py-2 text-left text-[11px] font-semibold text-on-surface-variant uppercase tracking-wider">Estado</th>
-                                                        <th scope="col" class="relative py-2 pl-3 pr-2 text-right" *ngIf="puedeLeer">
+                                                                                                                <th scope="col" class="relative py-2 pl-3 pr-2 text-right" *ngIf="puedeLeer">
                                                             <span class="sr-only">Acciones</span>
                                                         </th>
                                                     </tr>
@@ -160,9 +159,6 @@
                                                         </td>
                                                         <td class="whitespace-nowrap px-2 py-2 text-xs text-on-surface-variant">{{ tarea.responsable || 'N/A' }}</td>
                                                         <td class="whitespace-nowrap px-2 py-2 text-xs text-on-surface-variant">{{ tarea.mes_de_cierre || 'N/A' }}</td>
-                                                        <td class="whitespace-nowrap px-2 py-2 text-xs text-on-surface-variant">
-                                                            <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-surface-container text-on-surface">{{ tarea.estado_bucket || 'Desconocido' }}</span>
-                                                        </td>
                                                         <td class="relative whitespace-nowrap py-2 pl-3 pr-2 text-right text-xs font-medium" *ngIf="puedeLeer">
                                                             <button (click)="abrirDetalle(tarea); $event.stopPropagation();" class="text-primary hover:text-primary-container inline-flex items-center gap-1 transition-colors">
                                                                 Detalle <span class="material-symbols-outlined text-[14px]">open_in_new</span>
@@ -267,7 +263,7 @@
     <div class="fixed inset-0 bg-black/40 backdrop-blur-sm"></div>
     <div class="fixed inset-0 z-10 overflow-y-auto">
         <div class="flex min-h-full items-center justify-center p-4">
-            <div class="relative w-full max-w-2xl max-w-full bg-white rounded-2xl shadow-xl overflow-hidden">
+            <div class="relative w-full max-w-3xl bg-white rounded-2xl shadow-xl overflow-hidden">
                 <div class="px-6 py-4 border-b border-outline-variant/20 flex justify-between items-center bg-surface-container-lowest">
                     <h3 class="text-lg font-bold text-on-surface flex items-center gap-2">
                         <span class="material-symbols-outlined text-primary">visibility</span>
