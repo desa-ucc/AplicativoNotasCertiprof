@@ -20,6 +20,7 @@ namespace Backend.Controllers
     [Authorize]
     public class PlannerMetasController : ControllerBase
     {
+        private static readonly System.Collections.Concurrent.ConcurrentDictionary<string, string> _jobStatus = new();
         private readonly AppDbContext _dbContext;
         private readonly IBackgroundTaskQueue _taskQueue;
         private readonly Microsoft.Extensions.DependencyInjection.IServiceScopeFactory _serviceScopeFactory;
@@ -98,6 +99,8 @@ namespace Backend.Controllers
                 return BadRequest(new { Message = "Solo se permiten archivos Excel (.xlsx)." });
 
             var usuarioCarga = User.Identity?.Name ?? "Sistema";
+            var jobId = Guid.NewGuid().ToString();
+            _jobStatus[jobId] = "Procesando";
 
             // Read file into memory to pass it to the background task
             using var memoryStream = new MemoryStream();
@@ -110,10 +113,25 @@ namespace Backend.Controllers
                 var scopedDbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
                 var scopedPlannerService = scope.ServiceProvider.GetRequiredService<IPlannerService>();
 
-                await ProcessExcelInBackground(fileBytes, usuarioCarga, scopedDbContext, scopedPlannerService, token);
+                try {
+                    await ProcessExcelInBackground(fileBytes, usuarioCarga, scopedDbContext, scopedPlannerService, token);
+                    _jobStatus[jobId] = "Completado";
+                } catch(Exception) {
+                    _jobStatus[jobId] = "Error";
+                }
             });
 
-            return Accepted(new { Message = "El archivo se ha recibido y se está procesando en segundo plano." });
+            return Accepted(new { Message = "El archivo se ha recibido y se está procesando en segundo plano.", JobId = jobId });
+        }
+
+        [HttpGet("status/{jobId}")]
+        public IActionResult GetStatus(string jobId)
+        {
+            if (_jobStatus.TryGetValue(jobId, out var status))
+            {
+                return Ok(new { Status = status });
+            }
+            return NotFound();
         }
 
 
@@ -246,8 +264,24 @@ namespace Backend.Controllers
                     var solicitudesCambio = row.Cell(11).GetString();
 
                     string plannerTaskId = null;
+
+                    // Check for existing task to prevent duplicates
+                    using (var checkCmd = dbContext.Database.GetDbConnection().CreateCommand())
+                    {
+                        checkCmd.CommandText = "SELECT id_planner_task FROM pry_metas_planner WHERE codigo_proyecto = @codigo AND etapa_actividad_tarea = @etapa AND nombre_proyecto = @nombre";
+                        checkCmd.CommandType = System.Data.CommandType.Text;
+                        checkCmd.Parameters.Add(new SqlParameter("@codigo", string.IsNullOrWhiteSpace(codigoProyecto) ? DBNull.Value : codigoProyecto));
+                        checkCmd.Parameters.Add(new SqlParameter("@etapa", string.IsNullOrWhiteSpace(etapaActividadTarea) ? DBNull.Value : etapaActividadTarea));
+                        checkCmd.Parameters.Add(new SqlParameter("@nombre", string.IsNullOrWhiteSpace(nombreProyecto) ? DBNull.Value : nombreProyecto));
+                        var result = await checkCmd.ExecuteScalarAsync(token);
+                        if (result != null && result != DBNull.Value)
+                        {
+                            plannerTaskId = result.ToString();
+                        }
+                    }
+
                     int maxRetries = 3;
-                    for (int retry = 0; retry < maxRetries; retry++)
+                    for (int retry = 0; retry < maxRetries && string.IsNullOrEmpty(plannerTaskId); retry++)
                     {
                         try
                         {

@@ -260,16 +260,20 @@ export class Process2Component implements OnInit {
     formData.append('file', this.selectedFile);
 
     this.http.post<any>('/api/plannermetas/upload', formData).pipe(
-        timeout(30000), // Generous 30s timeout for the initial request
+        timeout(30000),
         catchError(err => {
             return throwError(() => err);
         })
     ).subscribe({
       next: (res) => {
-        this.isUploading = false;
-        // Check for 202 Accepted message pattern or just assume success if it lands here
-        this.showResultModal(true, res.message || 'El archivo se está procesando en segundo plano. Puede continuar usando el sistema.');
-        this.selectedFile = null;
+        const jobId = res.jobId;
+        if (jobId) {
+            this.pollJobStatus(jobId);
+        } else {
+            this.isUploading = false;
+            this.showResultModal(true, 'El archivo se está procesando en segundo plano. Puede continuar usando el sistema.');
+            this.selectedFile = null;
+        }
       },
       error: (err) => {
         this.isUploading = false;
@@ -283,6 +287,30 @@ export class Process2Component implements OnInit {
         this.showResultModal(false, errorMsg);
       }
     });
+  }
+
+  pollJobStatus(jobId: string) {
+    const intervalId = setInterval(() => {
+        this.http.get<any>(`/api/plannermetas/status/${jobId}`).subscribe({
+            next: (res) => {
+                if (res.status === 'Completado' || res.status === 'Error') {
+                    clearInterval(intervalId);
+                    this.isUploading = false;
+                    this.selectedFile = null;
+                    if (res.status === 'Completado') {
+                        this.showResultModal(true, 'Carga completada');
+                        this.cargarHistorial();
+                    } else {
+                        this.showResultModal(false, 'Ocurrió un error al procesar el archivo en segundo plano.');
+                    }
+                }
+            },
+            error: () => {
+                clearInterval(intervalId);
+                this.isUploading = false;
+            }
+        });
+    }, 2000);
   }
   showResultModal(success: boolean, message: string) {
       this.isUploadSuccess = success;
