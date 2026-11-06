@@ -33,8 +33,9 @@ namespace Backend.Controllers
             {
                 using (var command = _dbContext.Database.GetDbConnection().CreateCommand())
                 {
-                    command.CommandText = "sp_ObtenerHistorialMetas";
+                    command.CommandText = "sp_pry_GestionMetas";
                     command.CommandType = System.Data.CommandType.StoredProcedure;
+                    command.Parameters.Add(new SqlParameter("@Accion", "HISTORIAL"));
 
                     if (_dbContext.Database.GetDbConnection().State != System.Data.ConnectionState.Open)
                     {
@@ -128,16 +129,18 @@ namespace Backend.Controllers
 
                             using (var command = _dbContext.Database.GetDbConnection().CreateCommand())
                             {
-                                command.CommandText = "sp_CargarMetas";
+                                command.CommandText = "sp_pry_GestionMetas";
                                 command.CommandType = System.Data.CommandType.StoredProcedure;
+
+                                var pAccion = command.CreateParameter(); pAccion.ParameterName = "@Accion"; pAccion.Value = "UPSERT_META"; command.Parameters.Add(pAccion);
 
                                 var pArea = command.CreateParameter(); pArea.ParameterName = "@Area"; pArea.Value = string.IsNullOrWhiteSpace(area) ? DBNull.Value : area; command.Parameters.Add(pArea);
                                 var pCod = command.CreateParameter(); pCod.ParameterName = "@CodigoProyecto"; pCod.Value = string.IsNullOrWhiteSpace(codigoProyecto) ? DBNull.Value : codigoProyecto; command.Parameters.Add(pCod);
                                 var pUrl = command.CreateParameter(); pUrl.ParameterName = "@Url"; pUrl.Value = string.IsNullOrWhiteSpace(url) ? DBNull.Value : url; command.Parameters.Add(pUrl);
                                 var pNom = command.CreateParameter(); pNom.ParameterName = "@NombreProyecto"; pNom.Value = string.IsNullOrWhiteSpace(nombreProyecto) ? DBNull.Value : nombreProyecto; command.Parameters.Add(pNom);
-                                var pMes = command.CreateParameter(); pMes.ParameterName = "@MesCierre"; pMes.Value = string.IsNullOrWhiteSpace(mesCierre) ? DBNull.Value : mesCierre; command.Parameters.Add(pMes);
+                                var pMes = command.CreateParameter(); pMes.ParameterName = "@MesDeCierre"; pMes.Value = string.IsNullOrWhiteSpace(mesCierre) ? DBNull.Value : mesCierre; command.Parameters.Add(pMes);
                                 var pResp = command.CreateParameter(); pResp.ParameterName = "@Responsable"; pResp.Value = string.IsNullOrWhiteSpace(responsable) ? DBNull.Value : responsable; command.Parameters.Add(pResp);
-                                var pEtapa = command.CreateParameter(); pEtapa.ParameterName = "@EtapaActividadesTareas"; pEtapa.Value = string.IsNullOrWhiteSpace(etapaActividades) ? DBNull.Value : etapaActividades; command.Parameters.Add(pEtapa);
+                                var pEtapa = command.CreateParameter(); pEtapa.ParameterName = "@EtapaActividadTarea"; pEtapa.Value = string.IsNullOrWhiteSpace(etapaActividades) ? DBNull.Value : etapaActividades; command.Parameters.Add(pEtapa);
                                 var pUsr = command.CreateParameter(); pUsr.ParameterName = "@UsuarioCarga"; pUsr.Value = usuarioCarga; command.Parameters.Add(pUsr);
 
                                 try
@@ -147,8 +150,8 @@ namespace Backend.Controllers
                                 }
                                 catch (Exception ex)
                                 {
-                                     // Skip invalid rows on SP missing, let dev proceed
-                                     if(ex.Message.Contains("Could not find stored procedure")) break;
+                                    Console.WriteLine($"Error insertando fila {i} en Process2Controller: {ex.Message}");
+                                    if(ex.Message.Contains("Could not find stored procedure")) break;
                                 }
                             }
                         }

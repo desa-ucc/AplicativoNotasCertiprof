@@ -28,22 +28,9 @@ export class CertiprofComponent implements OnInit {
   constructor(private http: HttpClient, private router: Router) {}
 
   ngOnInit() {
-    this.obtenerFechasSistema();
+
   }
 
-  obtenerFechasSistema() {
-    // Consumimos el nuevo endpoint global de auditoría
-    this.http.get<any>('/api/certiprof/system-dates').subscribe({
-        next: (res) => {
-            // Mapeamos lastUploadDate igual que en el Historial
-            if (res.lastUploadDate) {
-                let cleanDate = res.lastUploadDate.endsWith('Z') ? res.lastUploadDate : res.lastUploadDate + 'Z';
-                this.fechaUltimaCarga = new Date(cleanDate);
-            }
-        },
-        error: (err) => console.error('Error obteniendo la última fecha', err)
-    });
-  }
 
 
   onDragOver(event: DragEvent) {

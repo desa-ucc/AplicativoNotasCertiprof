@@ -42,8 +42,9 @@ namespace Backend.Controllers
             {
                 using (var command = _dbContext.Database.GetDbConnection().CreateCommand())
                 {
-                    command.CommandText = "SELECT id, area, codigo_proyecto, url, nombre_proyecto, mes_de_cierre, responsable, etapa_actividad_tarea, mes, mes_ud, anio, solicitudes_cambio, id_planner_task, estado_bucket, fecha_expectativa, fecha_cierre_real, proyecto_umbrella, correos_autorizados, fecha_carga, usuario_carga, estado_proyecto FROM [dbo].[pry_metas_planner] ORDER BY fecha_carga DESC";
-                    command.CommandType = System.Data.CommandType.Text;
+                    command.CommandText = "sp_pry_GestionMetas";
+                    command.CommandType = System.Data.CommandType.StoredProcedure;
+                    command.Parameters.Add(new SqlParameter("@Accion", "HISTORIAL"));
 
                     if (_dbContext.Database.GetDbConnection().State != System.Data.ConnectionState.Open)
                     {
@@ -271,8 +272,9 @@ namespace Backend.Controllers
 
                     using (var command = dbContext.Database.GetDbConnection().CreateCommand())
                     {
-                        command.CommandText = "sp_UpsertMetaPlanner";
+                        command.CommandText = "sp_pry_GestionMetas";
                         command.CommandType = System.Data.CommandType.StoredProcedure;
+                        command.Parameters.Add(new SqlParameter("@Accion", "UPSERT_META"));
 
                         command.Parameters.Add(new SqlParameter("@Area", string.IsNullOrWhiteSpace(area) ? DBNull.Value : area));
                         command.Parameters.Add(new SqlParameter("@CodigoProyecto", string.IsNullOrWhiteSpace(codigoProyecto) ? DBNull.Value : codigoProyecto));
@@ -285,7 +287,7 @@ namespace Backend.Controllers
                         command.Parameters.Add(new SqlParameter("@MesUd", string.IsNullOrWhiteSpace(mesUd) ? DBNull.Value : mesUd));
                         command.Parameters.Add(new SqlParameter("@Anio", string.IsNullOrWhiteSpace(anio) ? DBNull.Value : anio));
                         command.Parameters.Add(new SqlParameter("@SolicitudesCambio", string.IsNullOrWhiteSpace(solicitudesCambio) ? DBNull.Value : solicitudesCambio));
-                        command.Parameters.Add(new SqlParameter("@IdPlannerTask", string.IsNullOrWhiteSpace(plannerTaskId) ? DBNull.Value : plannerTaskId));
+                        command.Parameters.Add(new SqlParameter("@id_planner_task", string.IsNullOrWhiteSpace(plannerTaskId) ? DBNull.Value : plannerTaskId));
                         command.Parameters.Add(new SqlParameter("@EstadoBucket", string.IsNullOrWhiteSpace(plannerTaskId) ? "Pendiente" : "En blanco"));
                         command.Parameters.Add(new SqlParameter("@FechaExpectativa", DBNull.Value));
                         command.Parameters.Add(new SqlParameter("@FechaCierreReal", DBNull.Value));
@@ -299,6 +301,7 @@ namespace Backend.Controllers
                         }
                         catch (Exception ex)
                         {
+                            Console.WriteLine($"Error ejecutando sp_pry_GestionMetas en la fila {i}: {ex.Message}");
                             if(ex.Message.Contains("Could not find stored procedure")) break;
                         }
                     }
@@ -321,8 +324,8 @@ namespace Backend.Controllers
             {
                 using (var command = _dbContext.Database.GetDbConnection().CreateCommand())
                 {
-                    command.CommandText = "v_pry_ProyectosPrincipales";
-                    command.CommandType = System.Data.CommandType.StoredProcedure;
+                    command.CommandText = "SELECT * FROM v_pry_ProyectosPrincipales";
+                    command.CommandType = System.Data.CommandType.Text;
 
                     if (_dbContext.Database.GetDbConnection().State != System.Data.ConnectionState.Open)
                     {
@@ -372,8 +375,9 @@ namespace Backend.Controllers
             {
                 using (var command = _dbContext.Database.GetDbConnection().CreateCommand())
                 {
-                    command.CommandText = "sp_ActualizarEstadoProyecto";
+                    command.CommandText = "sp_pry_GestionMetas";
                     command.CommandType = System.Data.CommandType.StoredProcedure;
+                    command.Parameters.Add(new SqlParameter("@Accion", "ACTUALIZAR_ESTADO"));
 
                     command.Parameters.Add(new SqlParameter("@CodigoProyecto", codigo));
                     command.Parameters.Add(new SqlParameter("@Estado", request.Estado));
@@ -428,10 +432,11 @@ namespace Backend.Controllers
             {
                 using (var command = _dbContext.Database.GetDbConnection().CreateCommand())
                 {
-                    command.CommandText = "sp_UpsertMetaPlanner";
+                    command.CommandText = "sp_pry_GestionMetas";
                     command.CommandType = System.Data.CommandType.StoredProcedure;
+                    command.Parameters.Add(new SqlParameter("@Accion", "UPSERT_META"));
 
-                    command.Parameters.Add(new SqlParameter("@IdPlannerTask", payload.IdPlannerTask));
+                    command.Parameters.Add(new SqlParameter("@id_planner_task", payload.IdPlannerTask));
                     command.Parameters.Add(new SqlParameter("@Area", string.IsNullOrWhiteSpace(payload.Area) ? DBNull.Value : payload.Area));
                     command.Parameters.Add(new SqlParameter("@CodigoProyecto", string.IsNullOrWhiteSpace(payload.CodigoProyecto) ? DBNull.Value : payload.CodigoProyecto));
                     command.Parameters.Add(new SqlParameter("@Url", string.IsNullOrWhiteSpace(payload.Url) ? DBNull.Value : payload.Url));
