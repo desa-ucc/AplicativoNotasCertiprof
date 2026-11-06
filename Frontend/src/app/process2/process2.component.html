@@ -141,7 +141,7 @@
                                             <table class="min-w-full divide-y divide-outline-variant/10">
                                                 <thead>
                                                     <tr>
-                                                        <th scope="col" class="py-2 pl-2 pr-3 text-left text-[11px] font-semibold text-on-surface-variant uppercase tracking-wider">Planner ID</th>
+                                                        <th scope="col" class="py-2 pl-2 pr-3 text-left text-[11px] font-semibold text-on-surface-variant uppercase tracking-wider">TAREA / ACTIVIDAD</th>
                                                         <th scope="col" class="px-2 py-2 text-left text-[11px] font-semibold text-on-surface-variant uppercase tracking-wider">Responsable</th>
                                                         <th scope="col" class="px-2 py-2 text-left text-[11px] font-semibold text-on-surface-variant uppercase tracking-wider">Mes Cierre</th>
                                                         <th scope="col" class="px-2 py-2 text-left text-[11px] font-semibold text-on-surface-variant uppercase tracking-wider">Estado</th>
@@ -155,7 +155,7 @@
                                                         <td class="whitespace-nowrap py-2 pl-2 pr-3 text-xs font-medium text-on-surface">
                                                             <div class="flex items-center gap-1.5">
                                                                 <span class="w-1.5 h-1.5 rounded-full" [ngClass]="tarea.id_planner_task ? 'bg-green-500' : 'bg-gray-300'"></span>
-                                                                <span class="truncate max-w-[120px]">{{ tarea.id_planner_task || 'Sin asignar' }}</span>
+                                                                <span class="truncate max-w-[150px] inline-block" [title]="tarea.etapa_actividad_tarea || 'Sin descripción'">{{ tarea.etapa_actividad_tarea || 'Sin descripción' }}</span>
                                                             </div>
                                                         </td>
                                                         <td class="whitespace-nowrap px-2 py-2 text-xs text-on-surface-variant">{{ tarea.responsable || 'N/A' }}</td>
