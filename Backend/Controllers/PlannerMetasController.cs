@@ -271,7 +271,7 @@ namespace Backend.Controllers
 
                     using (var command = dbContext.Database.GetDbConnection().CreateCommand())
                     {
-                        command.CommandText = "sp_UpsertMetaPlanner";
+                        command.CommandText = "sp_pry_GestionMetas";
                         command.CommandType = System.Data.CommandType.StoredProcedure;
 
                         command.Parameters.Add(new SqlParameter("@Area", string.IsNullOrWhiteSpace(area) ? DBNull.Value : area));
@@ -281,6 +281,7 @@ namespace Backend.Controllers
                         command.Parameters.Add(new SqlParameter("@MesDeCierre", string.IsNullOrWhiteSpace(mesDeCierre) ? DBNull.Value : mesDeCierre));
                         command.Parameters.Add(new SqlParameter("@Responsable", string.IsNullOrWhiteSpace(responsable) ? DBNull.Value : responsable));
                         command.Parameters.Add(new SqlParameter("@EtapaActividadTarea", string.IsNullOrWhiteSpace(etapaActividadTarea) ? DBNull.Value : etapaActividadTarea));
+                        command.Parameters.Add(new SqlParameter("@Accion", "UPSERT_META"));
                         command.Parameters.Add(new SqlParameter("@Mes", string.IsNullOrWhiteSpace(mes) ? DBNull.Value : mes));
                         command.Parameters.Add(new SqlParameter("@MesUd", string.IsNullOrWhiteSpace(mesUd) ? DBNull.Value : mesUd));
                         command.Parameters.Add(new SqlParameter("@Anio", string.IsNullOrWhiteSpace(anio) ? DBNull.Value : anio));
@@ -428,7 +429,7 @@ namespace Backend.Controllers
             {
                 using (var command = _dbContext.Database.GetDbConnection().CreateCommand())
                 {
-                    command.CommandText = "sp_UpsertMetaPlanner";
+                    command.CommandText = "sp_pry_GestionMetas";
                     command.CommandType = System.Data.CommandType.StoredProcedure;
 
                     command.Parameters.Add(new SqlParameter("@IdPlannerTask", payload.IdPlannerTask));
@@ -439,6 +440,7 @@ namespace Backend.Controllers
                     command.Parameters.Add(new SqlParameter("@MesDeCierre", string.IsNullOrWhiteSpace(payload.MesDeCierre) ? DBNull.Value : payload.MesDeCierre));
                     command.Parameters.Add(new SqlParameter("@Responsable", string.IsNullOrWhiteSpace(payload.Responsable) ? DBNull.Value : payload.Responsable));
                     command.Parameters.Add(new SqlParameter("@EtapaActividadTarea", string.IsNullOrWhiteSpace(payload.EtapaActividadTarea) ? DBNull.Value : payload.EtapaActividadTarea));
+                        command.Parameters.Add(new SqlParameter("@Accion", "UPSERT_META"));
                     command.Parameters.Add(new SqlParameter("@Mes", string.IsNullOrWhiteSpace(payload.Mes) ? DBNull.Value : payload.Mes));
                     command.Parameters.Add(new SqlParameter("@MesUd", string.IsNullOrWhiteSpace(payload.MesUd) ? DBNull.Value : payload.MesUd));
                     command.Parameters.Add(new SqlParameter("@Anio", string.IsNullOrWhiteSpace(payload.Anio) ? DBNull.Value : payload.Anio));
