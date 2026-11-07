@@ -45,6 +45,10 @@
         "net8.0": {
           "targetAlias": "net8.0",
           "dependencies": {
+            "Azure.Identity": {
+              "target": "Package",
+              "version": "[1.21.0, )"
+            },
             "ClosedXML": {
               "target": "Package",
               "version": "[0.105.0, )"
@@ -71,13 +75,17 @@
               "target": "Package",
               "version": "[8.0.4, )"
             },
+            "Microsoft.Graph": {
+              "target": "Package",
+              "version": "[6.9.0, )"
+            },
             "Swashbuckle.AspNetCore": {
               "target": "Package",
               "version": "[6.6.2, )"
             },
             "System.IdentityModel.Tokens.Jwt": {
               "target": "Package",
-              "version": "[8.17.0, )"
+              "version": "[8.18.0, )"
             }
           },
           "imports": [
